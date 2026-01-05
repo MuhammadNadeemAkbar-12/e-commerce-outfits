@@ -1,26 +1,9 @@
 import axios from "axios";
-// Import pinia store access to read token in-memory when available
 import { useAuthStore } from '@/stores/auth'
-import { getCurrentInstance } from 'vue'
 
-// Derive API base URL with priority:
-// 1. Explicit Vite env variable (import.meta.env.VITE_API_BASE_URL)
-// 2. Fallback to window.__API_BASE_URL__ (can be injected via script tag if needed)
-// 3. Hard-coded public IP (legacy fallback) - consider removing once envs are set in Vercel
-const FALLBACK_API = "http://13.53.109.52/api";
-let resolvedBase = FALLBACK_API;
-try {
-  if (import.meta?.env?.VITE_API_BASE_URL) {
-    resolvedBase = import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '');
-  } else if (typeof window !== 'undefined' && window.__API_BASE_URL__) {
-    resolvedBase = String(window.__API_BASE_URL__).replace(/\/$/, '');
-  }
-} catch (e) {
-  // ignore – retain fallback
-}
-
+// Use relative path - Vercel will proxy it to your backend
 const axiosInstance = axios.create({
-  baseURL: resolvedBase,
+  baseURL: '/api',  // Relative to current domain
   timeout: 20000,
   headers: {
     "Content-Type": "application/json",
@@ -31,8 +14,6 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     try {
-      // Prefer in-memory token from Pinia store when available.
-      // Using a direct import and calling the store works outside of setup.
       const auth = useAuthStore()
       const token = auth?.token || null
       if (token) {
@@ -40,14 +21,15 @@ axiosInstance.interceptors.request.use(
         return config
       }
     } catch (e) {
-      // If Pinia isn't available for some reason, fall back to localStorage.
+      // If Pinia isn't available for some reason, fall back to sessionStorage.
     }
 
-    // Fallback: read from sessionStorage (token not persisted across tab close)
+    // Fallback: read from sessionStorage
     const token = typeof window !== 'undefined' ? sessionStorage.getItem("token") : null
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
+    
     return config
   },
   (error) => {
@@ -63,6 +45,7 @@ axiosInstance.interceptors.response.use(
     const cfg = error.config || {};
     const skip = cfg.skipAuthRedirect;
     const status = error.response?.status;
+    
     if (status === 401 && !skip) {
       const isPublic = publicPaths.some((r) => r.test(cfg.url || ""));
       if (!isPublic) {

@@ -3,5 +3,11 @@
     "env": {
       "NODE_VERSION": "20"
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "http://13.60.78.97/api/:path*"
+    }
+  ]
 }
