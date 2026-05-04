@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import authApi from '@/services/authApi'
+import { firebaseLogin as doFirebaseLogin } from '@/services/firebaseAuth'
 // Lightweight direct axios instance import for profile hydration after refresh
 import axios from '@/api/axios'
 
@@ -175,10 +176,54 @@ export const useAuthStore = defineStore('auth', () => {
   const getDashboardRoute = (role) => {
     const routes = {
       admin: '/admin/dashboard',
+      manager: '/seller/dashboard',
+      salesman: '/customer/orders',
       seller: '/seller/dashboard',
       buyer: '/'
     }
     return routes[role] || '/'
+  }
+
+  const loginWithFirebase = async (email, password) => {
+    loading.value = true
+    try {
+      const firebaseUser = await doFirebaseLogin(email, password)
+      const idToken = await firebaseUser.getIdToken()
+
+      const response = await axios.post('/firebase/login', { idToken })
+      const data = response.data
+
+      if (!data.success) {
+        return { success: false, message: data.message || 'Firebase login failed' }
+      }
+
+      const payload = data.data
+      const rolesRaw = payload?.roles ?? payload?.role
+      const roles = Array.isArray(rolesRaw)
+        ? rolesRaw.map(r => (typeof r === 'object' ? r?.name : r))
+        : rolesRaw ? [typeof rolesRaw === 'object' ? rolesRaw?.name : rolesRaw] : []
+
+      const userObj = { ...payload.user, role: roles[0] || null }
+
+      user.value = userObj
+      token.value = payload.token
+      isAuthenticated.value = true
+
+      try {
+        localStorage.setItem('token', payload.token)
+        if (!persistTokenOnly) {
+          localStorage.setItem('user', JSON.stringify(userObj))
+          if (userObj.role) localStorage.setItem('role', userObj.role)
+        }
+      } catch (e) { /* ignore */ }
+
+      return { success: true, user: userObj }
+    } catch (error) {
+      const msg = error?.response?.data?.message || error?.message || 'Firebase login failed'
+      return { success: false, message: msg }
+    } finally {
+      loading.value = false
+    }
   }
 
   const hasRole = (roles) => {
@@ -189,8 +234,10 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const isAdmin = computed(() => user.value?.role === 'admin')
-  const isSeller = computed(() => user.value?.role === 'seller')
-  const isBuyer = computed(() => user.value?.role === 'buyer')
+  const isManager = computed(() => user.value?.role === 'manager')
+  const isSalesman = computed(() => user.value?.role === 'salesman')
+  const isSeller = computed(() => user.value?.role === 'seller' || user.value?.role === 'manager')
+  const isBuyer = computed(() => user.value?.role === 'buyer' || user.value?.role === 'salesman')
 
   return {
     user,
@@ -203,11 +250,14 @@ export const useAuthStore = defineStore('auth', () => {
     isLoggedIn,
     isLoading,
     isAdmin,
+    isManager,
+    isSalesman,
     isSeller,
     isBuyer,
     login,
     register,
     logout,
+    loginWithFirebase,
     checkAuth,
     getDashboardRoute,
     hasRole,

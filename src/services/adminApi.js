@@ -587,6 +587,25 @@ class AdminService {
   }
 
   // =========================
+  // System Backup
+  // =========================
+
+  async exportSystemBackup() {
+    try {
+      const response = await axios.get("/admin/system/backup/export", {
+        responseType: "blob",
+      });
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Failed to export backup",
+        error,
+      };
+    }
+  }
+
+  // =========================
   // Categories
   // =========================
 

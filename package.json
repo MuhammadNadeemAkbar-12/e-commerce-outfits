@@ -12,6 +12,7 @@
 		"@quasar/extras": "^1.17.0",
 		"axios": "^1.11.0",
 		"chart.js": "^4.5.0",
+		"firebase": "^11.7.1",
 		"pinia": "^3.0.3",
 		"quasar": "^2.18.2",
 		"uuid": "^11.1.0",
@@ -29,8 +30,7 @@
 		"vite": "^7.1.2",
 		"vitest": "^3.2.4",
 		"vue": "^3.5.18",
-		"rollup": "^3.29.4",
-		"@rollup/rollup-linux-x64-gnu": "4.6.1"
+		"rollup": "^3.29.4"
 	},
 	"engines": {
 		"node": "20.x"

@@ -1,6 +1,16 @@
 <template>
   <div class="q-pa-md">
-    <div class="text-h4 q-mb-md dark:text-white">Admin Dashboard</div>
+    <div class="flex items-center justify-between q-mb-md">
+      <div class="text-h4 dark:text-white">Admin Dashboard</div>
+      <q-btn
+        unelevated
+        color="primary"
+        icon="download"
+        label="Download Backup"
+        :loading="backupLoading"
+        @click="downloadBackup"
+      />
+    </div>
     
     <!-- Stats Cards -->
     <div class="row q-col-gutter-md q-mb-lg">
@@ -148,6 +158,7 @@ const stats = ref({
   totalOrders: 0,
 });
 const loading = ref(true);
+const backupLoading = ref(false);
 const error = ref(null);
 
 const fetchDashboardStats = async () => {
@@ -169,6 +180,29 @@ const fetchDashboardStats = async () => {
     console.error('Dashboard stats fetch error:', err);
   } finally {
     loading.value = false;
+  }
+};
+
+const downloadBackup = async () => {
+  backupLoading.value = true;
+  try {
+    const response = await AdminService.exportSystemBackup();
+    if (!response.success) {
+      throw new Error(response.message || 'Failed to export backup');
+    }
+
+    const blob = new Blob([response.data], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const ts = new Date().toISOString().replace(/[:.]/g, '-');
+    link.href = url;
+    link.download = `inventory-backup-${ts}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    error.value = err?.message || 'Failed to download backup';
+  } finally {
+    backupLoading.value = false;
   }
 };
 

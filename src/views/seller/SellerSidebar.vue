@@ -233,6 +233,13 @@
 			badgeColor: "accent",
 		},
 		{ to: "/seller/stock", icon: "inventory", label: "Update Stock" },
+		{ to: "/seller/invoices", icon: "receipt_long", label: "Invoices" },
+		{ to: "/seller/stock-ledger", icon: "trending_up", label: "Stock Ledger" },
+		{ to: "/seller/returns", icon: "keyboard_return", label: "Returns" },
+		{ to: "/seller/customers", icon: "people", label: "Customers" },
+		{ to: "/seller/suppliers", icon: "local_shipping", label: "Suppliers" },
+		{ to: "/seller/reports", icon: "bar_chart", label: "Reports" },
+		{ to: "/seller/audit-logs", icon: "history", label: "Audit Logs" },
 		{ to: "/seller/profile", icon: "person", label: "Profile" },
 	];
 

@@ -107,11 +107,11 @@ const routes = [
     ],
   },
 
-  // Seller routes
+  // Manager routes (formerly seller)
   {
     path: '/seller',
     component: () => import('@/views/seller/SellerLayout.vue'),
-    meta: { requiresAuth: true, requiresRole: 'seller' },
+    meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] },
     children: [
       {
         path: '',
@@ -121,38 +121,94 @@ const routes = [
         path: 'dashboard',
         name: 'SellerDashboard',
         component: () => import('@/views/seller/SellerDashboard.vue'),
-        meta: { requiresAuth: true, requiresRole: 'seller' }
+        meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
       },
       {
         path: 'products',
         name: 'SellerProducts',
         component: () => import('@/views/seller/ProductForm.vue'),
-        meta: { requiresAuth: true, requiresRole: 'seller' }
+        meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
       },
       {
         path: 'products/add',
         name: 'AddProduct',
         component: () => import('@/views/seller/ProductForm.vue'),
-        meta: { requiresAuth: true, requiresRole: 'seller' }
+        meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
       },
       {
         path: 'orders',
         name: 'SellerOrdersPanel',
         component: () => import('@/views/seller/OrderManagement.vue'),
-        meta: { requiresAuth: true, requiresRole: 'seller' }
+        meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
       },
       {
-        path: 'stock', name: 'SellerStock', component: () => import('@/views/seller/UpdateStock.vue')
+        path: 'stock', name: 'SellerStock', component: () => import('@/views/seller/UpdateStock.vue'),
+        meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
       },
       {
+        path: 'invoices',
+        name: 'SellerInvoices',
+        component: () => import('@/views/seller/Invoices.vue'),
+        meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+      },
+      {
+        path: 'invoices/create',
+        name: 'CreateInvoice',
+        component: () => import('@/views/seller/InvoiceCreate.vue'),
+        meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+      },
+        {
+          path: 'stock-ledger',
+          name: 'StockLedger',
+          component: () => import('@/views/seller/StockLedger.vue'),
+          meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+        },
+        {
+          path: 'returns',
+          name: 'SaleReturns',
+          component: () => import('@/views/seller/Returns.vue'),
+          meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+        },
+        {
+          path: 'returns/create',
+          name: 'ReturnCreate',
+          component: () => import('@/views/seller/ReturnCreate.vue'),
+          meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+        },
+        {
+          path: 'customers',
+          name: 'BizCustomers',
+          component: () => import('@/views/seller/Customers.vue'),
+          meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+        },
+        {
+          path: 'suppliers',
+          name: 'SellerSuppliers',
+          component: () => import('@/views/seller/Suppliers.vue'),
+          meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+        },
+        {
+          path: 'reports',
+          name: 'SellerReports',
+          component: () => import('@/views/seller/Reports.vue'),
+          meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+        },
+        {
+          path: 'audit-logs',
+          name: 'SellerAuditLogs',
+          component: () => import('@/views/seller/AuditLogs.vue'),
+          meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+        },
+        {
         path: 'settings',
         name: 'SellerSettings',
         component: () => import('@/views/seller/SellerStats.vue'),
-        meta: { requiresAuth: true, requiresRole: 'seller' }
+        meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
       },
       {
         path: 'profile',
-        component: () => import('@/views/seller/Profile.vue')
+        component: () => import('@/views/seller/Profile.vue'),
+        meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
       }
     ]
   },
@@ -230,23 +286,21 @@ router.beforeEach(async (to, from, next) => {
 
     // Handle role-based access
     if (to.meta.requiresRole) {
-      const requiredRole = to.meta.requiresRole
+      const requiredRoles = Array.isArray(to.meta.requiresRole)
+        ? to.meta.requiresRole
+        : [to.meta.requiresRole]
       const userRole = authStore.role
 
-      if (userRole !== requiredRole) {
+      if (!requiredRoles.includes(userRole)) {
         // Redirect based on actual role
-        switch (userRole) {
-          case 'admin':
-            next('/admin/dashboard')
-            break
-          case 'seller':
-            next('/seller/dashboard')
-            break
-          case 'buyer':
-            next('/')
-            break
-          default:
-            next('/')
+        if (userRole === 'admin') {
+          next('/admin/dashboard')
+        } else if (userRole === 'seller' || userRole === 'manager') {
+          next('/seller/dashboard')
+        } else if (userRole === 'buyer' || userRole === 'customer' || userRole === 'salesman') {
+          next('/')
+        } else {
+          next('/')
         }
         return
       }
@@ -255,19 +309,11 @@ router.beforeEach(async (to, from, next) => {
 
   // Redirect logged-in users away from login/register
   if ((to.path === '/loginuser' || to.path === '/registeruser') && authStore.isLoggedIn) {
-    switch (authStore.role) {
-      case 'admin':
-        next('/admin/dashboard')
-        break
-      case 'seller':
-        next('/seller/dashboard')
-        break
-      case 'buyer':
-        next('/')
-        break
-      default:
-        next('/')
-    }
+    const r = authStore.role
+    if (r === 'admin') next('/admin/dashboard')
+    else if (r === 'seller' || r === 'manager') next('/seller/dashboard')
+    else if (r === 'salesman') next('/customer/orders')
+    else next('/')
     return
   }
 

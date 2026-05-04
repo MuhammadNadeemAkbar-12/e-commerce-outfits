@@ -370,17 +370,12 @@
 											v-for="(p, i) in imagePreviews"
 											:key="'testpv-' + i"
 											:src="p"
-											class="w-24 h-24 object-cover border rounded" />
+											class="w-30 h-24 object-cover border rounded" />
 									</div>
 								</div>
 
 								<div class="mt-3 grid grid-cols-3 gap-2">
-									<div
-										v-for="(p, i) in imagePreviews"
-										:key="'pv-' + i"
-										class="w-full h-20 rounded overflow-hidden border bg-white flex items-center justify-center">
-										<img :src="p" class="w-full h-full object-cover" />
-									</div>
+									
 
 									<!-- existing images returned from server -->
 									<div
@@ -394,23 +389,18 @@
 											type="button"
 											@click="markExistingRemoved(e._idx)"
 											class="absolute top-1 right-1 bg-white/70 rounded-full p-1 text-rose-600">
-											✕
+											Delete
 										</button>
 									</div>
 
 									<!-- removed existing images list -->
-									<div
+									<!-- <div
 										v-for="(e, i) in removedExistingImages"
 										:key="'ex-rem-' + i"
 										class="w-full h-20 rounded overflow-hidden border bg-rose-50 flex items-center justify-center text-rose-600 text-xs">
-										Removed
-										<button
-											type="button"
-											@click="unmarkExistingRemoved(e._idx)"
-											class="ml-2 text-slate-700">
-											(undo)
-										</button>
-									</div>
+										Delete
+										
+									</div> -->
 								</div>
 
 								<div
@@ -839,9 +829,9 @@
 		modalError.value = null;
 
 		// revoke previews
-		imagePreviews.value.forEach((u) => {
+		imagePreviews.value.forEach((url) => {
 			try {
-				URL.revokeObjectURL(u);
+				URL.revokeObjectURL(url);
 			} catch {}
 		});
 		imagePreviews.value = [];
@@ -925,106 +915,68 @@
 	}
 
 	async function saveProduct() {
-		if (!validateForm()) {
-			modalError.value = "Fix validation errors";
-			return;
-		}
-
-		if (savingProduct.value) return;
+		if (!validateForm()) return;
 		savingProduct.value = true;
 		modalError.value = null;
-		Object.keys(formErrors).forEach((k) => (formErrors[k] = ""));
-
 		try {
 			const formData = new FormData();
-			formData.append("name", productForm.name);
-			formData.append("description", productForm.description ?? "");
-			formData.append("price", String(productForm.price));
-			formData.append("category_id", String(productForm.category_id ?? ""));
+			formData.append("name", productForm.name || "");
+			formData.append("description", productForm.description || "");
+			formData.append("price", productForm.price || "");
+			formData.append("category_id", productForm.category_id || "");
+			formData.append("stock", productForm.stock || 0);
 
-			// append selected new files
-			if (selectedFiles.value && selectedFiles.value.length) {
-				for (const f of selectedFiles.value) {
-					formData.append("images[]", f, f.name);
+			// Add new images
+			for (const file of selectedFiles.value) {
+				formData.append("images[]", file);
+			}
+
+			// ✅ Remove images - id directly send karo
+			const removedItems = existingImages.value.filter((e) => e && e.removed);
+			console.log("Removed items:", removedItems); // debug
+
+			for (const it of removedItems) {
+				if (it.id != null) {
+					formData.append("remove_image_ids[]", String(it.id));
+					console.log("Sending remove_image_ids[]:", it.id); // debug
 				}
 			}
 
-			// collect removed existing images
-			const removedItems = existingImages.value.filter((e) => e && e.removed);
-			if (removedItems.length) {
-				// prefer sending numeric IDs if backend supports it
-				for (const it of removedItems) {
-					if (it.id != null) {
-						formData.append("remove_image_ids[]", String(it.id));
-					} else if (it.image_path) {
-						formData.append("remove_images[]", it.image_path);
-					} else if (it.url) {
-						formData.append("remove_images[]", it.url);
-					}
-				}
-
-				// keep a JSON fallback
-				try {
-					const fallback = removedItems
-						.map((r) => r.id ?? r.image_path ?? r.url)
-						.filter(Boolean);
-					if (fallback.length)
-						formData.append("remove_images", JSON.stringify(fallback));
-				} catch {}
+			// Debug: FormData contents dekho
+			for (const [key, val] of formData.entries()) {
+				console.log(key, "→", val);
 			}
 
 			let res;
 			if (editingProductId.value) {
-				formData.append("_method", "PATCH");
-				res = await axios.post(
-					`/seller/products/${editingProductId.value}`,
-					formData,
-					{ headers: { "Content-Type": "multipart/form-data" } }
-				);
+				formData.append("_method", "PUT");
+				res = await axios.post(`/seller/products/${editingProductId.value}`, formData, {
+					headers: { "Content-Type": "multipart/form-data" },
+				});
 			} else {
 				res = await axios.post("/seller/products", formData, {
 					headers: { "Content-Type": "multipart/form-data" },
-					timeout: 60000, // 60 seconds
 				});
 			}
 
-			showToast(
-				editingProductId.value ? "Product updated" : "Product created",
-				"success"
-			);
-
-			// refresh list
-			await fetchProducts();
-			closeModal();
+			if (res?.data?.success || res?.data?.data) {
+				showToast(
+					editingProductId.value ? "Product updated!" : "Product created!",
+					"success"
+				);
+				closeModal();
+				await fetchProducts();
+			} else {
+				modalError.value = res?.data?.message || "Save failed";
+			}
 		} catch (err) {
-			console.error("Save product failed - full error:", err);
-			const status = err?.response?.status;
-			const data = err?.response?.data;
-			Object.keys(formErrors).forEach((k) => (formErrors[k] = ""));
-			formErrors.images = "";
-
-			if (data && data.errors && typeof data.errors === "object") {
-				if (data.errors["images.0"] && Array.isArray(data.errors["images.0"]))
-					formErrors.images = data.errors["images.0"].join(", ");
-				else if (data.errors["images"] && Array.isArray(data.errors["images"]))
-					formErrors.images = data.errors["images"].join(", ");
-				else
-					Object.entries(data.errors).forEach(([field, val]) => {
-						const mapped = field.replace(/\[\]$/, "");
-						if (mapped in formErrors)
-							formErrors[mapped] = Array.isArray(val)
-								? val.join(", ")
-								: String(val);
-					});
-				if (data.errors["category_id"]) {
-					formErrors.category_id = Array.isArray(data.errors["category_id"])
-						? data.errors["category_id"].join(", ")
-						: String(data.errors["category_id"]);
-				}
-				modalError.value = `Validation failed (${status}). See highlighted fields.`;
-			} else if (data && data.message)
-				modalError.value = `${data.message} (${status ?? ""})`;
-			else modalError.value = err?.message || "Failed to save product";
+			console.error("saveProduct error:", err?.response?.data || err);
+			const errors = err?.response?.data?.errors;
+			if (errors) {
+				modalError.value = Object.values(errors).flat().join(", ");
+			} else {
+				modalError.value = err?.response?.data?.message || "Server error";
+			}
 		} finally {
 			savingProduct.value = false;
 		}

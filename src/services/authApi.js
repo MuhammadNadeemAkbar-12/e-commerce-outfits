@@ -8,20 +8,38 @@ class AuthService {
         email: credentials.email,
         password: credentials.password
       })
-      
-      // Handle the actual API response structure
-      const userData = response.data.data.user
-      const roles = response.data.data.roles
-      
+
+      // Debug: log actual response so we can see structure in browser console
+      console.log('[authApi] login raw response:', JSON.stringify(response.data))
+
+      // Handle multiple possible response structures from backend
+      const data = response.data
+      // Support: { data: { user, token, roles } }  OR  { user, token, roles/role }
+      const payload = data?.data || data
+      const userData = payload?.user || payload
+      // Support roles array OR single role string
+      const rolesRaw = payload?.roles ?? payload?.role
+      const roles = Array.isArray(rolesRaw)
+        ? rolesRaw.map(r => (typeof r === 'object' ? r?.name : r))
+        : rolesRaw ? [typeof rolesRaw === 'object' ? rolesRaw?.name : rolesRaw] : []
+
+      const token = payload?.token || payload?.access_token || data?.token
+
+      if (!token) {
+        console.error('[authApi] No token in response. payload:', payload)
+        return { success: false, message: 'No token received from server' }
+      }
+
+      const role = roles[0] || null
+      console.log('[authApi] Parsed → role:', role, '| token:', token ? 'present' : 'missing')
+
       return {
         success: true,
-        user: {
-          ...userData,
-          role: roles[0] // Extract the first role from roles array
-        },
-        token: response.data.data.token
+        user: { ...userData, role },
+        token
       }
     } catch (error) {
+      console.error('[authApi] login error:', error.response?.data || error.message)
       return {
         success: false,
         message: error.response?.data?.message || 'Login failed'

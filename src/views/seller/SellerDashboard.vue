@@ -8,11 +8,10 @@
         <h1
           class="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900"
         >
-          Seller Dashboard
+          Manager Dashboard
         </h1>
         <p class="text-sm text-slate-500 mt-1 max-w-2xl">
-          Products, approvals, stock alerts & revenue — frontend only, backend
-          unchanged.
+          Products, stock alerts, invoices & revenue overview
         </p>
       </div>
 
@@ -220,6 +219,63 @@
       </div>
     </section>
 
+    <!-- Charts + Recent Transactions -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
+      <div class="bg-white rounded-2xl shadow-md overflow-hidden">
+        <div class="px-6 py-4 border-b">
+          <h2 class="text-lg font-semibold">Stock In/Out (Last 7 Days)</h2>
+          <div class="text-sm text-slate-500">Movement trend by day</div>
+        </div>
+        <div class="p-5">
+          <div class="grid grid-cols-7 gap-2 items-end h-44">
+            <div v-for="(label, idx) in stats.charts.labels" :key="label" class="flex flex-col items-center gap-2">
+              <div class="w-full flex items-end justify-center gap-1 h-32">
+                <div
+                  class="w-3 bg-emerald-400 rounded-t"
+                  :style="{ height: normalizeBar(stats.charts.stock_in_last_7_days[idx] || 0, maxStockBar) + 'px' }"
+                  :title="'In: ' + (stats.charts.stock_in_last_7_days[idx] || 0)"
+                />
+                <div
+                  class="w-3 bg-rose-400 rounded-t"
+                  :style="{ height: normalizeBar(stats.charts.stock_out_last_7_days[idx] || 0, maxStockBar) + 'px' }"
+                  :title="'Out: ' + (stats.charts.stock_out_last_7_days[idx] || 0)"
+                />
+              </div>
+              <div class="text-[11px] text-slate-500">{{ label }}</div>
+            </div>
+          </div>
+          <div class="mt-3 text-xs text-slate-500 flex items-center gap-4">
+            <span class="inline-flex items-center gap-1"><span class="w-2 h-2 bg-emerald-400 rounded-full"></span>Stock In</span>
+            <span class="inline-flex items-center gap-1"><span class="w-2 h-2 bg-rose-400 rounded-full"></span>Stock Out</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-md overflow-hidden">
+        <div class="px-6 py-4 border-b">
+          <h2 class="text-lg font-semibold">Recent Transactions</h2>
+          <div class="text-sm text-slate-500">Latest invoices, returns and stock actions</div>
+        </div>
+        <div class="p-2">
+          <div v-if="!stats.recent_transactions.length" class="text-sm text-slate-400 text-center py-8">No recent transactions.</div>
+          <div v-else class="divide-y divide-slate-100">
+            <div v-for="tx in stats.recent_transactions" :key="`${tx.type}-${tx.id}`" class="px-4 py-3 flex items-start justify-between gap-3">
+              <div>
+                <div class="text-sm font-medium text-slate-800">{{ tx.title }}</div>
+                <div class="text-xs text-slate-500 capitalize">{{ tx.type.replace('_', ' ') }} · {{ tx.status }}</div>
+              </div>
+              <div class="text-right">
+                <div class="text-sm font-semibold" :class="tx.type === 'sale_return' ? 'text-amber-700' : 'text-slate-800'">
+                  {{ tx.type === 'stock_movement' ? tx.amount : formatCurrency(tx.amount) }}
+                </div>
+                <div class="text-xs text-slate-400">{{ formatDate(tx.timestamp) }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Low-stock table -->
     <section class="mb-6">
       <div class="bg-white rounded-2xl shadow-md overflow-hidden">
@@ -315,6 +371,8 @@ const fetchedAt = ref("");
 const stats = ref({
   products: { total: 0, approved: 0, pending: 0, low_stock_list: [] },
   orders: { orders_count: 0, revenue_total: 0, revenue_this_month: 0 },
+  charts: { labels: [], sales_last_7_days: [], stock_in_last_7_days: [], stock_out_last_7_days: [] },
+  recent_transactions: [],
   insights: { top_products: [] },
 });
 
@@ -364,13 +422,8 @@ const displayFetchedAt = computed(() => {
 
 // simple mock sparkline points (non-critical)
 const sparklinePoints = computed(() => {
-  const base = Number(stats.value.orders.revenue_this_month || 0) || 0;
-  const values = new Array(12)
-    .fill(0)
-    .map(
-      (_, i) =>
-        base * (0.4 + 0.1 * Math.sin(i / 1.7) + (Math.random() - 0.5) * 0.08)
-    );
+  const values = (stats.value.charts?.sales_last_7_days || []).map((v) => Number(v || 0));
+  if (!values.length) return "";
   const max = Math.max(...values, 1);
   const step = 120 / (values.length - 1);
   return values
@@ -390,6 +443,23 @@ function formatCurrency(n) {
   } catch {
     return n;
   }
+}
+
+function formatDate(d) {
+  if (!d) return "—";
+  return new Date(d).toLocaleString();
+}
+
+const maxStockBar = computed(() => {
+  const a = stats.value.charts?.stock_in_last_7_days || [];
+  const b = stats.value.charts?.stock_out_last_7_days || [];
+  return Math.max(...a, ...b, 1);
+});
+
+function normalizeBar(value, max) {
+  const n = Number(value || 0);
+  if (max <= 0 || n <= 0) return 0;
+  return Math.max(6, Math.round((n / max) * 120));
 }
 
 async function fetchDashboardStats() {
@@ -431,6 +501,17 @@ async function fetchDashboardStats() {
     if (payload?.insights) {
       stats.value.insights.top_products = payload.insights.top_products ?? [];
     }
+
+    if (payload?.charts) {
+      stats.value.charts.labels = payload.charts.labels ?? [];
+      stats.value.charts.sales_last_7_days = payload.charts.sales_last_7_days ?? [];
+      stats.value.charts.stock_in_last_7_days = payload.charts.stock_in_last_7_days ?? [];
+      stats.value.charts.stock_out_last_7_days = payload.charts.stock_out_last_7_days ?? [];
+    }
+
+    stats.value.recent_transactions = Array.isArray(payload?.recent_transactions)
+      ? payload.recent_transactions
+      : [];
 
     fetchedAt.value = d?.meta?.generated_at ?? new Date().toISOString();
 
