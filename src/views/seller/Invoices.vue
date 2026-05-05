@@ -1,29 +1,73 @@
 <template>
-  <div class="p-6 max-w-7xl mx-auto">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-      <div>
-        <h1 class="text-2xl font-bold text-slate-900">Sales Invoices</h1>
-        <p class="text-sm text-slate-500 mt-1">Manage and view all sales invoices</p>
-      </div>
-      <router-link to="/seller/invoices/create">
-        <q-btn unelevated color="primary" icon="add" label="New Invoice" />
-      </router-link>
-    </div>
+  <div class="invoice-page">
+    <div class="invoice-shell p-4 sm:p-6 max-w-7xl mx-auto">
+      <!-- Header -->
+      <section class="hero-panel mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 class="hero-title">Sales Invoices</h1>
+            <p class="hero-subtitle">Track, filter and close billing records.</p>
+          </div>
+          <router-link to="/seller/invoices/create">
+            <q-btn unelevated color="primary" icon="add" label="New Invoice" class="hero-btn" />
+          </router-link>
+        </div>
+      </section>
 
-    <!-- Filters -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <!-- KPI row -->
+      <section class="kpi-grid mb-5">
+        <article class="kpi-card">
+          <p class="kpi-label">Visible Invoices</p>
+          <p class="kpi-value">{{ pageStats.total }}</p>
+        </article>
+        <article class="kpi-card">
+          <p class="kpi-label">Paid</p>
+          <p class="kpi-value text-emerald-700">{{ pageStats.paid }}</p>
+        </article>
+        <article class="kpi-card">
+          <p class="kpi-label">Pending</p>
+          <p class="kpi-value text-amber-700">{{ pageStats.pending }}</p>
+        </article>
+        <article class="kpi-card">
+          <p class="kpi-label">Page Total</p>
+          <p class="kpi-value">PKR {{ formatAmount(pageStats.value) }}</p>
+        </article>
+      </section>
+
+      <!-- Filters -->
+      <section class="filter-panel mb-5">
+        <div class="filter-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
       <input
         v-model="filters.search"
-        @input="fetchInvoices"
+        @input="applyFilters"
         type="text"
-        placeholder="Search invoice number..."
-        class="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        placeholder="Search invoice/customer..."
+        class="input-polish"
+      />
+      <input
+        v-model.number="filters.product_id"
+        @input="applyFilters"
+        type="number"
+        min="1"
+        placeholder="Product ID"
+        class="input-polish"
+      />
+      <input
+        v-model="filters.from_date"
+        @change="applyFilters"
+        type="date"
+        class="input-polish"
+      />
+      <input
+        v-model="filters.to_date"
+        @change="applyFilters"
+        type="date"
+        class="input-polish"
       />
       <select
         v-model="filters.payment_status"
-        @change="fetchInvoices"
-        class="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        @change="applyFilters"
+        class="input-polish"
       >
         <option value="">All Payment Status</option>
         <option value="pending">Pending</option>
@@ -33,15 +77,17 @@
       </select>
       <select
         v-model="filters.status"
-        @change="fetchInvoices"
-        class="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        @change="applyFilters"
+        class="input-polish"
       >
         <option value="">All Status</option>
         <option value="draft">Draft</option>
         <option value="finalized">Finalized</option>
         <option value="cancelled">Cancelled</option>
       </select>
-    </div>
+      <q-btn flat icon="restart_alt" label="Reset" @click="resetFilters" class="justify-self-start reset-btn" />
+        </div>
+      </section>
 
     <!-- Loading -->
     <div v-if="loading" class="flex justify-center py-16">
@@ -49,23 +95,23 @@
     </div>
 
     <!-- Error -->
-    <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-center">
+    <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 text-center">
       {{ error }}
       <button @click="fetchInvoices" class="ml-2 underline font-medium">Retry</button>
     </div>
 
     <!-- Empty -->
-    <div v-else-if="!invoices.length" class="text-center py-16 text-slate-400">
+    <div v-else-if="!invoices.length" class="text-center py-16 text-slate-400 panel-muted rounded-2xl">
       <q-icon name="receipt_long" size="56px" class="mb-3 opacity-30" />
       <p class="text-lg font-medium">No invoices found</p>
       <p class="text-sm mt-1">Create your first invoice to get started</p>
     </div>
 
     <!-- Table -->
-    <div v-else class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div v-else class="ledger-card overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
-          <thead class="bg-slate-50 border-b border-slate-200">
+          <thead class="ledger-head border-b border-slate-200">
             <tr>
               <th class="text-left px-4 py-3 font-semibold text-slate-600">Invoice #</th>
               <th class="text-left px-4 py-3 font-semibold text-slate-600">Customer</th>
@@ -80,7 +126,7 @@
             <tr
               v-for="inv in invoices"
               :key="inv.id"
-              class="hover:bg-slate-50 transition-colors"
+              class="ledger-row transition-colors"
             >
               <td class="px-4 py-3 font-mono font-medium text-indigo-700">{{ inv.invoice_number }}</td>
               <td class="px-4 py-3 text-slate-700">{{ inv.customer?.name || '—' }}</td>
@@ -102,14 +148,20 @@
                 <div class="flex items-center justify-center gap-2">
                   <button
                     @click="viewInvoice(inv)"
-                    class="text-indigo-600 hover:text-indigo-800 font-medium text-xs"
+                    class="table-action"
                   >
                     View
                   </button>
                   <button
+                    @click="openPrint(inv)"
+                    class="table-action"
+                  >
+                    Print
+                  </button>
+                  <button
                     v-if="inv.payment_status !== 'paid'"
                     @click="markPaid(inv)"
-                    class="text-green-600 hover:text-green-800 font-medium text-xs"
+                    class="table-action table-action-ok"
                   >
                     Mark Paid
                   </button>
@@ -121,7 +173,7 @@
       </div>
 
       <!-- Pagination -->
-      <div v-if="pagination.last_page > 1" class="flex items-center justify-between px-4 py-3 border-t border-slate-100">
+      <div v-if="pagination.last_page > 1" class="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-white/80">
         <span class="text-sm text-slate-500">
           Page {{ pagination.current_page }} of {{ pagination.last_page }}
         </span>
@@ -144,7 +196,7 @@
 
     <!-- Invoice Detail Dialog -->
     <q-dialog v-model="showDetail" max-width="640px">
-      <q-card v-if="selectedInvoice" style="min-width: 560px">
+      <q-card v-if="selectedInvoice" class="dialog-polish" style="min-width: 560px">
         <q-card-section class="border-b">
           <div class="flex items-start justify-between">
             <div>
@@ -152,15 +204,15 @@
               <div class="text-sm text-slate-500 mt-1">{{ formatDate(selectedInvoice.invoice_date) }}</div>
             </div>
             <div class="flex items-center gap-2">
-              <q-btn flat icon="print" label="Print" @click="printInvoice" />
-              <q-btn flat icon="download" label="Download" @click="downloadInvoice" />
+              <q-btn flat icon="print" label="Print" @click="printInvoice" class="dialog-btn" />
+              <q-btn flat icon="download" label="Download" @click="downloadInvoice" class="dialog-btn" />
               <q-btn flat round icon="close" @click="showDetail = false" />
             </div>
           </div>
         </q-card-section>
 
         <q-card-section>
-          <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 text-sm">
             <div>
               <div class="text-slate-500">Customer</div>
               <div class="font-medium">{{ selectedInvoice.customer?.name || '—' }}</div>
@@ -172,7 +224,7 @@
           </div>
 
           <!-- Items -->
-          <table class="w-full text-sm mb-4">
+          <table class="w-full text-sm mb-4 rounded-xl overflow-hidden">
             <thead class="bg-slate-50">
               <tr>
                 <th class="text-left px-2 py-2 font-semibold text-slate-600">Product</th>
@@ -216,12 +268,16 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { computed, ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import invoiceApi from '@/services/invoiceApi'
+
+const router = useRouter()
 
 const invoices = ref([])
 const loading = ref(false)
@@ -231,6 +287,9 @@ const selectedInvoice = ref(null)
 
 const filters = reactive({
   search: '',
+  product_id: null,
+  from_date: '',
+  to_date: '',
   payment_status: '',
   status: '',
   page: 1,
@@ -243,11 +302,34 @@ const pagination = reactive({
   total: 0
 })
 
+const pageStats = computed(() => {
+  const paid = invoices.value.filter((i) => i.payment_status === 'paid').length
+  const pending = invoices.value.filter((i) => i.payment_status === 'pending').length
+  const value = invoices.value.reduce((sum, i) => sum + Number(i.grand_total || 0), 0)
+
+  return {
+    total: invoices.value.length,
+    paid,
+    pending,
+    value,
+  }
+})
+
 const fetchInvoices = async () => {
   loading.value = true
   error.value = null
   try {
-    const res = await invoiceApi.getInvoices({ ...filters })
+    const params = {
+      ...filters,
+      product_id: filters.product_id || undefined,
+      from_date: filters.from_date || undefined,
+      to_date: filters.to_date || undefined,
+      search: filters.search || undefined,
+      payment_status: filters.payment_status || undefined,
+      status: filters.status || undefined,
+    }
+
+    const res = await invoiceApi.getInvoices(params)
     const d = res.data?.data ?? res.data
     if (Array.isArray(d)) {
       invoices.value = d
@@ -266,6 +348,22 @@ const fetchInvoices = async () => {
 
 const changePage = (page) => {
   filters.page = page
+  fetchInvoices()
+}
+
+const applyFilters = () => {
+  filters.page = 1
+  fetchInvoices()
+}
+
+const resetFilters = () => {
+  filters.search = ''
+  filters.product_id = null
+  filters.from_date = ''
+  filters.to_date = ''
+  filters.payment_status = ''
+  filters.status = ''
+  filters.page = 1
   fetchInvoices()
 }
 
@@ -290,19 +388,21 @@ const markPaid = async (inv) => {
 }
 
 const printInvoice = () => {
-  window.print()
+  if (!selectedInvoice.value) return
+  const id = selectedInvoice.value.id
+  showDetail.value = false
+  router.push(`/seller/invoices/${id}/print`)
 }
 
 const downloadInvoice = () => {
   if (!selectedInvoice.value) return
-  const payload = JSON.stringify(selectedInvoice.value, null, 2)
-  const blob = new Blob([payload], { type: 'application/json;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `${selectedInvoice.value.invoice_number || 'invoice'}.json`
-  link.click()
-  URL.revokeObjectURL(url)
+  const id = selectedInvoice.value.id
+  showDetail.value = false
+  router.push(`/seller/invoices/${id}/print`)
+}
+
+const openPrint = (inv) => {
+  router.push(`/seller/invoices/${inv.id}/print`)
 }
 
 const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'
@@ -323,3 +423,155 @@ const statusBadge = (s) => ({
 
 onMounted(fetchInvoices)
 </script>
+
+<style scoped>
+.invoice-page {
+  --ink-1: #0f172a;
+  --ink-2: #334155;
+  min-height: 100%;
+  background: #f8fafc;
+}
+
+.hero-panel {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  padding: 22px 24px;
+}
+
+.hero-title {
+  margin: 0 0 4px;
+  color: #0f172a;
+  font-size: 1.65rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.hero-subtitle {
+  color: #64748b;
+  font-size: 0.88rem;
+}
+
+.hero-btn {
+  border-radius: 10px;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.kpi-card {
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 16px;
+  padding: 0.8rem 0.95rem;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+}
+
+.kpi-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+}
+
+.kpi-value {
+  margin-top: 0.2rem;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--ink-1);
+}
+
+.filter-panel {
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+  padding: 0.9rem;
+}
+
+.input-polish {
+  width: 100%;
+  border-radius: 11px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  padding: 0.56rem 0.72rem;
+  font-size: 0.84rem;
+  color: #1e293b;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input-polish:focus {
+  border-color: #0e7490;
+  box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.14);
+}
+
+.reset-btn {
+  color: #0e7490;
+  border-radius: 10px;
+}
+
+.panel-muted {
+  border: 1px dashed #cbd5e1;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.ledger-card {
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(255, 255, 255, 0.93);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+}
+
+.ledger-head {
+  background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
+}
+
+.ledger-row:nth-child(even) {
+  background: rgba(248, 250, 252, 0.62);
+}
+
+.ledger-row:hover {
+  background: rgba(224, 242, 254, 0.35);
+}
+
+.table-action {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #0e7490;
+}
+
+.table-action-ok {
+  color: #047857;
+}
+
+.dialog-polish {
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.dialog-btn {
+  color: #0e7490;
+}
+
+@media (min-width: 640px) {
+  .hero-panel {
+    padding: 1.2rem 1.35rem;
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .kpi-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+</style>

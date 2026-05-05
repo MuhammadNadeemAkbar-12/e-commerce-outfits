@@ -175,6 +175,17 @@
     @editOrder="handleEditOrder"
   />
 
+  <!-- Bulk Status Confirm Dialog -->
+  <ConfirmDialog
+    v-model="showBulkConfirm"
+    title="Update Order Status"
+    :message="`Update ${selectedOrders.length} order(s) to &quot;${bulkStatus}&quot; status?`"
+    type="warning"
+    confirm-label="Update"
+    :loading="confirmLoading"
+    @confirm="executeBulkStatusUpdate"
+  />
+
   </div>
 </template>
 
@@ -183,6 +194,7 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { useOrderStore } from '@/stores/order'
 import { useQuasar } from 'quasar'
 import OrderDetailModal from '@/components/admin/OrderDetailModal.vue'
+import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
 
 const $q = useQuasar()
 const orderStore = useOrderStore()
@@ -193,6 +205,8 @@ const filterType = ref('all')
 const showOrderModal = ref(false)
 const selectedOrderId = ref(null)
 const openInEditMode = ref(false)
+const showBulkConfirm = ref(false)
+const confirmLoading = ref(false)
 
 const statusOptions = ['all', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded', 'disputed']
 const typeOptions = ['all', 'customer', 'seller']
@@ -237,33 +251,33 @@ const filteredOrders = computed(() => {
   return filtered
 })
 
-const updateBulkStatus = async () => {
+const updateBulkStatus = () => {
   if (selectedOrders.value.length === 0 || !bulkStatus.value) return
-  
-  $q.dialog({
-    title: 'Confirm Status Update',
-    message: `Are you sure you want to update ${selectedOrders.value.length} order(s) to "${bulkStatus.value}" status?`,
-    cancel: true,
-    persistent: true
-  }).onOk(async () => {
-    try {
-      const orderIds = selectedOrders.value.map(order => order.id)
-      const response = await orderStore.bulkUpdateOrders(orderIds, { status: bulkStatus.value })
-      
-      if (response.success) {
-        $q.notify({
-          type: 'positive',
-          message: `${orderIds.length} order(s) updated to ${bulkStatus.value} successfully`,
-          position: 'top'
-        })
-      }
-      selectedOrders.value = []
-      bulkStatus.value = ''
-      await fetchOrders() // always refresh
-    } catch (error) {
-      await fetchOrders() // refresh silently
+  showBulkConfirm.value = true
+}
+
+const executeBulkStatusUpdate = async () => {
+  confirmLoading.value = true
+  try {
+    const orderIds = selectedOrders.value.map(order => order.id)
+    const response = await orderStore.bulkUpdateOrders(orderIds, { status: bulkStatus.value })
+    
+    if (response.success) {
+      $q.notify({
+        type: 'positive',
+        message: `${orderIds.length} order(s) updated to ${bulkStatus.value} successfully`,
+        position: 'top'
+      })
     }
-  })
+    selectedOrders.value = []
+    bulkStatus.value = ''
+    await fetchOrders()
+  } catch (error) {
+    await fetchOrders()
+  } finally {
+    confirmLoading.value = false
+    showBulkConfirm.value = false
+  }
 }
 
 const clearSelection = () => {

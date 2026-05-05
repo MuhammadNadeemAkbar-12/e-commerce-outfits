@@ -127,6 +127,31 @@
 
               <!-- Buyer Registration with OTP -->
               <div v-if="role === 'buyer'" class="space-y-6">
+                <!-- SUCCESS SCREEN -->
+                <div v-if="buyer.success" class="text-center py-8 space-y-6">
+                  <div class="w-20 h-20 mx-auto bg-green-100 rounded-full flex items-center justify-center">
+                    <svg class="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 class="text-2xl font-bold text-gray-800 mb-2">Account Created!</h4>
+                    <p class="text-gray-600">Welcome, <strong>{{ buyer.name }}</strong>! Your account is verified.</p>
+                    <p class="text-sm text-gray-500 mt-2">Redirecting you to the homepage...</p>
+                  </div>
+                  <div class="flex justify-center">
+                    <div class="w-8 h-8">
+                      <svg class="animate-spin text-indigo-600 w-8 h-8" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <button @click="router.push('/')" class="text-indigo-600 font-semibold hover:underline text-sm">Go now →</button>
+                </div>
+
+                <!-- FORMS (hidden when success) -->
+                <div v-if="!buyer.success">
                 <!-- Progress Steps -->
                 <div class="flex items-center justify-center space-x-4 mb-8">
                   <div class="flex items-center space-x-2">
@@ -432,10 +457,39 @@
                     </div>
                   </form>
                 </div>
+                </div><!-- end v-if="!buyer.success" -->
               </div>
 
               <!-- Seller Registration -->
               <div v-else class="space-y-6">
+
+                <!-- SELLER SUCCESS / PENDING APPROVAL SCREEN -->
+                <div v-if="seller.registered" class="text-center py-8 space-y-6">
+                  <div class="w-20 h-20 mx-auto bg-amber-100 rounded-full flex items-center justify-center">
+                    <svg class="w-10 h-10 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 class="text-2xl font-bold text-gray-800 mb-2">Application Submitted!</h4>
+                    <p class="text-gray-700 font-medium">Your seller account is <span class="text-amber-600">pending admin approval</span>.</p>
+                    <p class="text-gray-500 text-sm mt-3 max-w-sm mx-auto">Once approved by an admin, you will be able to log in and start listing your products.</p>
+                  </div>
+                  <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 max-w-sm mx-auto text-left space-y-2">
+                    <div class="flex items-center space-x-2 text-sm text-amber-800">
+                      <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                      <span>Registered as: <strong>{{ seller.email }}</strong></span>
+                    </div>
+                    <div class="flex items-center space-x-2 text-sm text-amber-800">
+                      <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                      <span>You'll receive access once approved</span>
+                    </div>
+                  </div>
+                  <router-link to="/loginuser" class="inline-block text-indigo-600 font-semibold hover:underline text-sm">Go to Login →</router-link>
+                </div>
+
+                <!-- SELLER FORM (hidden when registered) -->
+                <div v-if="!seller.registered">
                 <div class="text-center mb-6">
                   <div class="w-16 h-16 mx-auto mb-4 bg-purple-100 rounded-full flex items-center justify-center">
                     <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -648,6 +702,7 @@
                     </div>
                   </button>
                 </form>
+                </div><!-- end v-if="!seller.registered" -->
               </div>
 
               <!-- Error Message -->
@@ -680,10 +735,12 @@
 import { ref, computed, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import axios from "@/api/axios";
+import { useAuthStore } from "@/stores/auth";
 
 const router = useRouter();
 const formRef = ref(null);
 const errorMessage = ref("");
+const authStore = useAuthStore();
 
 // Role management
 const role = ref("buyer");
@@ -720,6 +777,7 @@ const buyer = ref({
   step: 1,
   submitted: false,
   loading: false,
+  success: false,
   name: "",
   email: "",
   phone: "",
@@ -809,10 +867,27 @@ async function verifyBuyerOtp() {
     
     if (res?.data?.success) {
       errorMessage.value = "";
-      // Show success message and redirect
-      setTimeout(() => {
-        router.push("/loginuser");
-      }, 2000);
+      // Auto-login: store token + user in auth store and localStorage
+      const userData = res.data.data?.user;
+      const token = res.data.data?.token;
+      if (token && userData) {
+        const userWithRole = { ...userData, role: "salesman" };
+        authStore.user = userWithRole;
+        authStore.token = token;
+        authStore.isAuthenticated = true;
+        try {
+          localStorage.setItem("token", token);
+          localStorage.setItem("user", JSON.stringify(userWithRole));
+          localStorage.setItem("role", "salesman");
+        } catch (_) {}
+        // Redirect to home after short delay
+        buyer.value.success = true;
+        setTimeout(() => router.push("/"), 2000);
+      } else {
+        // No token returned — still success, go to login
+        buyer.value.success = true;
+        setTimeout(() => router.push("/loginuser"), 2000);
+      }
     } else {
       errorMessage.value = res?.data?.message || "OTP incorrect. Please try again.";
     }
@@ -855,6 +930,7 @@ function resetBuyer() {
     step: 1,
     submitted: false,
     loading: false,
+    success: false,
     name: "",
     email: "",
     phone: "",
@@ -878,6 +954,7 @@ function resetBuyer() {
 const seller = ref({
   submitted: false,
   loading: false,
+  registered: false,
   name: "",
   email: "",
   phone: "",
@@ -937,10 +1014,7 @@ async function handleSellerRegister() {
     const response = await axios.post("/sellers/register", payload);
     if (response?.data?.success) {
       errorMessage.value = "";
-      // Show success and redirect
-      setTimeout(() => {
-        router.push("/loginuser");
-      }, 2000);
+      seller.value.registered = true;
     } else {
       errorMessage.value = response?.data?.message || "Registration failed. Please try again.";
     }
@@ -956,6 +1030,7 @@ function resetSeller() {
   seller.value = {
     submitted: false,
     loading: false,
+    registered: false,
     name: "",
     email: "",
     phone: "",

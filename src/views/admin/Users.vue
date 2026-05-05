@@ -234,25 +234,15 @@
     </q-card>
 
     <!-- Confirmation Dialog -->
-    <q-dialog v-model="showConfirmDialog" persistent>
-      <q-card style="min-width: 350px" class="dark:bg-gray-800 dark:border-gray-700">
-        <q-card-section class="row items-center">
-          <q-avatar :icon="confirmIcon" :color="confirmColor" text-color="white" />
-          <span class="q-ml-sm dark:text-white">{{ confirmMessage }}</span>
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn flat label="Cancel" color="primary" v-close-popup class="dark:text-white" />
-          <q-btn 
-            flat 
-            :label="confirmAction" 
-            :color="confirmColor" 
-            @click="confirmStatusChange" 
-            v-close-popup 
-          />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
+    <ConfirmDialog
+      v-model="showConfirmDialog"
+      :title="newStatus === 'blocked' ? 'Block User' : 'Unblock User'"
+      :message="confirmMessage"
+      :confirm-label="newStatus === 'blocked' ? 'Block' : 'Unblock'"
+      :type="newStatus === 'blocked' ? 'danger' : 'success'"
+      :loading="confirmLoading"
+      @confirm="confirmStatusChange"
+    />
 
     <!-- User Details Dialog -->
     <q-dialog v-model="showUserDetails" persistent>
@@ -359,6 +349,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useUserStore } from '@/stores/user'
+import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
 
 const $q = useQuasar()
 const userStore = useUserStore()
@@ -375,6 +366,7 @@ const itemsPerPage = ref(10)
 
 // Dialog states
 const showConfirmDialog = ref(false)
+const confirmLoading = ref(false)
 const showUserDetails = ref(false)
 const selectedUser = ref(null)
 const newStatus = ref('')
@@ -538,7 +530,7 @@ const toggleUserStatus = (user) => {
 
 const confirmStatusChange = async () => {
   if (!selectedUser.value) return
-  
+  confirmLoading.value = true
   try {
     const result = await userStore.updateUserStatus(selectedUser.value.id, newStatus.value)
     
@@ -566,6 +558,9 @@ const confirmStatusChange = async () => {
       message: error.message || 'Failed to update user status',
       position: 'top'
     })
+  } finally {
+    confirmLoading.value = false
+    showConfirmDialog.value = false
   }
 }
 

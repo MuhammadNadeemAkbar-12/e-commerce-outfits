@@ -1,0 +1,231 @@
+/*
+ * Seller Panel – Global Dark Mode Overrides
+ * Applied when .dark class is on the layout root (SellerLayout.vue)
+ * These target all seller page CSS classes regardless of scoped hash
+ */
+
+/* ── Page backgrounds ──────────────────────────────────── */
+.dark .invoice-page,
+.dark .order-management-container,
+.dark .seller-dashboard,
+.dark .reports-page,
+.dark .customers-page,
+.dark .audit-page,
+.dark .suppliers-page,
+.dark .returns-page,
+.dark .stock-ledger-page,
+.dark .update-stock-page,
+.dark .product-form-page {
+  background: #0f172a !important;
+}
+
+/* ── White card panels ─────────────────────────────────── */
+.dark .hero-panel,
+.dark .header-section,
+.dark .filter-panel,
+.dark .ledger-card,
+.dark .kpi-card,
+.dark .stat-card,
+.dark .summary-card,
+.dark .card-kpi,
+.dark .filters-section,
+.dark .order-card,
+.dark .order-item-card,
+.dark .content-card,
+.dark .table-wrapper,
+.dark .q-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+/* ── Text overrides ────────────────────────────────────── */
+.dark .hero-title,
+.dark .main-title,
+.dark h1, .dark h2, .dark h3, .dark h4,
+.dark .stat-number,
+.dark .kpi-value,
+.dark .value,
+.dark .summary-value,
+.dark .text-slate-900,
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .text-slate-800 {
+  color: #f1f5f9 !important;
+}
+
+.dark .hero-subtitle,
+.dark .subtitle,
+.dark .kpi-label,
+.dark .stat-label,
+.dark .label,
+.dark .sub,
+.dark .muted,
+.dark .text-slate-500,
+.dark .text-slate-400,
+.dark .text-gray-500,
+.dark .text-gray-600,
+.dark .text-slate-600 {
+  color: #94a3b8 !important;
+}
+
+/* ── Inputs ────────────────────────────────────────────── */
+.dark .input-polish,
+.dark .input-base,
+.dark input[type="text"],
+.dark input[type="number"],
+.dark input[type="email"],
+.dark input[type="date"],
+.dark select,
+.dark textarea {
+  background: #0f172a !important;
+  border-color: #475569 !important;
+  color: #e2e8f0 !important;
+}
+.dark .input-polish:focus,
+.dark .input-base:focus,
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25) !important;
+}
+
+/* ── Tables ────────────────────────────────────────────── */
+.dark .ledger-head,
+.dark thead,
+.dark thead tr,
+.dark thead th {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-color: #334155 !important;
+}
+.dark tbody tr {
+  border-color: #334155 !important;
+}
+.dark tbody td {
+  color: #e2e8f0 !important;
+  border-color: #334155 !important;
+}
+.dark .ledger-row:nth-child(even) {
+  background: rgba(51, 65, 85, 0.4) !important;
+}
+.dark .ledger-row:hover {
+  background: rgba(99, 102, 241, 0.1) !important;
+}
+.dark .bg-white {
+  background-color: #1e293b !important;
+}
+.dark .bg-slate-50,
+.dark .bg-gray-50 {
+  background-color: #0f172a !important;
+}
+.dark .bg-slate-100,
+.dark .bg-gray-100 {
+  background-color: #1e293b !important;
+}
+
+/* ── Borders ───────────────────────────────────────────── */
+.dark .border-b,
+.dark .border,
+.dark .divide-y > * {
+  border-color: #334155 !important;
+}
+.dark .border-slate-200,
+.dark .border-gray-200,
+.dark .border-slate-300 {
+  border-color: #475569 !important;
+}
+
+/* ── OrderManagement specific ─────────────────────────── */
+.dark .action-group {
+  background: #334155 !important;
+  border-color: #475569 !important;
+}
+.dark .action-btn {
+  color: #94a3b8 !important;
+}
+.dark .action-btn:hover {
+  background: #475569 !important;
+}
+.dark .stat-card {
+  background: #0f172a !important;
+}
+.dark .stat-card:hover {
+  background: #334155 !important;
+}
+
+/* ── Invoices specific ─────────────────────────────────── */
+.dark .invoice-page {
+  --ink-1: #f1f5f9;
+  --ink-2: #e2e8f0;
+}
+.dark .panel-muted {
+  background: rgba(30, 41, 59, 0.72) !important;
+  border-color: #475569 !important;
+}
+.dark .table-action {
+  color: #38bdf8 !important;
+}
+.dark .dialog-polish {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+}
+
+/* ── Badge overrides ───────────────────────────────────── */
+.dark .badge {
+  background: #334155 !important;
+  color: #e2e8f0 !important;
+}
+.dark .badge.success {
+  background: #14532d !important;
+  color: #bbf7d0 !important;
+}
+.dark .badge.warn {
+  background: #451a03 !important;
+  color: #fde68a !important;
+}
+
+/* ── Quasar overrides inside seller dark ──────────────── */
+.dark .q-toolbar {
+  background: inherit;
+}
+.dark .q-table__card {
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+.dark .q-table thead tr {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+}
+.dark .q-table tbody tr:hover {
+  background: rgba(99,102,241,0.08) !important;
+}
+.dark .q-table th,
+.dark .q-table td {
+  border-color: #334155 !important;
+}
+.dark .q-separator {
+  background: #334155 !important;
+}
+.dark .q-item {
+  color: #e2e8f0 !important;
+}
+.dark .q-item__label--caption {
+  color: #94a3b8 !important;
+}
+.dark .q-field__control {
+  background: #0f172a !important;
+  color: #e2e8f0 !important;
+}
+.dark .q-field__label {
+  color: #94a3b8 !important;
+}
+.dark .q-field__native,
+.dark .q-field__input {
+  color: #e2e8f0 !important;
+}
+.dark .q-chip {
+  background: #334155 !important;
+  color: #e2e8f0 !important;
+}

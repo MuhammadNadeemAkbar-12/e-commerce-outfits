@@ -189,6 +189,17 @@
         </q-table>
       </q-card-section>
     </q-card>
+
+    <!-- Confirm Dialog -->
+    <ConfirmDialog
+      v-model="showConfirmDialog"
+      :title="confirmConfig.title"
+      :message="confirmConfig.message"
+      :type="confirmConfig.type"
+      :confirm-label="confirmConfig.confirmLabel"
+      :loading="confirmLoading"
+      @confirm="handleConfirm"
+    />
   </div>
 </template>
 
@@ -196,6 +207,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import adminApi from '@/services/adminApi'
+import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
 
 const $q = useQuasar()
 
@@ -213,6 +225,11 @@ const columns = [
 const selectedProducts = ref([])
 const products = ref([]) 
 const loading = ref(false)
+
+// Confirm dialog state
+const showConfirmDialog = ref(false)
+const confirmLoading = ref(false)
+const confirmConfig = ref({ title: '', message: '', type: 'danger', confirmLabel: 'Confirm', onConfirm: null })
 
 // Filter and search variables
 const searchQuery = ref('')
@@ -325,205 +342,140 @@ const getStatusText = (product) => {
   return 'Pending'
 }
 
-// Product management methods
-const approveProduct = async (product) => {
-  try {
-    const response = await adminApi.approveProduct(product.id)
-    if (response.success) {
-      $q.notify({
-        type: 'positive',
-        message: 'Product approved successfully',
-        position: 'top'
-      })
-      fetchProducts()
-    } else {
-      $q.notify({
-        type: 'negative',
-        message: response.message || 'Failed to approve product',
-        position: 'top'
-      })
+const approveProduct = (product) => {
+  confirmConfig.value = {
+    title: 'Approve Product',
+    message: `Approve "${product.name}"? It will be visible to customers.`,
+    type: 'success',
+    confirmLabel: 'Approve',
+    onConfirm: async () => {
+      const response = await adminApi.approveProduct(product.id)
+      if (response.success) {
+        $q.notify({ type: 'positive', message: 'Product approved successfully', position: 'top' })
+        fetchProducts()
+      } else {
+        $q.notify({ type: 'negative', message: response.message || 'Failed to approve product', position: 'top' })
+      }
     }
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Failed to approve product',
-      position: 'top'
-    })
   }
+  showConfirmDialog.value = true
 }
 
-const rejectProduct = async (product) => {
-  try {
-    const response = await adminApi.rejectProduct(product.id)
-    if (response.success) {
-      $q.notify({
-        type: 'positive',
-        message: 'Product rejected successfully',
-        position: 'top'
-      })
-      fetchProducts()
-    } else {
-      $q.notify({
-        type: 'negative',
-        message: response.message || 'Failed to reject product',
-        position: 'top'
-      })
+const rejectProduct = (product) => {
+  confirmConfig.value = {
+    title: 'Reject Product',
+    message: `Reject "${product.name}"? It will be hidden from customers.`,
+    type: 'warning',
+    confirmLabel: 'Reject',
+    onConfirm: async () => {
+      const response = await adminApi.rejectProduct(product.id)
+      if (response.success) {
+        $q.notify({ type: 'positive', message: 'Product rejected successfully', position: 'top' })
+        fetchProducts()
+      } else {
+        $q.notify({ type: 'negative', message: response.message || 'Failed to reject product', position: 'top' })
+      }
     }
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Failed to reject product',
-      position: 'top'
-    })
   }
+  showConfirmDialog.value = true
 }
 
-const deleteProduct = async (product) => {
-  $q.dialog({
-    title: 'Confirm Delete',
-    message: `Are you sure you want to delete "${product.name}"?`,
-    cancel: true,
-    persistent: true
-  }).onOk(async () => {
-    try {
+const deleteProduct = (product) => {
+  confirmConfig.value = {
+    title: 'Delete Product',
+    message: `Permanently delete "${product.name}"? This cannot be undone.`,
+    type: 'danger',
+    confirmLabel: 'Delete',
+    onConfirm: async () => {
       const response = await adminApi.deleteProduct(product.id)
       if (response.success) {
-        $q.notify({
-          type: 'positive',
-          message: 'Product deleted successfully',
-          position: 'top'
-        })
+        $q.notify({ type: 'positive', message: 'Product deleted successfully', position: 'top' })
         fetchProducts()
       } else {
-        $q.notify({
-          type: 'negative',
-          message: response.message || 'Failed to delete product',
-          position: 'top'
-        })
+        $q.notify({ type: 'negative', message: response.message || 'Failed to delete product', position: 'top' })
       }
-    } catch (error) {
-      $q.notify({
-        type: 'negative',
-        message: 'Failed to delete product',
-        position: 'top'
-      })
     }
-  })
+  }
+  showConfirmDialog.value = true
 }
 
-// Bulk action methods
-const approveSelected = async () => {
+const approveSelected = () => {
   if (selectedProducts.value.length === 0) return
-  
-  $q.dialog({
-    title: 'Confirm Approval',
-    message: `Are you sure you want to approve ${selectedProducts.value.length} product(s)?`,
-    cancel: true,
-    persistent: true
-  }).onOk(async () => {
-    try {
+  confirmConfig.value = {
+    title: 'Approve Selected',
+    message: `Approve ${selectedProducts.value.length} product(s)? They will be visible to customers.`,
+    type: 'success',
+    confirmLabel: 'Approve All',
+    onConfirm: async () => {
       const productIds = selectedProducts.value.map(p => p.id)
       const response = await adminApi.approveProductsBulk(productIds)
-      
       if (response.success) {
-        $q.notify({
-          type: 'positive',
-          message: `${productIds.length} product(s) approved successfully`,
-          position: 'top'
-        })
+        $q.notify({ type: 'positive', message: `${productIds.length} product(s) approved successfully`, position: 'top' })
         selectedProducts.value = []
         fetchProducts()
       } else {
-        $q.notify({
-          type: 'negative',
-          message: response.message || 'Failed to approve products',
-          position: 'top'
-        })
+        $q.notify({ type: 'negative', message: response.message || 'Failed to approve products', position: 'top' })
       }
-    } catch (error) {
-      $q.notify({
-        type: 'negative',
-        message: 'Failed to approve products',
-        position: 'top'
-      })
     }
-  })
+  }
+  showConfirmDialog.value = true
 }
 
-const rejectSelected = async () => {
+const rejectSelected = () => {
   if (selectedProducts.value.length === 0) return
-  
-  $q.dialog({
-    title: 'Confirm Rejection',
-    message: `Are you sure you want to reject ${selectedProducts.value.length} product(s)?`,
-    cancel: true,
-    persistent: true
-  }).onOk(async () => {
-    try {
+  confirmConfig.value = {
+    title: 'Reject Selected',
+    message: `Reject ${selectedProducts.value.length} product(s)? They will be hidden from customers.`,
+    type: 'warning',
+    confirmLabel: 'Reject All',
+    onConfirm: async () => {
       const productIds = selectedProducts.value.map(p => p.id)
       const response = await adminApi.rejectProductsBulk(productIds)
-      
       if (response.success) {
-        $q.notify({
-          type: 'positive',
-          message: `${productIds.length} product(s) rejected successfully`,
-          position: 'top'
-        })
+        $q.notify({ type: 'positive', message: `${productIds.length} product(s) rejected successfully`, position: 'top' })
         selectedProducts.value = []
         fetchProducts()
       } else {
-        $q.notify({
-          type: 'negative',
-          message: response.message || 'Failed to reject products',
-          position: 'top'
-        })
+        $q.notify({ type: 'negative', message: response.message || 'Failed to reject products', position: 'top' })
       }
-    } catch (error) {
-      $q.notify({
-        type: 'negative',
-        message: 'Failed to reject products',
-        position: 'top'
-      })
     }
-  })
+  }
+  showConfirmDialog.value = true
 }
 
-const deleteSelected = async () => {
+const deleteSelected = () => {
   if (selectedProducts.value.length === 0) return
-  
-  $q.dialog({
-    title: 'Confirm Delete',
-    message: `Are you sure you want to delete ${selectedProducts.value.length} product(s)?`,
-    cancel: true,
-    persistent: true
-  }).onOk(async () => {
-    try {
+  confirmConfig.value = {
+    title: 'Delete Selected',
+    message: `Permanently delete ${selectedProducts.value.length} product(s)? This cannot be undone.`,
+    type: 'danger',
+    confirmLabel: 'Delete All',
+    onConfirm: async () => {
       const productIds = selectedProducts.value.map(p => p.id)
       const response = await adminApi.deleteProductsBulk(productIds)
-      
       if (response.success) {
-        $q.notify({
-          type: 'positive',
-          message: `${productIds.length} product(s) deleted successfully`,
-          position: 'top'
-        })
+        $q.notify({ type: 'positive', message: `${productIds.length} product(s) deleted successfully`, position: 'top' })
         selectedProducts.value = []
         fetchProducts()
       } else {
-        $q.notify({
-          type: 'negative',
-          message: response.message || 'Failed to delete products',
-          position: 'top'
-        })
+        $q.notify({ type: 'negative', message: response.message || 'Failed to delete products', position: 'top' })
       }
-    } catch (error) {
-      $q.notify({
-        type: 'negative',
-        message: 'Failed to delete products',
-        position: 'top'
-      })
     }
-  })
+  }
+  showConfirmDialog.value = true
+}
+
+const handleConfirm = async () => {
+  if (!confirmConfig.value.onConfirm) return
+  confirmLoading.value = true
+  try {
+    await confirmConfig.value.onConfirm()
+  } catch (error) {
+    $q.notify({ type: 'negative', message: error.message || 'Action failed', position: 'top' })
+  } finally {
+    confirmLoading.value = false
+    showConfirmDialog.value = false
+  }
 }
 
 const clearSelection = () => {

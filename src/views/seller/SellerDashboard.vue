@@ -227,21 +227,23 @@
           <div class="text-sm text-slate-500">Movement trend by day</div>
         </div>
         <div class="p-5">
-          <div class="grid grid-cols-7 gap-2 items-end h-44">
-            <div v-for="(label, idx) in stats.charts.labels" :key="label" class="flex flex-col items-center gap-2">
-              <div class="w-full flex items-end justify-center gap-1 h-32">
-                <div
-                  class="w-3 bg-emerald-400 rounded-t"
-                  :style="{ height: normalizeBar(stats.charts.stock_in_last_7_days[idx] || 0, maxStockBar) + 'px' }"
-                  :title="'In: ' + (stats.charts.stock_in_last_7_days[idx] || 0)"
-                />
-                <div
-                  class="w-3 bg-rose-400 rounded-t"
-                  :style="{ height: normalizeBar(stats.charts.stock_out_last_7_days[idx] || 0, maxStockBar) + 'px' }"
-                  :title="'Out: ' + (stats.charts.stock_out_last_7_days[idx] || 0)"
-                />
+          <div class="overflow-x-auto">
+            <div class="grid grid-cols-7 gap-2 items-end h-44 min-w-[320px]">
+              <div v-for="(label, idx) in stats.charts.labels" :key="label" class="flex flex-col items-center gap-2">
+                <div class="w-full flex items-end justify-center gap-1 h-32">
+                  <div
+                    class="w-3 bg-emerald-400 rounded-t"
+                    :style="{ height: normalizeBar(stats.charts.stock_in_last_7_days[idx] || 0, maxStockBar) + 'px' }"
+                    :title="'In: ' + (stats.charts.stock_in_last_7_days[idx] || 0)"
+                  />
+                  <div
+                    class="w-3 bg-rose-400 rounded-t"
+                    :style="{ height: normalizeBar(stats.charts.stock_out_last_7_days[idx] || 0, maxStockBar) + 'px' }"
+                    :title="'Out: ' + (stats.charts.stock_out_last_7_days[idx] || 0)"
+                  />
+                </div>
+                <div class="text-[11px] text-slate-500">{{ label }}</div>
               </div>
-              <div class="text-[11px] text-slate-500">{{ label }}</div>
             </div>
           </div>
           <div class="mt-3 text-xs text-slate-500 flex items-center gap-4">
@@ -276,6 +278,24 @@
       </div>
     </section>
 
+    <!-- Sales Revenue Chart (Chart.js) -->
+    <section class="mb-6">
+      <div class="bg-white rounded-2xl shadow-md overflow-hidden">
+        <div class="px-6 py-4 border-b flex items-center justify-between">
+          <div>
+            <h2 class="text-lg font-semibold">Sales Revenue (Last 7 Days)</h2>
+            <div class="text-sm text-slate-500">Daily revenue &amp; order trend</div>
+          </div>
+          <q-btn dense flat label="Refresh" @click="refreshStats" />
+        </div>
+        <div class="p-5">
+          <div class="relative" style="height: 260px;">
+            <canvas ref="salesChartRef"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Low-stock table -->
     <section class="mb-6">
       <div class="bg-white rounded-2xl shadow-md overflow-hidden">
@@ -297,6 +317,7 @@
         </div>
 
         <div v-else>
+          <div class="overflow-x-auto">
           <table class="min-w-full table-fixed">
             <thead class="bg-slate-50">
               <tr>
@@ -345,6 +366,7 @@
               </tr>
             </tbody>
           </table>
+          </div><!-- end overflow-x-auto -->
         </div>
       </div>
     </section>
@@ -356,13 +378,96 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from "vue";
+import Chart from 'chart.js/auto';
 import axios from "@/api/axios";
 import { useRouter } from "vue-router";
 import { useQuasar } from "quasar";
 
 const $q = useQuasar();
 const router = useRouter();
+
+// Chart
+const salesChartRef = ref(null);
+let salesChartInstance = null;
+
+const destroySalesChart = () => {
+  if (salesChartInstance) {
+    salesChartInstance.destroy();
+    salesChartInstance = null;
+  }
+};
+
+const renderSalesChart = async () => {
+  await nextTick();
+  const ctx = salesChartRef.value?.getContext('2d');
+  if (!ctx) return;
+  destroySalesChart();
+  const labels = stats.value.charts?.labels || [];
+  const salesData = stats.value.charts?.sales_last_7_days || [];
+  salesChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          type: 'line',
+          label: 'Revenue (PKR)',
+          data: salesData,
+          borderColor: '#6366f1',
+          backgroundColor: 'rgba(99,102,241,0.12)',
+          borderWidth: 2,
+          pointBackgroundColor: '#6366f1',
+          pointRadius: 4,
+          tension: 0.4,
+          fill: true,
+          yAxisID: 'y',
+        },
+        {
+          type: 'bar',
+          label: 'Orders',
+          data: stats.value.charts?.orders_last_7_days || salesData.map(() => 0),
+          backgroundColor: 'rgba(16,185,129,0.18)',
+          borderColor: '#10b981',
+          borderWidth: 1.5,
+          borderRadius: 6,
+          yAxisID: 'y1',
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { font: { size: 12 } } },
+        tooltip: { callbacks: {
+          label: (ctx) => {
+            if (ctx.datasetIndex === 0) return ` Revenue: PKR ${Number(ctx.parsed.y || 0).toLocaleString('en-PK', { minimumFractionDigits: 0 })}`;
+            return ` Orders: ${ctx.parsed.y}`;
+          }
+        }},
+      },
+      scales: {
+        y: {
+          type: 'linear',
+          position: 'left',
+          ticks: { callback: (v) => 'PKR ' + Number(v).toLocaleString('en-PK', { maximumFractionDigits: 0 }) },
+          grid: { color: 'rgba(0,0,0,0.05)' },
+        },
+        y1: {
+          type: 'linear',
+          position: 'right',
+          grid: { drawOnChartArea: false },
+          ticks: { stepSize: 1 },
+        },
+        x: { grid: { display: false } },
+      },
+    },
+  });
+};
+
+onBeforeUnmount(destroySalesChart);
 
 const loading = ref(false);
 const error = ref("");
@@ -519,6 +624,7 @@ async function fetchDashboardStats() {
     animateNumber("total", stats.value.products.total);
     animateNumber("approved", stats.value.products.approved);
     animateNumber("pending", stats.value.products.pending);
+    renderSalesChart();
   } catch (err) {
     console.error("fetchDashboardStats", err);
     error.value =
@@ -577,11 +683,10 @@ watch(
   flex-direction: column;
   justify-content: space-between;
   box-shadow: 0 10px 28px rgba(8, 15, 30, 0.06);
-  transition: transform 0.16s ease, box-shadow 0.16s ease;
+  transition: box-shadow 0.16s ease;
 }
 .card-kpi:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 22px 44px rgba(8, 15, 30, 0.09);
+  box-shadow: 0 14px 32px rgba(8, 15, 30, 0.1);
 }
 .kpi-head {
   display: flex;
@@ -705,14 +810,89 @@ tbody td {
   animation: pulse 1.4s ease-in-out infinite;
 }
 @keyframes pulse {
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.6;
-  }
-  100% {
-    opacity: 1;
-  }
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+/* ── Dark Mode ──────────────────────────────────────────── */
+:global(.dark) .seller-dashboard {
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+}
+:global(.dark) .card-kpi {
+  background: #1e293b;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+:global(.dark) .kpi-head .label,
+:global(.dark) .sub,
+:global(.dark) .muted {
+  color: #94a3b8;
+}
+:global(.dark) .value,
+:global(.dark) .summary-value {
+  color: #f1f5f9;
+}
+:global(.dark) .badge {
+  background: #334155;
+  color: #e2e8f0;
+}
+:global(.dark) .badge.success {
+  background: #14532d;
+  color: #bbf7d0;
+}
+:global(.dark) .badge.warn {
+  background: #451a03;
+  color: #fde68a;
+}
+:global(.dark) .circle-indigo {
+  background: rgba(99,102,241,0.18);
+  color: #a5b4fc;
+}
+:global(.dark) .circle-emerald {
+  background: rgba(16,185,129,0.15);
+  color: #6ee7b7;
+}
+:global(.dark) .circle-amber {
+  background: rgba(245,158,11,0.15);
+  color: #fcd34d;
+}
+:global(.dark) .summary-card {
+  background: #1e293b;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+}
+:global(.dark) .summary-label,
+:global(.dark) .summary-sub {
+  color: #94a3b8;
+}
+:global(.dark) thead th {
+  color: #94a3b8;
+}
+:global(.dark) tbody td {
+  border-color: #334155;
+  color: #e2e8f0;
+}
+:global(.dark) .bg-white {
+  background-color: #1e293b !important;
+}
+:global(.dark) .bg-slate-50 {
+  background-color: #0f172a !important;
+}
+:global(.dark) .text-slate-800,
+:global(.dark) .text-slate-900 {
+  color: #f1f5f9 !important;
+}
+:global(.dark) .text-slate-500,
+:global(.dark) .text-slate-400 {
+  color: #94a3b8 !important;
+}
+:global(.dark) .border-b {
+  border-color: #334155 !important;
+}
+:global(.dark) .divide-slate-100 > * {
+  border-color: #334155;
+}
+:global(.dark) h1,
+:global(.dark) h2 {
+  color: #f1f5f9;
 }
 </style>

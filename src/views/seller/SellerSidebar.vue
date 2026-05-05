@@ -24,7 +24,14 @@
 			side="left"
 			:width="drawerWidth"
 			bordered
-			:class="['seller-drawer', { 'mobile-light': isMobile }]"
+			:class="[
+				'seller-drawer',
+				{
+					'seller-drawer--dark': $q.dark.isActive,
+					'seller-drawer--light': !$q.dark.isActive,
+					'mobile-light': isMobile && !$q.dark.isActive,
+				},
+			]"
 			:behavior="isMobile ? 'mobile' : 'desktop'"
 			:overlay="isMobile"
 			:swipe-close="false"
@@ -105,7 +112,24 @@
 					<!-- Footer / user -->
 					<div class="mt-auto q-pa-sm footer" :style="{ zIndex: 2 }">
 						<q-separator spaced />
-						<div v-if="!collapsed" class="q-mt-sm footer-actions">
+						<div v-if="!collapsed" class="q-mt-sm footer-actions flex flex-col gap-2">
+							<!-- Dark mode toggle -->
+							<q-btn
+								unelevated
+								:color="$q.dark.isActive ? 'yellow-8' : 'blue-grey-7'"
+								class="w-full"
+								:icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'"
+								:label="$q.dark.isActive ? 'Light Mode' : 'Dark Mode'"
+								@click="toggleDark"
+								dense
+							/>
+							<q-btn
+								unelevated
+								color="negative"
+								class="w-full logout-btn"
+								icon="logout"
+								label="Logout"
+								@click="handleLogout" />
 							<q-btn
 								unelevated
 								color="primary"
@@ -115,8 +139,24 @@
 								@click="toHome" />
 						</div>
 
-						<!-- collapsed footer: show compact Home icon when collapsed -->
-						<div v-else class="collapsed-footer-actions q-mt-sm">
+						<!-- collapsed footer: show compact icons when collapsed -->
+						<div v-else class="collapsed-footer-actions q-mt-sm flex flex-col items-center gap-2">
+							<q-btn
+								dense
+								unelevated
+								:color="$q.dark.isActive ? 'yellow-8' : 'blue-grey-7'"
+								:icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'"
+								@click="toggleDark"
+								round
+							/>
+							<q-btn
+								dense
+								unelevated
+								color="negative"
+								icon="logout"
+								@click="handleLogout"
+								round
+							/>
 							<q-btn
 								dense
 								unelevated
@@ -137,11 +177,13 @@
 	import { useRouter, useRoute } from "vue-router";
 	import { useQuasar } from "quasar";
 	import { useUserStore } from "@/stores/user";
+	import { useAuthStore } from "@/stores/auth";
 
 	const $q = useQuasar();
 	const router = useRouter();
 	const route = useRoute();
 	const userStore = useUserStore();
+	const authStore = useAuthStore();
 
 	// UI state
 	const drawer = ref(true);
@@ -244,7 +286,8 @@
 	];
 
 	function isActive(item) {
-		return route.path.startsWith(item.to);
+		if (!item?.to) return false;
+		return route.path === item.to || route.path.startsWith(`${item.to}/`);
 	}
 	function go(item) {
 		if (item.to) {
@@ -265,6 +308,17 @@
 	}
 	function goToProfile() {
 		router.push("/seller/profile");
+	}
+	function toggleDark() {
+		$q.dark.toggle();
+	}
+	async function handleLogout() {
+		try {
+			await authStore.logout();
+			router.push("/");
+		} catch (error) {
+			console.error("Seller logout failed", error);
+		}
 	}
 
 	// ensure drawer only toggles on explicit user action
@@ -319,20 +373,14 @@
 
 <style scoped>
 	:root {
-		/* local color variables for easier tweaking */
-		--sb-primary-1: 6 86% 40%;
-		--sb-primary-2: 205 95% 50%;
-		--glass-alpha: 0.06;
 		--muted-white: rgba(255, 255, 255, 0.92);
-		--muted-white-2: rgba(255, 255, 255, 0.82);
+		--muted-white-2: rgba(255, 255, 255, 0.72);
 	}
 
 	/* wrapper holds decorative background */
 	.seller-sidebar-wrap {
 		position: relative;
 		z-index: 30;
-		--shadow-strong: 0 18px 48px rgba(2, 6, 23, 0.22);
-		padding-left: 6px; /* small inset so card shadow is visible on left */
 	}
 
 	/* mobile open button */
@@ -341,57 +389,24 @@
 		left: 12px;
 		top: 12px;
 		z-index: 120;
-		box-shadow: 0 8px 22px rgba(2, 6, 23, 0.14);
-		background: #fff;
-		color: #0b63d6;
-		transition: none;
-	}
-	:deep(body.q-dark) .mobile-open-btn {
-		background: rgba(255, 255, 255, 0.06);
-		color: #cfe6ff;
+		box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+		background: #1e293b;
+		color: #a5b4fc;
 	}
 
-	/* decorative background behind sidebar (subtle, premium) */
+	/* decorative background — kept minimal, just a blur accent */
 	.sidebar-bg {
-		position: absolute;
-		left: 0;
-		top: 0;
-		bottom: 0;
-		width: 340px;
-		background: radial-gradient(
-				circle at 18% 20%,
-				rgba(255, 255, 255, 0.03),
-				transparent 18%
-			),
-			linear-gradient(
-				180deg,
-				hsla(var(--sb-primary-1) / 0.95),
-				hsla(var(--sb-primary-2) / 0.93)
-			);
-		filter: blur(30px);
-		transform: translateX(-44px);
-		pointer-events: none;
-		z-index: 1;
-		border-right: 1px solid rgba(255, 255, 255, 0.03);
-		opacity: 0.95;
+		display: none;
 	}
 
-	/* drawer styling */
+	/* ── DRAWER ─────────────────────────────────────────────── */
 	.seller-drawer {
-		background: linear-gradient(
-			180deg,
-			rgba(3, 105, 161, 0.98) 0%,
-			rgba(22, 116, 250, 0.96) 100%
-		);
-		color: #fff;
-		transition: width 180ms ease, box-shadow 180ms ease;
-		box-shadow: none;
-		border-right: 0;
-		overflow: visible; /* allow outer shadow */
-		position: relative;
-		backdrop-filter: blur(6px);
+		background: #0f172a;
+		color: #e2e8f0;
+		border-right: 1px solid rgba(255, 255, 255, 0.05);
+		box-shadow: 4px 0 28px rgba(0, 0, 0, 0.28);
+		transition: width 180ms ease;
 		will-change: width, transform;
-		padding: 8px 0; /* make space for card margin */
 	}
 
 	/* inner layout */
@@ -399,216 +414,196 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		position: relative;
 	}
 
-	/* visual card which contains the sidebar content */
+	/* card that wraps all content */
 	.drawer-card {
-		background: linear-gradient(
-			180deg,
-			rgba(255, 255, 255, 0.02),
-			rgba(255, 255, 255, 0.01)
-		);
-		border-radius: 12px;
-		padding: 8px 8px;
-		margin: 6px 8px;
-		box-shadow: 0 14px 40px rgba(2, 6, 23, 0.18);
-		border: 1px solid rgba(255, 255, 255, 0.04);
 		display: flex;
 		flex-direction: column;
-		height: calc(100% - 12px);
-		overflow: hidden;
+		height: 100%;
+		padding: 0 8px 8px;
 	}
 
-	/* brand */
+	/* ── BRAND ───────────────────────────────────────────────── */
 	.brand {
 		align-items: center;
 		gap: 12px;
-		padding-top: 6px;
-		padding-bottom: 6px;
+		padding: 20px 8px 12px;
 	}
 	.brand-avatar {
-		border-radius: 12px;
-		box-shadow: 0 12px 28px rgba(2, 6, 23, 0.18);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		color: #fff;
+		border-radius: 14px;
+		box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+		flex-shrink: 0;
+		background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+	}
+	.brand-avatar .q-icon {
+		font-size: 26px;
+		color: #fff !important;
 	}
 	.brand-title {
-		font-weight: 800;
-		font-size: 1rem;
-		letter-spacing: 0.2px;
-		color: var(--muted-white);
+		font-weight: 700;
+		font-size: 0.95rem;
+		letter-spacing: 0.1px;
+		color: #f1f5f9;
+		line-height: 1.2;
 	}
 	.brand-sub {
-		font-size: 0.75rem;
-		color: rgba(255, 255, 255, 0.82);
-		margin-top: -2px;
+		font-size: 0.7rem;
+		color: #64748b;
+		margin-top: 1px;
 	}
-
-	/* toggle */
 	.toggle-btn {
-		color: rgba(255, 255, 255, 0.96);
+		color: #64748b !important;
 	}
-	.toggle-btn .q-icon {
-		color: var(--muted-white) !important;
+	.toggle-btn:hover {
+		color: #a5b4fc !important;
+		background: rgba(165, 180, 252, 0.08) !important;
 	}
 
-	/* menu */
-	.menu-list {
-		margin-top: 10px;
-		padding: 4px;
-		overflow: auto;
+	/* ── SEPARATOR ───────────────────────────────────────────── */
+	:deep(.q-separator) {
+		background: rgba(255, 255, 255, 0.06) !important;
 	}
+
+	/* ── MENU LIST ───────────────────────────────────────────── */
+	.menu-list {
+		flex: 1;
+		overflow-y: auto;
+		overflow-x: hidden;
+		padding: 4px 0;
+		scrollbar-width: thin;
+		scrollbar-color: rgba(255,255,255,0.08) transparent;
+	}
+	.menu-list::-webkit-scrollbar { width: 4px; }
+	.menu-list::-webkit-scrollbar-track { background: transparent; }
+	.menu-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+
 	.menu-item {
 		border-radius: 10px;
-		margin: 6px;
+		margin: 2px 4px;
+		padding: 6px 8px;
+		min-height: 44px;
 		cursor: pointer;
-		padding: 8px 6px;
-		display: flex;
-		align-items: center;
-		gap: 10px;
+		color: #cbd5e1;
 	}
 	.menu-item:hover,
 	.menu-item:focus-within {
-		background: rgba(255, 255, 255, 0.02);
+		background: rgba(255, 255, 255, 0.07);
+		color: #f1f5f9;
 	}
 
-	/* enhanced hover / active visuals */
-	.menu-item:hover,
-	.menu-item:focus-within {
-		background: linear-gradient(
-			90deg,
-			rgba(255, 255, 255, 0.03),
-			rgba(255, 255, 255, 0.02)
-		);
-		transform: translateX(3px);
-		box-shadow: 0 6px 18px rgba(2, 6, 23, 0.06);
-	}
-
+	/* ACTIVE item */
 	.menu-item.q-item--active {
-		background: linear-gradient(
-			90deg,
-			rgba(255, 255, 255, 0.06),
-			rgba(255, 255, 255, 0.03)
-		);
-		box-shadow: 0 12px 30px rgba(2, 6, 23, 0.14);
-	}
-	.menu-item.q-item--active {
-		background: linear-gradient(
-			90deg,
-			rgba(255, 255, 255, 0.04),
-			rgba(255, 255, 255, 0.02)
-		);
-		box-shadow: 0 10px 22px rgba(2, 6, 23, 0.12);
+		background: linear-gradient(90deg, rgba(99, 102, 241, 0.22), rgba(99, 102, 241, 0.1));
+		color: #a5b4fc !important;
+		box-shadow: none;
 	}
 
-	/* icon wrapper to center inside collapsed mode and to show active indicator */
+	/* ── ICON WRAP ───────────────────────────────────────────── */
 	.icon-wrap {
 		position: relative;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		width: 44px;
-		height: 44px;
-		border-radius: 10px;
+		width: 36px;
+		height: 36px;
+		border-radius: 9px;
+		background: rgba(255, 255, 255, 0.04);
+		flex-shrink: 0;
 	}
-	.menu-icon {
-		font-size: 20px;
-		color: rgba(255, 255, 255, 0.95);
+	.menu-item:hover .icon-wrap,
+	.menu-item:focus-within .icon-wrap {
+		background: rgba(255, 255, 255, 0.07);
 	}
-	.active-indicator {
-		position: absolute;
-		left: -12px;
-		width: 6px;
-		height: 26px;
-		border-radius: 8px;
-		background: linear-gradient(
-			180deg,
-			rgba(255, 255, 255, 0.98),
-			rgba(255, 255, 255, 0.85)
-		);
-		box-shadow: 0 8px 20px rgba(2, 6, 23, 0.18);
-		transition: height 180ms ease, background 180ms ease, left 140ms ease;
+	.menu-item.q-item--active .icon-wrap {
+		background: rgba(99, 102, 241, 0.28);
 	}
 
-	/* text */
+	.menu-icon {
+		font-size: 19px;
+		color: #64748b;
+	}
+	.menu-item:hover .menu-icon,
+	.menu-item:focus-within .menu-icon {
+		color: #cbd5e1 !important;
+	}
+	.menu-item.q-item--active .menu-icon {
+		color: #a5b4fc !important;
+	}
+
+	/* active left bar */
+	.active-indicator {
+		position: absolute;
+		left: -10px;
+		width: 3px;
+		height: 20px;
+		border-radius: 8px;
+		background: #6366f1;
+		box-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
+	}
+
+	/* ── MENU TEXT ───────────────────────────────────────────── */
 	.menu-text {
-		padding-left: 6px;
+		padding-left: 10px;
+	}
+	.menu-label {
+		font-size: 0.85rem;
+		font-weight: 500;
+		color: inherit;
+		line-height: 1.3;
+	}
+	.menu-item.q-item--active .menu-label {
+		font-weight: 600;
 	}
 
 	/* badge */
 	.menu-badge {
-		margin-left: 8px;
-		padding: 6px 10px;
+		margin-left: 6px;
+		font-size: 10px;
+		font-weight: 700;
 		border-radius: 999px;
-		font-weight: 800;
-		font-size: 12px;
-		box-shadow: 0 8px 20px rgba(2, 6, 23, 0.12);
-		color: white !important;
-		background: rgba(255, 255, 255, 0.12) !important;
+		padding: 2px 7px;
+		background: #6366f1 !important;
+		color: #fff !important;
 	}
 
-	/* user footer */
+	/* ── FOOTER ─────────────────────────────────────────────── */
 	.footer {
-		padding-top: 12px;
+		padding: 8px 4px 4px;
 	}
-	.user-row {
-		align-items: center;
-		gap: 10px;
-	}
-	.user-avatar {
-		box-shadow: 0 8px 24px rgba(2, 6, 23, 0.12);
-		font-weight: 700;
-	}
-	.user-name {
-		font-weight: 700;
-		color: var(--muted-white);
-	}
-	.user-role {
-		color: rgba(255, 255, 255, 0.82);
-		font-size: 12px;
-	}
-
-	/* profile button */
-	.profile-wrap {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-	.profile-btn {
-		color: rgba(255, 255, 255, 0.95);
-	}
-	.footer-actions {
-		margin-top: 10px;
-	}
+	.footer-actions { margin-top: 6px; }
 	.collapsed-footer-actions {
 		display: flex;
 		justify-content: center;
-		margin-top: 10px;
+		margin-top: 6px;
 	}
 
-	/* back button pill styling */
-	.back-btn {
-		border-radius: 999px;
-		height: 44px;
-		font-weight: 700;
-		box-shadow: 0 8px 18px rgba(2, 6, 23, 0.12);
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		gap: 8px;
+	/* back button */
+	.logout-btn {
+		border-radius: 10px;
+		height: 40px;
+		font-weight: 600;
+		font-size: 0.8rem;
 	}
-	.back-btn .q-icon {
-		margin-right: 6px;
+
+	.back-btn {
+		border-radius: 10px;
+		height: 42px;
+		font-weight: 600;
+		font-size: 0.8rem;
+		letter-spacing: 0.5px;
+		background: linear-gradient(90deg, #6366f1, #7c3aed) !important;
+		color: #fff !important;
+		box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35) !important;
+	}
+	.back-btn:hover {
+		box-shadow: 0 6px 18px rgba(99, 102, 241, 0.45) !important;
 	}
 
 	/* collapsed adjustments */
 	.seller-drawer[style*="width: 84px"] .menu-item {
 		justify-content: center;
-		padding-left: 6px;
-		padding-right: 6px;
+		padding: 4px;
 	}
 	.seller-drawer[style*="width: 84px"] .brand-text,
 	.seller-drawer[style*="width: 84px"] .user-meta,
@@ -616,104 +611,70 @@
 		display: none;
 	}
 
-	/* ensure icons visible and crisp */
-	.menu-icon,
-	.q-btn .q-icon,
-	.brand-avatar .q-icon,
-	.user-avatar .q-icon {
-		color: var(--muted-white) !important;
-		fill: currentColor !important;
-		stroke: currentColor !important;
-		transition: transform 160ms ease, color 160ms ease;
+	/* ── LIGHT THEME OVERRIDES ──────────────────────────────── */
+	.seller-drawer--light {
+		background: #ffffff !important;
+		color: #1e293b !important;
+		border-right: 1px solid #e2e8f0;
+		box-shadow: 4px 0 24px rgba(15, 23, 42, 0.08);
+	}
+	.seller-drawer--light :deep(.q-separator) {
+		background: #e2e8f0 !important;
+	}
+	.seller-drawer--light .brand-title {
+		color: #1e293b;
+	}
+	.seller-drawer--light .brand-sub {
+		color: #64748b;
+	}
+	.seller-drawer--light .toggle-btn {
+		color: #64748b !important;
+	}
+	.seller-drawer--light .menu-item {
+		color: #334155;
+	}
+	.seller-drawer--light .menu-item:hover,
+	.seller-drawer--light .menu-item:focus-within {
+		background: #f1f5f9;
+		color: #0f172a;
+	}
+	.seller-drawer--light .menu-item.q-item--active {
+		background: #eef2ff;
+		color: #4f46e5 !important;
+	}
+	.seller-drawer--light .icon-wrap {
+		background: #f1f5f9;
+	}
+	.seller-drawer--light .menu-item:hover .icon-wrap,
+	.seller-drawer--light .menu-item:focus-within .icon-wrap {
+		background: #e2e8f0;
+	}
+	.seller-drawer--light .menu-item.q-item--active .icon-wrap {
+		background: #e0e7ff;
+	}
+	.seller-drawer--light .menu-icon {
+		color: #64748b !important;
+	}
+	.seller-drawer--light .menu-item:hover .menu-icon,
+	.seller-drawer--light .menu-item:focus-within .menu-icon {
+		color: #1e293b !important;
+	}
+	.seller-drawer--light .menu-item.q-item--active .menu-icon {
+		color: #4f46e5 !important;
+	}
+	.seller-drawer--light .active-indicator {
+		background: #4f46e5;
+		box-shadow: 0 0 6px rgba(79, 70, 229, 0.4);
 	}
 
-	.menu-item:hover .menu-icon,
-	.menu-item.q-item--active .menu-icon {
-		transform: translateX(2px) scale(1.03);
-		color: #fff !important;
-	}
-
-	/* responsive tweaks */
-	@media (max-width: 900px) {
-		.seller-sidebar-wrap .sidebar-bg {
-			width: 180px;
-			transform: translateX(-20px);
-			filter: blur(22px);
-		}
-		.menu-icon {
-			font-size: 22px;
-		}
-		.brand-sub {
-			display: none;
-		}
-	}
-
-	/* Mobile light mode so white text is not on white background */
+	/* ── MOBILE ──────────────────────────────────────────────── */
 	@media (max-width: 900px) {
 		.seller-drawer.mobile-light {
-			/* light glass background */
-			background: rgba(255, 255, 255, 0.9) !important;
-			backdrop-filter: blur(8px);
+			background: #ffffff !important;
 			color: #1e293b !important;
 		}
-
-		.seller-drawer.mobile-light .drawer-card {
-			background: linear-gradient(
-					180deg,
-					rgba(255, 255, 255, 0.95),
-					rgba(245, 247, 250, 0.92)
-				),
-				linear-gradient(
-					180deg,
-					rgba(255, 255, 255, 0.95),
-					rgba(245, 247, 250, 0.92)
-				);
-			border: 1px solid rgba(0, 0, 0, 0.06);
-			box-shadow: 0 8px 28px rgba(0, 0, 0, 0.15);
-		}
-
-		/* Text */
-		.seller-drawer.mobile-light .brand-title,
-		.seller-drawer.mobile-light .brand-sub,
-		.seller-drawer.mobile-light .menu-label,
-		.seller-drawer.mobile-light .menu-item .q-item__label,
-		.seller-drawer.mobile-light .user-name,
-		.seller-drawer.mobile-light .user-role,
-		.seller-drawer.mobile-light .menu-badge {
-			color: #1e293b !important;
-		}
-
-		/* Icons */
-		.seller-drawer.mobile-light .menu-icon,
-		.seller-drawer.mobile-light .q-icon,
-		.seller-drawer.mobile-light .brand-avatar .q-icon,
-		.seller-drawer.mobile-light .user-avatar .q-icon {
-			color: #0f5298 !important;
-			fill: currentColor !important;
-		}
-
-		/* Active menu item */
-		.seller-drawer.mobile-light .menu-item.q-item--active {
-			background: linear-gradient(90deg, #e2ecf9, #dde7f4);
-			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-		}
-		.seller-drawer.mobile-light .active-indicator {
-			background: #0f5298;
-			box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
-		}
-
-		/* Toggle / buttons */
-		.seller-drawer.mobile-light .toggle-btn,
-		.seller-drawer.mobile-light .profile-btn,
-		.seller-drawer.mobile-light .back-btn,
-		.seller-drawer.mobile-light .collapsed-footer-actions .q-btn {
-			color: #0f5298 !important;
-		}
-
-		/* Avatar text stays white on gradient */
-		.seller-drawer.mobile-light .user-avatar,
-		.seller-drawer.mobile-light .brand-avatar {
-			color: #fff !important;
+		.seller-drawer.mobile-light .back-btn {
+			background: linear-gradient(90deg, #4f46e5, #7c3aed) !important;
 		}
 	}
 </style>

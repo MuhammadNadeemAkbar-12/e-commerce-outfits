@@ -158,21 +158,38 @@
 
           <template v-slot:body-cell-avatar="props">
             <q-td :props="props">
-              <q-avatar size="42px">
-                <img :src="props.row.logo || 'https://cdn.quasar.dev/img/boy-avatar.png'" />
-              </q-avatar>
+              <div class="row items-center no-wrap q-gutter-x-sm">
+                <q-avatar size="38px" class="shadow-sm">
+                  <img
+                    :src="props.row.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(props.row.name || 'S')}&background=6366f1&color=fff&size=80`"
+                    :alt="props.row.name"
+                  />
+                </q-avatar>
+                <div>
+                  <div class="text-weight-medium text-sm dark:text-white" style="white-space:nowrap">{{ props.row.name }}</div>
+                  <div class="text-caption text-grey-6" style="white-space:nowrap">{{ props.row.businessName !== props.row.name ? props.row.businessName : '' }}</div>
+                </div>
+              </div>
             </q-td>
           </template>
 
           <template v-slot:body-cell-status="props">
             <q-td :props="props">
-              <q-chip
-                :color="getStatusColor(props.row.status)"
-                text-color="white"
-                size="sm"
-              >
+              <span :class="[
+                'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold gap-1',
+                props.row.status === 'verified'  ? 'status-verified'  :
+                props.row.status === 'suspended' ? 'status-suspended' :
+                props.row.status === 'rejected'  ? 'status-rejected'  :
+                'status-pending'
+              ]">
+                <span class="w-1.5 h-1.5 rounded-full inline-block" :class="[
+                  props.row.status === 'verified'  ? 'bg-green-500'  :
+                  props.row.status === 'suspended' ? 'bg-red-500'    :
+                  props.row.status === 'rejected'  ? 'bg-gray-500'   :
+                  'bg-amber-500'
+                ]"></span>
                 {{ props.row.status }}
-              </q-chip>
+              </span>
             </q-td>
           </template>
 
@@ -184,54 +201,61 @@
 
           <template v-slot:body-cell-createdAt="props">
             <q-td :props="props">
-              {{ formatDate(props.row.createdAt) }}
+              <span class="text-sm text-grey-8 dark:text-gray-300">{{ formatDate(props.row.createdAt) }}</span>
             </q-td>
           </template>
 
           <template v-slot:body-cell-actions="props">
             <q-td :props="props">
-              <div class="q-gutter-x-sm">
-                <q-btn
-                  @click="viewSellerDetails(props.row)"
-                  icon="visibility"
-                  color="primary"
-                  size="sm"
-                  round
-                  flat
-                />
-                <q-btn
-                  @click="viewSellerProducts(props.row)"
-                  icon="inventory_2"
-                  color="info"
-                  size="sm"
-                  round
-                  flat
-                />
-                <q-btn
-                  v-if="!props.row.is_approved"
-                  @click="approveSeller(props.row)"
-                  label="Approve"
-                  color="positive"
-                  size="sm"
-                  unelevated
-                />
-                <q-btn
-                  v-if="props.row.is_approved"
-                  @click="unapproveSeller(props.row)"
-                  label="Unapprove"
-                  color="warning"
-                  size="sm"
-                  unelevated
-                />
-                <q-btn
-                  v-if="props.row.is_approved"
-                  @click="toggleBlockStatus(props.row)"
-                  :label="props.row.is_blocked ? 'Unblock' : 'Block'"
-                  :color="props.row.is_blocked ? 'positive' : 'negative'"
-                  size="sm"
-                  unelevated
-                />
-              </div>
+              <q-btn icon="more_horiz" flat round dense color="grey-7">
+                <q-menu anchor="bottom right" self="top right" class="shadow-lg rounded-xl" style="min-width:170px">
+                  <q-list dense padding>
+                    <!-- View Profile -->
+                    <q-item clickable v-close-popup @click="viewSellerDetails(props.row)" class="rounded-lg">
+                      <q-item-section avatar>
+                        <q-icon name="visibility" color="blue-6" size="18px" />
+                      </q-item-section>
+                      <q-item-section class="text-sm text-grey-9">View Profile</q-item-section>
+                    </q-item>
+
+                    <!-- View Products -->
+                    <q-item clickable v-close-popup @click="viewSellerProducts(props.row)" class="rounded-lg">
+                      <q-item-section avatar>
+                        <q-icon name="inventory_2" color="indigo-5" size="18px" />
+                      </q-item-section>
+                      <q-item-section class="text-sm text-grey-9">Products</q-item-section>
+                    </q-item>
+
+                    <q-separator spaced />
+
+                    <!-- Approve (only if not yet approved) -->
+                    <q-item v-if="!props.row.is_approved" clickable v-close-popup @click="approveSeller(props.row)" class="rounded-lg">
+                      <q-item-section avatar>
+                        <q-icon name="check_circle" color="positive" size="18px" />
+                      </q-item-section>
+                      <q-item-section class="text-sm text-positive font-medium">Approve</q-item-section>
+                    </q-item>
+
+                    <!-- Decline / Unapprove (only if approved) -->
+                    <q-item v-if="props.row.is_approved" clickable v-close-popup @click="unapproveSeller(props.row)" class="rounded-lg">
+                      <q-item-section avatar>
+                        <q-icon name="cancel" color="negative" size="18px" />
+                      </q-item-section>
+                      <q-item-section class="text-sm text-negative font-medium">Decline</q-item-section>
+                    </q-item>
+
+                    <!-- Block / Unblock (only if approved) -->
+                    <q-item v-if="props.row.is_approved" clickable v-close-popup @click="toggleBlockStatus(props.row)" class="rounded-lg">
+                      <q-item-section avatar>
+                        <q-icon :name="props.row.is_blocked ? 'lock_open' : 'block'" :color="props.row.is_blocked ? 'positive' : 'warning'" size="18px" />
+                      </q-item-section>
+                      <q-item-section :class="['text-sm font-medium', props.row.is_blocked ? 'text-positive' : 'text-warning']">
+                        {{ props.row.is_blocked ? 'Unblock' : 'Suspend' }}
+                      </q-item-section>
+                    </q-item>
+                  </q-list>
+                </q-menu>
+              </q-btn>
             </q-td>
           </template>
 
@@ -261,25 +285,15 @@
     </q-card>
 
     <!-- Confirmation Dialog -->
-    <q-dialog v-model="showConfirmDialog" persistent>
-      <q-card style="min-width: 350px" class="dark:bg-gray-800 dark:border-gray-700">
-        <q-card-section class="row items-center">
-          <q-avatar :icon="confirmIcon" :color="confirmColor" text-color="white" />
-          <span class="q-ml-sm dark:text-white">{{ confirmMessage }}</span>
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn flat label="Cancel" color="primary" v-close-popup class="dark:text-white" />
-          <q-btn 
-            flat 
-            :label="confirmAction" 
-            :color="confirmColor" 
-            @click="confirmStatusChange" 
-            v-close-popup 
-          />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
+    <ConfirmDialog
+      v-model="showConfirmDialog"
+      :title="pendingAction === 'approve' ? 'Approve Seller' : pendingAction === 'unapprove' ? 'Unapprove Seller' : pendingAction === 'block' ? 'Block Seller' : 'Unblock Seller'"
+      :message="pendingAction === 'approve' ? 'Approve this seller? They will be able to list products.' : pendingAction === 'unapprove' ? 'Unapprove this seller? Their products will be hidden.' : pendingAction === 'block' ? 'Block this seller? They will not be able to access the platform.' : 'Unblock this seller? They will regain access to the platform.'"
+      :type="pendingAction === 'approve' || pendingAction === 'unblock' ? 'success' : pendingAction === 'unapprove' ? 'warning' : 'danger'"
+      :confirm-label="pendingAction === 'approve' ? 'Approve' : pendingAction === 'unapprove' ? 'Unapprove' : pendingAction === 'block' ? 'Block' : 'Unblock'"
+      :loading="confirmLoading"
+      @confirm="executeConfirmedAction"
+    />
 
     <!-- Seller Details Dialog -->
     <q-dialog v-model="showSellerDetails" persistent>
@@ -329,13 +343,21 @@
                   <q-item-section>
                     <q-item-label caption class="dark:text-gray-300">Status</q-item-label>
                     <q-item-label>
-                      <q-chip
-                        :color="getStatusColor(selectedSeller.status)"
-                        text-color="white"
-                        size="sm"
-                      >
+                      <span :class="[
+                        'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold gap-1',
+                        selectedSeller.status === 'verified'  ? 'status-verified'  :
+                        selectedSeller.status === 'suspended' ? 'status-suspended' :
+                        selectedSeller.status === 'rejected'  ? 'status-rejected'  :
+                        'status-pending'
+                      ]">
+                        <span class="w-1.5 h-1.5 rounded-full inline-block" :class="[
+                          selectedSeller.status === 'verified'  ? 'bg-green-500'  :
+                          selectedSeller.status === 'suspended' ? 'bg-red-500'    :
+                          selectedSeller.status === 'rejected'  ? 'bg-gray-500'   :
+                          'bg-amber-500'
+                        ]"></span>
                         {{ selectedSeller.status }}
-                      </q-chip>
+                      </span>
                     </q-item-label>
                   </q-item-section>
                 </q-item>
@@ -369,6 +391,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
 import adminApi from '@/services/adminApi'
+import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
 
 const $q = useQuasar()
 
@@ -385,19 +408,22 @@ const itemsPerPage = ref(10)
 // Dialog states
 const showSellerDetails = ref(false)
 const selectedSeller = ref(null)
+const showConfirmDialog = ref(false)
+const confirmLoading = ref(false)
+const pendingAction = ref(null)  // 'approve' | 'unapprove' | 'block' | 'unblock'
+const pendingTarget = ref(null)
 
 // Table columns
 const columns = [
-  { name: 'avatar', label: 'Logo', field: 'logo', align: 'center' },
-  { name: 'businessName', label: 'Business Name', field: 'businessName', align: 'left', sortable: true },
-  { name: 'email', label: 'Email', field: 'email', align: 'left', sortable: true },
-  { name: 'phone', label: 'Phone', field: 'phone', align: 'left' },
-  { name: 'businessType', label: 'Business Type', field: 'businessType', align: 'center' },
-  { name: 'products', label: 'Products', field: 'productCount', align: 'center' },
-  { name: 'revenue', label: 'Revenue', field: 'revenue', align: 'right', sortable: true },
-  { name: 'status', label: 'Status', field: 'status', align: 'center', sortable: true },
-  { name: 'createdAt', label: 'Joined', field: 'createdAt', align: 'center', sortable: true },
-  { name: 'actions', label: 'Actions', align: 'center' }
+  { name: 'avatar',      label: 'Seller',       field: 'name',         align: 'left' },
+  { name: 'email',       label: 'Email',         field: 'email',        align: 'left',   sortable: true },
+  { name: 'phone',       label: 'Phone',         field: 'phone',        align: 'left' },
+  { name: 'businessType',label: 'Business Type', field: 'businessType', align: 'center' },
+  { name: 'products',    label: 'Products',      field: 'productCount', align: 'center' },
+  { name: 'revenue',     label: 'Revenue',       field: 'revenue',      align: 'right',  sortable: true },
+  { name: 'status',      label: 'Status',        field: 'status',       align: 'center', sortable: true },
+  { name: 'createdAt',   label: 'Joined Date',   field: 'createdAt',    align: 'center', sortable: true },
+  { name: 'actions',     label: 'Action',        align: 'center' }
 ]
 
 // Filter options
@@ -507,12 +533,12 @@ const fetchSellers = async () => {
         is_blocked: seller.is_blocked,
         businessName: seller.profile?.company_name || seller.name || 'N/A',
         phone: seller.profile?.phone || 'N/A',
-        businessType: 'N/A', // Not in API response, set default
-        productCount: 0, // Not in API response, set default
-        revenue: 0, // Not in API response, set default
+        businessType: 'N/A',
+        productCount: 0,
+        revenue: 0,
         status: getSellerStatus(seller.is_approved, seller.is_blocked),
-        createdAt: new Date().toISOString(), // Not in API response, set default
-        logo: null, // Not in API response, set default
+        createdAt: seller.created_at || null,
+        logo: seller.avatar || null,
         profile: seller.profile || {}
       }))
     } else {
@@ -548,128 +574,61 @@ const viewSellerDetails = (seller) => {
   showSellerDetails.value = true
 }
 
-const toggleSellerStatus = (seller) => {
-  selectedSeller.value = seller
-  
-  if (!seller.is_approved) {
-    // Seller is not approved - show approval dialog
-    newStatus.value = 'verified'
-    showConfirmDialog.value = true
-  } else {
-    // Seller is approved - toggle block/unblock
-    const newBlockStatus = !seller.is_blocked
-    blockUnblockSeller(seller, newBlockStatus)
-  }
+const approveSeller = (seller) => {
+  pendingTarget.value = seller
+  pendingAction.value = 'approve'
+  showConfirmDialog.value = true
 }
 
-const blockUnblockSeller = async (seller, block) => {
-  try {
-    const response = await adminApi.blockSeller(seller.id, block)
-    
-    if (response.success) {
-      // Update local state
-      const sellerIndex = sellers.value.findIndex(s => s.id === seller.id)
-      if (sellerIndex !== -1) {
-        sellers.value[sellerIndex].is_blocked = block
-        sellers.value[sellerIndex].status = block ? 'suspended' : 'verified'
-      }
-      
-      $q.notify({
-        type: 'positive',
-        message: `Seller ${block ? 'blocked' : 'unblocked'} successfully`,
-        position: 'top'
-      })
-    }
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: `Failed to ${block ? 'block' : 'unblock'} seller`,
-      position: 'top'
-    })
-  }
+const unapproveSeller = (seller) => {
+  pendingTarget.value = seller
+  pendingAction.value = 'unapprove'
+  showConfirmDialog.value = true
 }
 
-const approveSeller = async (seller) => {
-  try {
-    const response = await adminApi.approveSeller(seller.id, true)
-    
-    if (response.success) {
-      // Update local state
-      const sellerIndex = sellers.value.findIndex(s => s.id === seller.id)
-      if (sellerIndex !== -1) {
-        sellers.value[sellerIndex].is_approved = true
-        sellers.value[sellerIndex].status = 'verified'
-        sellers.value[sellerIndex].is_blocked = false
-      }
-      
-      $q.notify({
-        type: 'positive',
-        message: 'Seller approved successfully',
-        position: 'top'
-      })
-    }
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Failed to approve seller',
-      position: 'top'
-    })
-  }
+const toggleBlockStatus = (seller) => {
+  pendingTarget.value = seller
+  pendingAction.value = seller.is_blocked ? 'unblock' : 'block'
+  showConfirmDialog.value = true
 }
 
-const unapproveSeller = async (seller) => {
+const executeConfirmedAction = async () => {
+  const seller = pendingTarget.value
+  const action = pendingAction.value
+  if (!seller || !action) return
+  confirmLoading.value = true
   try {
-    const response = await adminApi.approveSeller(seller.id, false)
-    
-    if (response.success) {
-      // Update local state
-      const sellerIndex = sellers.value.findIndex(s => s.id === seller.id)
-      if (sellerIndex !== -1) {
-        sellers.value[sellerIndex].is_approved = false
-        sellers.value[sellerIndex].status = 'pending'
-        sellers.value[sellerIndex].is_blocked = false
+    let response
+    if (action === 'approve') {
+      response = await adminApi.approveSeller(seller.id, true)
+      if (response.success) {
+        const idx = sellers.value.findIndex(s => s.id === seller.id)
+        if (idx !== -1) { sellers.value[idx].is_approved = true; sellers.value[idx].status = 'verified'; sellers.value[idx].is_blocked = false }
+        $q.notify({ type: 'positive', message: 'Seller approved successfully', position: 'top' })
       }
-      
-      $q.notify({
-        type: 'positive',
-        message: 'Seller unapproved successfully',
-        position: 'top'
-      })
+    } else if (action === 'unapprove') {
+      response = await adminApi.approveSeller(seller.id, false)
+      if (response.success) {
+        const idx = sellers.value.findIndex(s => s.id === seller.id)
+        if (idx !== -1) { sellers.value[idx].is_approved = false; sellers.value[idx].status = 'pending'; sellers.value[idx].is_blocked = false }
+        $q.notify({ type: 'positive', message: 'Seller unapproved successfully', position: 'top' })
+      }
+    } else if (action === 'block' || action === 'unblock') {
+      const block = action === 'block'
+      response = await adminApi.blockSeller(seller.id, block)
+      if (response.success) {
+        const idx = sellers.value.findIndex(s => s.id === seller.id)
+        if (idx !== -1) { sellers.value[idx].is_blocked = block; sellers.value[idx].status = block ? 'suspended' : 'verified' }
+        $q.notify({ type: 'positive', message: `Seller ${block ? 'blocked' : 'unblocked'} successfully`, position: 'top' })
+      }
     }
   } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Failed to unapprove seller',
-      position: 'top'
-    })
-  }
-}
-
-const toggleBlockStatus = async (seller) => {
-  const newBlockStatus = !seller.is_blocked
-  try {
-    const response = await adminApi.blockSeller(seller.id, newBlockStatus)
-    
-    if (response.success) {
-      // Update local state
-      const sellerIndex = sellers.value.findIndex(s => s.id === seller.id)
-      if (sellerIndex !== -1) {
-        sellers.value[sellerIndex].is_blocked = newBlockStatus
-        sellers.value[sellerIndex].status = newBlockStatus ? 'suspended' : 'verified'
-      }
-      
-      $q.notify({
-        type: 'positive',
-        message: `Seller ${newBlockStatus ? 'blocked' : 'unblocked'} successfully`,
-        position: 'top'
-      })
-    }
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: `Failed to ${newBlockStatus ? 'block' : 'unblock'} seller`,
-      position: 'top'
-    })
+    $q.notify({ type: 'negative', message: `Action failed: ${error.message || 'Unknown error'}`, position: 'top' })
+  } finally {
+    confirmLoading.value = false
+    showConfirmDialog.value = false
+    pendingTarget.value = null
+    pendingAction.value = null
   }
 }
 
@@ -715,11 +674,11 @@ const formatCurrency = (amount) => {
 
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A'
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
+  return new Date(dateString).toLocaleDateString('en-GB', {
+    day: '2-digit',
     month: 'short',
-    day: 'numeric'
-  })
+    year: 'numeric'
+  }).replace(/ /g, ' ')
 }
 
 const onPageChange = (page) => {
@@ -740,6 +699,28 @@ onMounted(() => {
 <style scoped>
 .q-page {
   background: none;
+}
+
+/* Status badge styles */
+.status-verified {
+  background-color: #dcfce7;
+  color: #15803d;
+  text-transform: capitalize;
+}
+.status-suspended {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  text-transform: capitalize;
+}
+.status-pending {
+  background-color: #fef3c7;
+  color: #b45309;
+  text-transform: capitalize;
+}
+.status-rejected {
+  background-color: #f3f4f6;
+  color: #4b5563;
+  text-transform: capitalize;
 }
 </style>
 

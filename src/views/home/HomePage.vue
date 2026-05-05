@@ -8,13 +8,7 @@
 			<div
 				class="absolute inset-0 bg-gradient-to-b from-transparent to-black/10"></div>
 
-			<!-- Floating Elements -->
-			<div
-				class="absolute top-20 left-10 w-32 h-32 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-			<div
-				class="absolute bottom-20 right-20 w-40 h-40 bg-pink-300/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-			<div
-				class="absolute top-40 right-40 w-24 h-24 bg-blue-300/20 rounded-full blur-2xl animate-pulse delay-500"></div>
+			<!-- Floating Elements removed for cleaner look -->
 
 			<div
 				class="relative mx-auto max-w-7xl px-6 pt-16 pb-20 md:pt-24 md:pb-28">
@@ -55,11 +49,11 @@
 					<div class="flex-1 relative">
 						<div class="relative group">
 							<div
-								class="absolute -inset-4 bg-gradient-to-r from-pink-500 to-blue-500 rounded-3xl blur-2xl opacity-30 group-hover:opacity-50 transition duration-500"></div>
+								class="absolute -inset-4 bg-gradient-to-r from-pink-500 to-blue-500 rounded-3xl blur-2xl opacity-20"></div>
 							<div
 								class="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white/20 backdrop-blur-sm">
 								<img
-									class="w-full h-[420px] object-cover transform group-hover:scale-105 transition duration-700"
+									class="w-full h-[420px] object-cover transition duration-300"
 									src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1200&q=80"
 									alt="Hero Fashion Banner"
 									loading="lazy" />
@@ -73,15 +67,15 @@
 		</section>
 
 		<!-- Categories Section - Enhanced -->
-		<section class="max-w-7xl mx-auto px-6 -mt-8 relative z-10 mb-12">
+		<section class="max-w-7xl mx-auto px-6 -mt-8 relative z-10 mb-10">
 			<div
-				class="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/50 shadow-2xl p-8">
-				<div class="flex items-center justify-between mb-8">
+				class="category-shell rounded-2xl border border-slate-200 bg-white shadow-xl p-6 md:p-7">
+				<div class="flex items-start justify-between gap-4 mb-5">
 					<div>
-						<h2 class="text-3xl font-bold text-slate-800 mb-2">
+						<h2 class="text-2xl md:text-3xl font-black tracking-tight text-slate-800 mb-1">
 							Browse Categories
 						</h2>
-						<p class="text-slate-600">
+						<p class="text-slate-500 text-sm md:text-base">
 							Discover products across different categories
 						</p>
 					</div>
@@ -93,41 +87,31 @@
 					</button>
 				</div>
 
-				<div class="flex flex-wrap gap-4">
+				<div class="category-chip-wrap">
 					<button
 						class="cat-chip-enhanced"
-						:class="
-							activeCategoryId === null ? 'cat-chip-enhanced--active' : ''
-						"
+						:class="activeCategoryId === null ? 'cat-chip-enhanced--active' : ''"
 						@click="selectAll">
 						<span class="flex items-center gap-2">
-							🌟 View All
-							<span v-if="totalProductsAll" class="count-enhanced">{{
-								totalProductsAll
-							}}</span>
+							View All
+							<span v-if="totalProductsAll" class="count-enhanced">{{ totalProductsAll }}</span>
 						</span>
 					</button>
+
 					<template v-if="!loadingCategories && categories.length">
 						<button
 							v-for="c in categories"
 							:key="c.id"
 							class="cat-chip-enhanced"
-							:class="
-								activeCategoryId === c.id ? 'cat-chip-enhanced--active' : ''
-							"
+							:class="activeCategoryId === c.id ? 'cat-chip-enhanced--active' : ''"
 							@click="selectCategory(c)">
 							<span class="flex items-center gap-2">
 								{{ c.name }}
-								<span
-									v-if="typeof c.products_count === 'number'"
-									class="count-enhanced"
-									>{{ c.products_count }}</span
-								>
+								<span v-if="typeof c.products_count === 'number'" class="count-enhanced">{{ c.products_count }}</span>
 							</span>
 						</button>
 					</template>
 
-					<!-- Enhanced Category Skeletons -->
 					<template v-else-if="loadingCategories">
 						<div
 							v-for="n in 6"
@@ -135,83 +119,78 @@
 							class="animate-pulse h-14 w-32 rounded-2xl bg-gradient-to-r from-slate-200 to-slate-300" />
 					</template>
 				</div>
+
 				<p
 					v-if="categoriesError"
 					class="mt-4 text-sm text-red-600 bg-red-50 p-3 rounded-xl">
-					⚠️ {{ categoriesError }}
+					{{ categoriesError }}
 				</p>
 			</div>
 		</section>
 
 		<!-- Enhanced Controls Section -->
-		<section class="max-w-7xl mx-auto px-6 mb-8">
-			<div
-				class="bg-white/90 backdrop-blur-xl rounded-3xl border border-white/50 shadow-xl p-6">
-				<div class="flex flex-col lg:flex-row gap-6 lg:items-center">
-					<div class="flex flex-1 gap-4">
+		<section class="max-w-7xl mx-auto px-6 mb-7">
+			<div class="control-shell rounded-2xl border border-slate-200 bg-white shadow-lg p-5 md:p-6">
+				<div class="flex flex-col xl:flex-row gap-4 xl:items-center xl:justify-between">
+					<div class="flex flex-1 flex-col md:flex-row gap-3">
 						<div class="relative flex-1">
-							<div
-								class="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400">
-								🔍
+							<div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-xs font-medium tracking-wide">
+								Search
 							</div>
 							<input
 								v-model.trim="searchQuery"
 								type="text"
-								placeholder="Search for amazing products..."
-								class="w-full rounded-2xl border-2 border-slate-200 pl-12 pr-12 py-4 text-sm focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-white/50 backdrop-blur" />
+								placeholder="Search products, brands, categories..."
+								class="w-full rounded-xl border border-slate-300 pl-20 pr-10 py-3.5 text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition" />
 							<button
 								v-if="searchQuery"
 								@click="searchQuery = ''"
-								class="absolute right-4 top-1/2 transform -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300 hover:text-slate-700 transition">
-								✕
+								class="absolute right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition">
+								×
 							</button>
 						</div>
+
 						<div class="relative">
 							<select
 								v-model="sortKey"
-								class="appearance-none rounded-2xl border-2 border-slate-200 px-6 py-4 text-sm focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none bg-white/50 backdrop-blur cursor-pointer min-w-[180px]">
-								<option value="featured">⭐ Featured</option>
-								<option value="price-asc">💰 Price: Low → High</option>
-								<option value="price-desc">💎 Price: High → Low</option>
-								<option value="stock-desc">📦 Stock: High → Low</option>
-								<option value="name-asc">🔤 Name A → Z</option>
+								class="appearance-none rounded-xl border border-slate-300 px-4 py-3.5 text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none bg-white cursor-pointer min-w-[210px]">
+								<option value="featured">Featured</option>
+								<option value="price-asc">Price: Low to High</option>
+								<option value="price-desc">Price: High to Low</option>
+								<option value="stock-desc">Stock: High to Low</option>
+								<option value="name-asc">Name: A to Z</option>
 							</select>
-							<div
-								class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none">
+							<div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none">
 								▼
 							</div>
 						</div>
+
 						<button
 							@click="resetFilters"
-							class="px-6 py-4 rounded-2xl bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 text-sm font-bold hover:from-slate-200 hover:to-slate-300 transition-all shadow-lg hover:shadow-xl transform hover:scale-105">
-							🔄 Reset
+							class="px-5 py-3.5 rounded-xl border border-slate-300 bg-slate-50 text-slate-700 text-sm font-semibold hover:bg-slate-100 transition-all">
+							Reset
 						</button>
 					</div>
 
-					<div class="flex items-center gap-4">
-						<div
-							class="text-sm text-slate-600 bg-slate-100 px-4 py-2 rounded-xl">
-							📄 Page
-							<span class="font-bold text-slate-800">{{
-								pagination.currentPage
-							}}</span>
+					<div class="flex items-center gap-3 flex-wrap justify-end">
+						<div class="text-sm text-slate-600 bg-slate-100 border border-slate-200 px-4 py-2 rounded-lg">
+							Page
+							<span class="font-bold text-slate-800">{{ pagination.currentPage }}</span>
 							/ <span class="font-bold">{{ pagination.lastPage || 1 }}</span>
 						</div>
+
 						<div class="flex gap-2">
 							<button
 								@click="goPrev"
 								:disabled="pagination.currentPage <= 1 || loadingProducts"
 								class="pager-btn-enhanced">
-								← Prev
+								Previous
 							</button>
 							<button
 								@click="goNext"
-								:disabled="
-									pagination.currentPage >= pagination.lastPage ||
-									loadingProducts
-								"
+								:disabled="pagination.currentPage >= pagination.lastPage || loadingProducts"
 								class="pager-btn-enhanced">
-								Next →
+								Next
 							</button>
 						</div>
 					</div>
@@ -221,12 +200,12 @@
 
 		<!-- Products Grid - Enhanced -->
 		<section class="max-w-7xl mx-auto px-6 pb-20">
-			<div class="flex items-center justify-between mb-8">
+			<div class="flex items-center justify-between gap-4 mb-7 flex-wrap">
 				<div>
-					<h2 class="text-3xl md:text-4xl font-black text-slate-800 mb-2">
+					<h2 class="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-1">
 						{{ activeCategoryLabel }}
 					</h2>
-					<p class="text-slate-600">Premium quality products just for you</p>
+					<p class="text-slate-500">Curated picks with best value and fast shipping</p>
 				</div>
 				<div
 					v-if="!loadingProducts && displayProducts.length"
@@ -277,20 +256,18 @@
 			<!-- Enhanced Products Grid -->
 			<div
 				v-else
-				class="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+				class="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
 				<div
 					v-for="(product, idx) in visibleProducts"
 					:key="product.id ?? idx"
-					class="group relative flex flex-col bg-white border border-slate-200/50 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden transform hover:scale-[1.02] hover:-translate-y-2"
+					class="group relative flex flex-col bg-white border border-slate-200 rounded-xl shadow-none hover:shadow-sm transition-shadow duration-150 overflow-hidden"
 					@mouseenter="() => startAutoPlay(product)"
 					@mouseleave="() => stopAutoPlay(product)">
-					<!-- Enhanced Image Section -->
 					<div
-						class="relative w-full h-64 bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden cursor-pointer"
+						class="relative w-full h-64 bg-slate-100 overflow-hidden cursor-pointer"
 						@click="openQuickView(product)"
 						@touchstart="(e) => onTouchStart(e, product)"
 						@touchend="(e) => onTouchEnd(e, product)">
-						<!-- Main Image -->
 						<img
 							:src="
 								product.gallery.length
@@ -298,14 +275,9 @@
 									: product.image
 							"
 							:alt="product.name"
-							class="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
+							class="w-full h-full object-cover transition-opacity duration-300"
 							loading="lazy" />
 
-						<!-- Overlay Gradient -->
-						<div
-							class="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-						<!-- Enhanced Dots -->
 						<div
 							v-if="product.gallery.length > 1"
 							class="absolute bottom-3 left-0 right-0 flex justify-center gap-2">
@@ -313,104 +285,79 @@
 								v-for="(g, i) in product.gallery"
 								:key="i"
 								@click.stop="selectImage(product, i)"
-								class="w-3 h-3 rounded-full transition-all duration-300 transform hover:scale-125"
+								class="w-3 h-3 rounded-full transition-colors duration-200"
 								:class="
 									product.currentIndex === i
-										? 'bg-white shadow-lg scale-125'
+										? 'bg-white shadow-lg'
 										: 'bg-white/60 hover:bg-white/80'
 								" />
 						</div>
 
-						<!-- Enhanced Stock Badge -->
 						<div class="absolute top-4 left-4">
 							<div
-								class="px-3 py-1.5 rounded-xl text-xs font-bold backdrop-blur-sm border"
+								class="px-3 py-1 rounded-full text-xs font-semibold border shadow-sm"
 								:class="
 									product.stock > 0
-										? 'bg-emerald-500/90 text-white border-emerald-400'
-										: 'bg-red-500/90 text-white border-red-400'
+										? 'bg-emerald-500 text-white border-emerald-500'
+										: 'bg-red-500 text-white border-red-500'
 								">
-								{{ product.stock > 0 ? "✅ In Stock" : "❌ Out of Stock" }}
+								{{ product.stock > 0 ? "In Stock" : "Out of Stock" }}
 							</div>
 						</div>
 
-						<!-- Enhanced Seller Badge -->
 						<div v-if="product.seller" class="absolute top-4 right-4">
 							<div
-								class="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/90 backdrop-blur-sm text-slate-700 border border-white/50 shadow-lg">
-								🏪 {{ product.seller }}
+								class="px-3 py-1 rounded-full text-xs font-semibold bg-white text-slate-700 border border-slate-200 shadow-sm">
+								{{ product.seller }}
 							</div>
-						</div>
-
-						<!-- Quick Action Overlay -->
-						<div
-							class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/20">
-							<button
-								@click.stop="openQuickView(product)"
-								class="px-6 py-3 rounded-2xl bg-white/95 backdrop-blur text-slate-800 font-bold shadow-xl transform scale-95 group-hover:scale-100 transition-all duration-300 hover:bg-white">
-								👁️ Quick View
-							</button>
 						</div>
 					</div>
 
-					<!-- Enhanced Product Info -->
-					<div
-						class="flex flex-col flex-1 p-6 bg-gradient-to-b from-white to-slate-50/50">
+					<div class="flex flex-col flex-1 p-5 bg-white">
 						<h3
-							class="font-bold text-slate-900 text-lg mb-3 line-clamp-1 group-hover:text-blue-600 transition-colors">
+							class="font-semibold text-slate-900 text-lg mb-2 line-clamp-1">
 							{{ product.name }}
 						</h3>
 
-						<div class="flex items-center gap-2 mb-3 flex-wrap">
+						<div class="flex items-center gap-2 mb-2 flex-wrap">
 							<span
-								class="inline-flex items-center px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-bold shadow">
-								📂 {{ product.category }}
-							</span>
-							<span
-								v-if="product.imagesCount > 1"
-								class="inline-flex items-center px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold">
-								🖼️ {{ product.imagesCount }}
+								class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
+								{{ product.category }}
 							</span>
 						</div>
 
-						<p class="text-sm text-slate-600 line-clamp-2 mb-4 leading-relaxed">
+						<p class="text-sm text-slate-600 line-clamp-2 mb-3 leading-relaxed">
 							{{ product.description }}
 						</p>
 
-						<!-- Enhanced Price & Actions -->
 						<div class="mt-auto">
-							<div class="flex items-center justify-between mb-4">
-								<div
-									class="text-2xl font-black text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">
+							<div class="flex items-center justify-between mb-3">
+								<div class="text-2xl font-bold text-indigo-600">
 									₹{{ product.priceDisplay }}
 								</div>
-								<div
-									class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">
-									💎 Premium
-								</div>
+								<div class="text-xs text-slate-400">Premium</div>
 							</div>
-							<div class="flex gap-3">
+							<div class="flex gap-2 items-center">
 								<button
-									class="flex-1 px-4 py-3 rounded-2xl bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 text-sm font-bold hover:from-slate-200 hover:to-slate-300 transition-all transform hover:scale-105 shadow-md"
+									class="w-24 px-3 py-2.5 rounded-lg bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200 transition"
 									@click.stop="openQuickView(product)">
-									👁️ View
+									View
 								</button>
 								<button
 									:disabled="product.stock === 0"
 									@click.stop="addToCart(product)"
-									class="flex-1 px-4 py-3 rounded-2xl text-sm font-bold transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 hover:shadow-xl">
-									🛒 Add to Cart
+									class="flex-1 min-w-0 px-3 py-2.5 rounded-lg text-sm font-medium transition whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed bg-indigo-600 text-white hover:bg-indigo-700">
+									Add to Cart
 								</button>
 								<button
 									@click.stop="toggleWishlist(product)"
 									:aria-pressed="wishlistStore.isInWishlist(product.id)"
-									class="ml-2 px-4 py-3 rounded-2xl border text-sm font-bold transition-all hover:scale-105 flex items-center justify-center"
+									class="w-11 h-11 rounded-lg border border-slate-300 text-sm font-medium transition-colors hover:bg-slate-50 flex items-center justify-center"
 									:title="
 										wishlistStore.isInWishlist(product.id)
 											? 'Remove from wishlist'
 											: 'Add to wishlist'
 									">
-									<!-- Filled heart when in wishlist -->
 									<svg
 										v-if="wishlistStore.isInWishlist(product.id)"
 										class="w-5 h-5 text-red-600"
@@ -420,7 +367,6 @@
 										<path
 											d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 6 3.99 4 6.5 4 8.24 4 9.91 4.81 11 6.09 12.09 4.81 13.76 4 15.5 4 18.01 4 20 6 20 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
 									</svg>
-									<!-- Outline heart when not in wishlist -->
 									<svg
 										v-else
 										class="w-5 h-5 text-gray-400"
@@ -436,10 +382,6 @@
 							</div>
 						</div>
 					</div>
-
-					<!-- Product Shine Effect -->
-					<div
-						class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none"></div>
 				</div>
 
 				<!-- No Products Message -->
@@ -457,7 +399,7 @@
 						</p>
 						<button
 							@click="resetFilters"
-							class="px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg">
+							class="px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold hover:from-blue-700 hover:to-purple-700 transition-colors shadow-lg">
 							🔄 Reset Filters
 						</button>
 					</div>
@@ -479,32 +421,28 @@
 			</div>
 		</section>
 
-		<!-- Enhanced Quick View Modal -->
+		<!-- Quick View Modal -->
 		<transition name="modal-fade">
 			<div
 				v-if="quickView.open"
-				class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4"
+				class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
 				@click.self="closeQuickView">
 				<div
-					class="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-white/20 transform transition-all duration-300">
-					<!-- Enhanced Close Button -->
+					class="relative w-full max-w-3xl bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
 					<button
 						@click="closeQuickView"
-						class="absolute top-6 right-6 z-10 w-12 h-12 flex items-center justify-center rounded-2xl bg-white/90 backdrop-blur shadow-xl hover:bg-white transition-all transform hover:scale-110 hover:rotate-90">
-						<span class="text-xl font-bold text-slate-600">✕</span>
+						class="absolute top-3 right-3 z-10 w-9 h-9 flex items-center justify-center rounded-lg bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
+						<span class="text-lg font-medium text-slate-600">✕</span>
 					</button>
-
 					<div class="grid md:grid-cols-2 gap-0">
-						<!-- Enhanced Image Section -->
 						<div
-							class="relative h-96 bg-gradient-to-br from-slate-100 to-slate-200">
+							class="relative h-80 bg-slate-100">
 							<img
 								v-if="quickView.product.gallery.length"
 								:src="quickView.product.gallery[quickView.product.currentIndex]"
 								class="w-full h-full object-cover"
 								:alt="quickView.product.name" />
 
-							<!-- Enhanced Modal Dots -->
 							<div
 								v-if="quickView.product.gallery.length > 1"
 								class="absolute bottom-4 left-0 right-0 flex justify-center gap-3">
@@ -512,82 +450,71 @@
 									v-for="(g, i) in quickView.product.gallery"
 									:key="i"
 									@click="selectImage(quickView.product, i)"
-									class="w-4 h-4 rounded-full transition-all duration-300 transform hover:scale-125"
+									class="w-3 h-3 rounded-full transition-colors duration-200"
 									:class="
 										quickView.product.currentIndex === i
-											? 'bg-blue-600 shadow-lg scale-125'
+											? 'bg-indigo-600 shadow'
 											: 'bg-white/70 hover:bg-white shadow'
 									" />
 							</div>
 
-							<!-- Enhanced Stock Badge for Modal -->
 							<div class="absolute top-6 left-6">
 								<div
-									class="px-4 py-2 rounded-2xl text-sm font-bold backdrop-blur-sm border-2"
+									class="px-3 py-1.5 rounded-full text-sm font-semibold border shadow-sm"
 									:class="
 										quickView.product.stock > 0
-											? 'bg-emerald-500/90 text-white border-emerald-400'
-											: 'bg-red-500/90 text-white border-red-400'
+											? 'bg-emerald-500 text-white border-emerald-500'
+											: 'bg-red-500 text-white border-red-500'
 									">
 									{{
 										quickView.product.stock > 0
-											? "✅ In Stock"
-											: "❌ Out of Stock"
+											? "In Stock"
+											: "Out of Stock"
 									}}
 								</div>
 							</div>
 						</div>
 
-						<!-- Enhanced Product Details -->
-						<div
-							class="p-8 flex flex-col bg-gradient-to-b from-white to-slate-50/50">
-							<h3 class="text-2xl font-black text-slate-900 mb-4 leading-tight">
+						<div class="p-6 flex flex-col bg-white">
+							<h3 class="text-2xl font-semibold text-slate-900 mb-3 leading-tight">
 								{{ quickView.product.name }}
 							</h3>
 
-							<div class="flex gap-3 mb-6 flex-wrap">
-								<span
-									class="badge-enhanced bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-									📂 {{ quickView.product.category }}
+							<div class="flex gap-2 mb-4 flex-wrap">
+								<span class="badge-enhanced bg-blue-50 text-blue-700">
+									{{ quickView.product.category }}
 								</span>
 								<span
 									v-if="quickView.product.seller"
-									class="badge-enhanced bg-gradient-to-r from-purple-500 to-pink-500 text-white">
-									🏪 {{ quickView.product.seller }}
-								</span>
-								<span
-									class="badge-enhanced bg-gradient-to-r from-slate-400 to-slate-500 text-white">
-									🆔 {{ quickView.product.id }}
+									class="badge-enhanced bg-slate-100 text-slate-700">
+									{{ quickView.product.seller }}
 								</span>
 							</div>
 
-							<div
-								class="bg-slate-50 rounded-2xl p-4 mb-6 border border-slate-200">
-								<p class="text-sm text-slate-700 leading-relaxed">
+							<div class="bg-slate-50 rounded-lg p-3 mb-4 border border-slate-200">
+								<p class="text-sm text-slate-700 leading-6">
 									{{
 										quickView.product.description ||
-										"No description available for this premium product."
+										"No description available for this product."
 									}}
 								</p>
 							</div>
 
-							<div
-								class="text-4xl font-black mb-8 text-transparent bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text">
+							<div class="text-3xl font-semibold mb-6 text-indigo-600">
 								₹{{ quickView.product.priceDisplay }}
 							</div>
 
-							<!-- Enhanced Action Buttons -->
-							<div class="mt-auto flex gap-4">
+							<div class="mt-auto flex gap-2">
 								<button
-									class="flex-1 py-4 rounded-2xl font-bold text-lg transition-all transform hover:scale-105 shadow-xl disabled:opacity-50 disabled:hover:scale-100 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 hover:shadow-2xl"
+									class="flex-1 py-3 rounded-lg font-medium text-base transition disabled:opacity-50 bg-indigo-600 text-white hover:bg-indigo-700"
 									:disabled="quickView.product.stock === 0"
 									@click="addToCart(quickView.product)">
-									🛒 Add to Cart
+									Add to Cart
 								</button>
 								<button
-									class="px-8 py-4 rounded-2xl bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 font-bold hover:from-slate-200 hover:to-slate-300 transition-all transform hover:scale-105 shadow-lg"
+									class="px-5 py-3 rounded-lg bg-slate-100 text-slate-700 font-medium hover:bg-slate-200 transition-colors"
 									@click="closeQuickView">
-									✕ Close
+									Close
 								</button>
 							</div>
 						</div>
@@ -1049,15 +976,29 @@
 </script>
 
 <style scoped>
+	.category-shell {
+		box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+	}
+
+	.control-shell {
+		box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+	}
+
+	.category-chip-wrap {
+		display: flex;
+		gap: 0.6rem;
+		flex-wrap: wrap;
+	}
+
 	/* Enhanced Category Chips */
 	.cat-chip-enhanced {
-		@apply relative px-6 py-3 flex items-center gap-2 rounded-2xl bg-white/80 backdrop-blur border-2 border-slate-200 text-slate-700 font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 hover:border-blue-400 hover:text-blue-700 overflow-hidden;
+		@apply relative px-5 py-3 flex items-center gap-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold shadow-sm hover:shadow-md transition-all duration-200 hover:border-blue-400 hover:text-blue-700 overflow-hidden;
 	}
 	.cat-chip-enhanced--active {
-		@apply bg-gradient-to-r from-blue-600 to-purple-600 text-white border-blue-500 shadow-xl scale-105;
+		@apply bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-lg;
 	}
 	.cat-chip-enhanced .count-enhanced {
-		@apply inline-block px-2 py-1 rounded-lg text-xs font-black;
+		@apply inline-block px-2 py-0.5 rounded-md text-xs font-bold;
 	}
 	.cat-chip-enhanced:not(.cat-chip-enhanced--active) .count-enhanced {
 		@apply bg-slate-100 text-slate-600;
@@ -1073,21 +1014,32 @@
 
 	/* Enhanced Pager Buttons */
 	.pager-btn-enhanced {
-		@apply px-6 py-3 rounded-2xl font-bold bg-gradient-to-r from-white to-slate-50 border-2 border-slate-200 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 hover:from-blue-50 hover:to-purple-50 hover:border-blue-300;
+		@apply px-5 py-2.5 rounded-lg font-semibold bg-white border border-slate-300 shadow-sm hover:shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:border-blue-300 hover:text-blue-700;
+	}
+
+	@media (max-width: 768px) {
+		.category-chip-wrap {
+			overflow-x: auto;
+			flex-wrap: nowrap;
+			padding-bottom: 6px;
+		}
+
+		.category-chip-wrap .cat-chip-enhanced {
+			white-space: nowrap;
+			flex-shrink: 0;
+		}
 	}
 
 	/* Enhanced Modal Transitions */
 	.modal-fade-enter-active,
 	.modal-fade-leave-active {
-		transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+		transition: opacity 0.25s ease;
 	}
 	.modal-fade-enter-from {
 		opacity: 0;
-		transform: scale(0.8) translateY(20px);
 	}
 	.modal-fade-leave-to {
 		opacity: 0;
-		transform: scale(0.95) translateY(-10px);
 	}
 
 	/* Enhanced Line Clamps */
@@ -1178,11 +1130,10 @@
 
 	/* Enhanced Hover Effects */
 	.hover-lift {
-		transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+		transition: box-shadow 0.2s ease;
 	}
 	.hover-lift:hover {
-		transform: translateY(-8px) scale(1.02);
-		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+		box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
 	}
 
 	/* Professional Focus States */
@@ -1195,10 +1146,9 @@
 
 	/* Enhanced Card Animations */
 	.product-card {
-		transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+		transition: box-shadow 0.2s ease;
 	}
 	.product-card:hover {
-		transform: translateY(-12px) scale(1.03);
-		box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+		box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 	}
 </style>

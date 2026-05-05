@@ -176,6 +176,12 @@ const routes = [
           meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
         },
         {
+          path: 'invoices/:id/print',
+          name: 'InvoicePrint',
+          component: () => import('@/views/seller/InvoicePrint.vue'),
+          meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+        },
+        {
           path: 'customers',
           name: 'BizCustomers',
           component: () => import('@/views/seller/Customers.vue'),
@@ -256,6 +262,12 @@ const routes = [
     name: 'LoginUser',
     component: () => import('@/components/auth/LoginUser.vue'),
   },
+  {
+    path: '/admin/login',
+    name: 'AdminLogin',
+    component: () => import('@/views/admin/AdminLogin.vue'),
+    meta: { requiresGuest: true },
+  },
 ]
 
 const router = createRouter({
@@ -308,7 +320,7 @@ router.beforeEach(async (to, from, next) => {
   }
 
   // Redirect logged-in users away from login/register
-  if ((to.path === '/loginuser' || to.path === '/registeruser') && authStore.isLoggedIn) {
+  if ((to.path === '/loginuser' || to.path === '/registeruser' || to.path === '/admin/login') && authStore.isLoggedIn) {
     const r = authStore.role
     if (r === 'admin') next('/admin/dashboard')
     else if (r === 'seller' || r === 'manager') next('/seller/dashboard')

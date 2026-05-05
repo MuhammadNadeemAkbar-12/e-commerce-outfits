@@ -1,6 +1,6 @@
 <template>
   <div :class="{ 'dark': $q.dark.isActive }" class="transition-colors duration-300">
-    <q-layout view="lHh Lpr lff" container style="height: 100vh" class="shadow-2 rounded-borders">
+    <q-layout view="lHh Lpr lff" class="admin-layout shadow-2 rounded-borders">
       <q-header elevated class="bg-gradient-to-r from-blue-600 to-cyan-600 shadow-lg">
         <q-toolbar>
           <!-- Back button for mobile view -->
@@ -13,7 +13,7 @@
             icon="arrow_back" 
             class="text-white hover:bg-blue-700 transition-colors duration-200" 
           />
-          <q-toolbar-title class="text-white text-xl font-bold tracking-wide">E-Commerce Admin Dashboard</q-toolbar-title>
+          <q-toolbar-title class="text-white text-xl font-bold tracking-wide">Stock, Inventory &amp; Sales Management</q-toolbar-title>
           <q-btn flat @click="drawer = !drawer" round dense icon="menu" class="text-white hover:bg-blue-700 transition-colors duration-200 md:hidden" />
           <q-btn flat @click="toggleTheme" round dense icon="brightness_6" class="text-white hover:bg-blue-700 transition-colors duration-200" />
           <q-btn flat @click="handleLogout" round dense icon="logout" class="text-white hover:bg-blue-700 transition-colors duration-200" />
@@ -158,7 +158,7 @@
             <q-separator spaced />
 
             <!-- Analytics Section -->
-            <q-item-label header class="text-weight-bold text-info">Analytics</q-item-label>
+            <q-item-label header class="text-weight-bold text-info">Analytics &amp; Reports</q-item-label>
             
             <q-item clickable v-ripple to="/admin/dashboard" class="hover:bg-cyan-100 dark:hover:bg-cyan-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
               <q-item-section avatar>
@@ -170,11 +170,32 @@
               </q-item-section>
             </q-item>
 
+            <q-item clickable v-ripple to="/admin/reports" class="hover:bg-cyan-100 dark:hover:bg-cyan-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
+              <q-item-section avatar>
+                <q-icon name="bar_chart" color="info" class="text-cyan-600 dark:text-cyan-400" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Reports</q-item-label>
+                <q-item-label caption class="text-gray-600 dark:text-gray-400">Sales &amp; inventory reports</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item clickable v-ripple to="/admin/platform-stats" class="hover:bg-cyan-100 dark:hover:bg-cyan-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
+              <q-item-section avatar>
+                <q-icon name="analytics" color="info" class="text-cyan-600 dark:text-cyan-400" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Platform Stats</q-item-label>
+                <q-item-label caption class="text-gray-600 dark:text-gray-400">Advanced analytics</q-item-label>
+              </q-item-section>
+            </q-item>
 
 
+
+            <!-- Settings & System -->
             <q-separator spaced />
+            <q-item-label header class="text-weight-bold">System</q-item-label>
 
-            <!-- Settings -->
             <q-item clickable v-ripple to="/admin/settings" class="hover:bg-gray-100 dark:hover:bg-gray-800/30 hover:shadow-md transition-all duration-200 rounded-lg">
               <q-item-section avatar>
                 <q-icon name="settings" class="text-gray-600 dark:text-gray-400" />
@@ -200,19 +221,24 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 
 const drawer = ref(false)
+const screenWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1024)
 const authStore = useAuthStore()
 const router = useRouter()
 const $q = useQuasar()
 
 const isMobile = computed(() => {
-  return window.innerWidth < 768
+  return screenWidth.value < 768
 })
+
+const onResize = () => {
+  screenWidth.value = window.innerWidth
+}
 
 const toggleTheme = () => {
   $q.dark.toggle();
@@ -227,6 +253,7 @@ const toggleTheme = () => {
 
 // Load theme state from localStorage on mount
 onMounted(() => {
+  window.addEventListener('resize', onResize)
   const savedTheme = localStorage.getItem('theme');
   if (savedTheme === 'dark') {
     $q.dark.set(true);
@@ -234,6 +261,10 @@ onMounted(() => {
     $q.dark.set(false);
   }
 });
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', onResize)
+})
 const handleBack = () => {
   router.back(); // Navigate to the previous page
 }
@@ -258,6 +289,10 @@ const handleLogout = async () => {
 </script>
 
 <style scoped>
+.admin-layout {
+  min-height: 100vh;
+}
+
 .q-item__section--avatar {
   min-width: 40px;
 }

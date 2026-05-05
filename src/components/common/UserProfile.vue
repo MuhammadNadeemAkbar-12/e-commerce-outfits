@@ -13,7 +13,7 @@
 				<div class="relative">
 					<q-avatar
 						size="44px"
-						class="profile-avatar cursor-pointer transition-all duration-300 hover:scale-110"
+						class="profile-avatar cursor-pointer"
 						:style="!user?.avatar ? { background: getGradientColor } : {}">
 						<span
 							v-if="!user?.avatar"
@@ -113,50 +113,39 @@
 						clickable
 						v-close-popup
 						@click="goToProfilePage"
-						class="menu-item hover:bg-gray-50 transition-colors duration-200 mx-2 rounded-lg">
+						class="menu-item">
 						<q-item-section avatar>
 							<div class="icon-wrapper bg-blue-100 text-blue-600">
 								<q-icon name="person" size="20px" />
 							</div>
 						</q-item-section>
 						<q-item-section>
-							<q-item-label class="font-medium text-gray-800"
-								>View Profile</q-item-label
-							>
-							<q-item-label caption class="text-gray-500"
-								>Manage your account details</q-item-label
-							>
+							<q-item-label class="font-medium text-gray-800">View Profile</q-item-label>
+							<q-item-label caption class="text-gray-500">Manage your account details</q-item-label>
 						</q-item-section>
 						<q-item-section side>
-							<q-icon name="chevron_right" color="gray-400" size="18px" />
+							<q-icon name="chevron_right" size="18px" color="grey-5" />
 						</q-item-section>
 					</q-item>
 
-					<!-- View All Orders (open orders page) - visible for customers/buyers only -->
+					<!-- View All Orders - visible for customers/buyers only -->
 					<q-item
-						v-if="
-							(profile?.role || user?.role) === 'customer' ||
-							(profile?.role || user?.role) === 'buyer'
-						"
+						v-if="(profile?.role || user?.role) === 'customer' || (profile?.role || user?.role) === 'buyer'"
 						clickable
 						v-close-popup
 						@click="goToOrders"
-						class="menu-item hover:bg-gray-50 transition-colors duration-200 mx-2 rounded-lg">
+						class="menu-item">
 						<q-item-section avatar>
 							<div class="icon-wrapper bg-teal-100 text-teal-600">
 								<q-icon name="receipt_long" size="20px" />
 							</div>
 						</q-item-section>
 						<q-item-section>
-							<q-item-label class="font-medium text-gray-800"
-								>View All Orders</q-item-label
-							>
-							<q-item-label caption class="text-gray-500"
-								>See all your past orders</q-item-label
-							>
+							<q-item-label class="font-medium text-gray-800">View All Orders</q-item-label>
+							<q-item-label caption class="text-gray-500">See all your past orders</q-item-label>
 						</q-item-section>
 						<q-item-section side>
-							<q-icon name="chevron_right" color="gray-400" size="18px" />
+							<q-icon name="chevron_right" size="18px" color="grey-5" />
 						</q-item-section>
 					</q-item>
 
@@ -165,22 +154,18 @@
 						clickable
 						v-close-popup
 						@click="editProfile"
-						class="menu-item hover:bg-gray-50 transition-colors duration-200 mx-2 rounded-lg">
+						class="menu-item">
 						<q-item-section avatar>
 							<div class="icon-wrapper bg-green-100 text-green-600">
 								<q-icon name="edit" size="20px" />
 							</div>
 						</q-item-section>
 						<q-item-section>
-							<q-item-label class="font-medium text-gray-800"
-								>Edit Profile</q-item-label
-							>
-							<q-item-label caption class="text-gray-500"
-								>Update your information</q-item-label
-							>
+							<q-item-label class="font-medium text-gray-800">Edit Profile</q-item-label>
+							<q-item-label caption class="text-gray-500">Update your information</q-item-label>
 						</q-item-section>
 						<q-item-section side>
-							<q-icon name="chevron_right" color="gray-400" size="18px" />
+							<q-icon name="chevron_right" size="18px" color="grey-5" />
 						</q-item-section>
 					</q-item>
 
@@ -189,22 +174,18 @@
 						v-if="(profile?.role || user?.role) === 'admin'"
 						clickable
 						v-close-popup
-						class="menu-item hover:bg-gray-50 transition-colors duration-200 mx-2 rounded-lg">
+						class="menu-item">
 						<q-item-section avatar>
 							<div class="icon-wrapper bg-purple-100 text-purple-600">
 								<q-icon name="settings" size="20px" />
 							</div>
 						</q-item-section>
 						<q-item-section>
-							<q-item-label class="font-medium text-gray-800"
-								>Settings</q-item-label
-							>
-							<q-item-label caption class="text-gray-500"
-								>Preferences and privacy</q-item-label
-							>
+							<q-item-label class="font-medium text-gray-800">Settings</q-item-label>
+							<q-item-label caption class="text-gray-500">Preferences and privacy</q-item-label>
 						</q-item-section>
 						<q-item-section side>
-							<q-icon name="chevron_right" color="gray-400" size="18px" />
+							<q-icon name="chevron_right" size="18px" color="grey-5" />
 						</q-item-section>
 					</q-item>
 
@@ -213,11 +194,8 @@
 						clickable
 						v-close-popup
 						@click="goToDashboard"
-						v-if="
-							(profile?.role || user?.role) === 'seller' ||
-							(profile?.role || user?.role) === 'admin'
-						"
-						class="menu-item hover:bg-gray-50 transition-colors duration-200 mx-2 rounded-lg">
+						v-if="(profile?.role || user?.role) === 'seller' || (profile?.role || user?.role) === 'admin'"
+						class="menu-item">
 						<q-item-section avatar>
 							<div class="icon-wrapper bg-indigo-100 text-indigo-600">
 								<q-icon name="dashboard" size="20px" />
@@ -225,22 +203,14 @@
 						</q-item-section>
 						<q-item-section>
 							<q-item-label class="font-medium text-gray-800">
-								{{
-									(profile?.role || user?.role) === "admin"
-										? "Admin Dashboard"
-										: "Seller Dashboard"
-								}}
+								{{ (profile?.role || user?.role) === "admin" ? "Admin Dashboard" : "Seller Dashboard" }}
 							</q-item-label>
 							<q-item-label caption class="text-gray-500">
-								{{
-									(profile?.role || user?.role) === "admin"
-										? "Manage system settings"
-										: "Manage your products"
-								}}
+								{{ (profile?.role || user?.role) === "admin" ? "Manage system settings" : "Manage your products" }}
 							</q-item-label>
 						</q-item-section>
 						<q-item-section side>
-							<q-icon name="chevron_right" color="gray-400" size="18px" />
+							<q-icon name="chevron_right" size="18px" color="grey-5" />
 						</q-item-section>
 					</q-item>
 				</div>
@@ -254,15 +224,14 @@
 						clickable
 						v-close-popup
 						@click="logout"
-						class="menu-item hover:bg-red-50 transition-colors duration-200 mx-2 rounded-lg">
+						class="menu-item menu-item--danger">
 						<q-item-section avatar>
-							<div class="icon-wrapper bg-red-100 text-red-600">
+							<div class="icon-wrapper bg-red-100 text-red-500">
 								<q-icon name="logout" size="20px" />
 							</div>
 						</q-item-section>
 						<q-item-section>
-							<q-item-label class="font-medium text-red-700"
-								>Logout</q-item-label
+							<q-item-label class="font-medium text-red-600">Logout</q-item-label
 							>
 							<q-item-label caption class="text-red-500"
 								>Sign out of your account</q-item-label
@@ -448,55 +417,32 @@
 </script>
 
 <style scoped>
-	/* Main dropdown styling */
+	/* Main dropdown */
 	.profile-dropdown {
 		min-width: 44px;
 		position: relative;
 	}
-
-	.profile-dropdown :deep(.q-btn) {
-		border-radius: 50%;
-		padding: 2px;
-		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-	}
-
-	.profile-dropdown :deep(.q-btn:hover) {
-		background-color: rgba(59, 130, 246, 0.1);
-		transform: scale(1.05);
-	}
-
 	.profile-dropdown :deep(.q-btn__content) {
 		padding: 0;
 		min-height: 0;
 	}
 
-	/* Profile icon container */
+	/* Trigger avatar */
 	.profile-icon-container {
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		position: relative;
 	}
-
-	/* Profile avatar styling */
 	.profile-avatar {
-		border: 3px solid rgba(255, 255, 255, 0.9);
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15),
-			0 0 0 1px rgba(255, 255, 255, 0.1);
-		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		border: 2px solid rgba(255, 255, 255, 0.85);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
 		overflow: hidden;
 	}
 
-	.profile-avatar:hover {
-		box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25),
-			0 0 0 1px rgba(255, 255, 255, 0.2);
-		transform: scale(1.1);
-	}
-
-	/* Fix avatar image display */
+	/* Avatar image */
 	.profile-avatar img {
 		border-radius: 50%;
-		transition: all 0.3s ease;
 		display: block;
 	}
 
@@ -505,269 +451,75 @@
 		overflow: hidden;
 	}
 
-	/* Dropdown content styling */
+	/* ── DROPDOWN PANEL ─────────────────────────────────────── */
 	.profile-dropdown :deep(.profile-dropdown-content) {
-		border-radius: 16px;
-		box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
-			0 10px 10px -5px rgba(0, 0, 0, 0.04);
-		border: 1px solid rgba(229, 231, 235, 0.8);
-		backdrop-filter: blur(10px);
-		background: rgba(255, 255, 255, 0.95);
-		margin-top: 8px;
+		border-radius: 14px;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.08);
+		border: 1px solid #e5e7eb;
+		background: #ffffff;
+		margin-top: 6px;
 		overflow: hidden;
-		animation: dropdownFadeIn 0.2s ease-out;
 	}
 
-	@keyframes dropdownFadeIn {
-		from {
-			opacity: 0;
-			transform: translateY(-10px) scale(0.95);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0) scale(1);
-		}
-	}
-
-	/* List styling */
+	/* ── LIST ───────────────────────────────────────────────── */
 	.dropdown-list {
 		padding: 0;
-		border-radius: 16px;
 		overflow: hidden;
 	}
 
-	/* Header styling */
+	/* ── HEADER ─────────────────────────────────────────────── */
 	.dropdown-header {
-		background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+		background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
 		position: relative;
-		overflow: hidden;
+		padding: 18px 16px 16px;
 	}
 
-	/* Close button inside header */
+	/* Close button */
 	.close-btn {
 		position: absolute;
-		top: 8px;
-		right: 8px;
-		color: rgba(255, 255, 255, 0.9);
-		background: rgba(255, 255, 255, 0.06);
+		top: 10px;
+		right: 10px;
+		color: rgba(255, 255, 255, 0.85) !important;
+		background: rgba(255, 255, 255, 0.1) !important;
 		border-radius: 8px;
-		min-width: 36px;
-		height: 36px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		transition: background 0.15s ease;
+		min-width: 32px;
+		height: 32px;
 	}
-
 	.close-btn:hover {
-		background: rgba(255, 255, 255, 0.12);
+		background: rgba(255, 255, 255, 0.18) !important;
 	}
 
-	.dropdown-header::before {
-		content: "";
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: linear-gradient(
-			45deg,
-			transparent 30%,
-			rgba(255, 255, 255, 0.1) 50%,
-			transparent 70%
-		);
-		transform: translateX(-100%);
-		animation: shimmer 3s infinite;
-	}
-
-	@keyframes shimmer {
-		0% {
-			transform: translateX(-100%);
-		}
-		100% {
-			transform: translateX(100%);
-		}
-	}
-
-	/* Menu item styling */
+	/* ── MENU ITEMS ─────────────────────────────────────────── */
 	.menu-item {
-		padding: 12px 16px;
-		margin: 4px 8px;
-		border-radius: 12px;
-		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-		position: relative;
-		overflow: hidden;
+		padding: 10px 14px;
+		margin: 2px 8px;
+		border-radius: 10px;
+		min-height: 48px;
 	}
-
 	.menu-item:hover {
-		background: linear-gradient(
-			135deg,
-			rgba(59, 130, 246, 0.08) 0%,
-			rgba(147, 51, 234, 0.08) 100%
-		);
-		transform: translateX(4px);
+		background: #f5f3ff;
+	}
+	.menu-item--danger:hover {
+		background: #fff1f2;
 	}
 
-	.menu-item:active {
-		transform: translateX(2px) scale(0.98);
-	}
-
-	/* Icon wrapper styling */
+	/* ── ICON WRAPPERS ──────────────────────────────────────── */
 	.icon-wrapper {
 		width: 36px;
 		height: 36px;
-		border-radius: 10px;
+		border-radius: 9px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: all 0.2s ease;
+		flex-shrink: 0;
 	}
 
-	.menu-item:hover .icon-wrapper {
-		transform: scale(1.1);
-	}
-
-	/* Item labels */
-	.menu-item .q-item__label {
-		transition: color 0.2s ease;
-	}
-
-	.menu-item:hover .q-item__label {
-		color: #1f2937;
-	}
-
-	/* Logout item special styling */
-	.menu-item:hover .text-red-700 {
-		color: #dc2626 !important;
-	}
-
-	.menu-item:hover .text-red-500 {
-		color: #ef4444 !important;
-	}
-
-	/* Separator styling */
-	.q-separator {
-		background: linear-gradient(
-			90deg,
-			transparent,
-			rgba(229, 231, 235, 0.8),
-			transparent
-		);
-		height: 1px;
-		margin: 8px 16px;
-	}
-
-	/* Responsive design */
+	/* ── RESPONSIVE ─────────────────────────────────────────── */
 	@media (max-width: 480px) {
 		.profile-dropdown :deep(.profile-dropdown-content) {
 			min-width: 260px;
-			max-width: calc(100vw - 32px);
+			max-width: calc(100vw - 24px);
 		}
-
-		.dropdown-header {
-			padding: 16px;
-		}
-
-		.menu-item {
-			padding: 10px 12px;
-		}
-	}
-
-	/* Dark mode support */
-	@media (prefers-color-scheme: dark) {
-		.profile-dropdown :deep(.profile-dropdown-content) {
-			background: rgba(31, 41, 55, 0.95);
-			border-color: rgba(75, 85, 99, 0.8);
-		}
-
-		.menu-item:hover {
-			background: linear-gradient(
-				135deg,
-				rgba(59, 130, 246, 0.15) 0%,
-				rgba(147, 51, 234, 0.15) 100%
-			);
-		}
-
-		.dropdown-list .q-item__label {
-			color: #f9fafb;
-		}
-
-		.dropdown-list .q-item__label--caption {
-			color: #d1d5db;
-		}
-	}
-
-	/* Loading animation */
-	@keyframes pulse {
-		0%,
-		100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.5;
-		}
-	}
-
-	.loading-pulse {
-		animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-	}
-
-	/* Micro-interactions */
-	.profile-dropdown :deep(.q-btn) {
-		position: relative;
-		overflow: hidden;
-	}
-
-	.profile-dropdown :deep(.q-btn)::before {
-		content: "";
-		position: absolute;
-		top: 50%;
-		left: 50%;
-		width: 0;
-		height: 0;
-		border-radius: 50%;
-		background: rgba(59, 130, 246, 0.2);
-		transition: width 0.6s, height 0.6s, top 0.6s, left 0.6s;
-		transform: translate(-50%, -50%);
-		z-index: 0;
-	}
-
-	.profile-dropdown :deep(.q-btn:active)::before {
-		width: 200px;
-		height: 200px;
-		top: 50%;
-		left: 50%;
-	}
-
-	/* Enhanced focus states for accessibility */
-	.profile-dropdown :deep(.q-btn:focus-visible) {
-		outline: 2px solid #3b82f6;
-		outline-offset: 2px;
-	}
-
-	.menu-item:focus-visible {
-		outline: 2px solid #3b82f6;
-		outline-offset: -2px;
-		border-radius: 12px;
-	}
-
-	/* Status indicator animations */
-	@keyframes statusPulse {
-		0% {
-			transform: scale(1);
-			opacity: 1;
-		}
-		50% {
-			transform: scale(1.1);
-			opacity: 0.8;
-		}
-		100% {
-			transform: scale(1);
-			opacity: 1;
-		}
-	}
-
-	.status-indicator {
-		animation: statusPulse 2s infinite;
+		.menu-item { padding: 9px 10px; }
 	}
 </style>

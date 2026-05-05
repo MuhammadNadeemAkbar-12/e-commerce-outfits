@@ -248,6 +248,20 @@
                   </router-link>
                 </div>
 
+                <!-- Admin Login Link -->
+                <div class="text-center pt-4 border-t border-gray-200">
+                  <p class="text-xs text-gray-500 mb-2">Are you an administrator?</p>
+                  <router-link 
+                    to="/admin/login" 
+                    class="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors duration-200 flex items-center justify-center gap-1"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m7 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Admin Login
+                  </router-link>
+                </div>
+
                 <!-- Back to Home -->
                 <div class="text-center pt-4">
                   <button

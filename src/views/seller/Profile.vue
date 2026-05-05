@@ -1,26 +1,23 @@
 <template>
 	<q-page
-		class="profile-root q-pa-lg bg-surface-1 min-h-screen flex justify-center">
-		<div class="w-full max-w-4xl">
+		class="profile-root q-pa-md md:q-pa-lg bg-surface-1 min-h-screen">
+		<div class="profile-shell w-full max-w-6xl">
 			<!-- Hero -->
 			<div
-				class="hero-card relative overflow-hidden rounded-2xl p-6 md:p-8 mb-6 shadow-xl">
-				<div class="flex items-center gap-5">
-					<transition name="avatar-pop" mode="out-in">
-						<q-avatar
-							:key="profile.company_name || 'avatar'"
-							size="84px"
-							class="hero-avatar"
-							:style="{
-								background: `linear-gradient(135deg, hsl(${
-									(profile.company_name?.charCodeAt(0) || 40) % 360
-								} 78% 52%), hsl(${
-									((profile.company_name?.charCodeAt(0) || 40) + 40) % 360
-								} 70% 44%))`,
-							}">
-							<q-icon name="store" size="36px" class="text-white" />
-						</q-avatar>
-					</transition>
+				class="hero-card relative overflow-hidden rounded-2xl p-5 md:p-7 mb-6 shadow-lg">
+				<div class="flex flex-col lg:flex-row lg:items-center gap-5">
+					<q-avatar
+						size="84px"
+						class="hero-avatar"
+						:style="{
+							background: `linear-gradient(135deg, hsl(${
+								(profile.company_name?.charCodeAt(0) || 40) % 360
+							} 78% 52%), hsl(${
+								((profile.company_name?.charCodeAt(0) || 40) + 40) % 360
+							} 70% 44%))`,
+						}">
+						<q-icon name="store" size="36px" class="text-white" />
+					</q-avatar>
 
 					<div class="flex-1 min-w-0">
 						<div
@@ -36,7 +33,7 @@
 							<span v-if="profile.country"> · {{ profile.country }}</span>
 						</div>
 
-						<div class="flex items-center gap-3 mt-4">
+						<div class="flex flex-wrap items-center gap-2.5 mt-3">
 							<q-badge class="shadow-xs" color="primary" align="top">
 								<div class="text-sm font-medium">Seller</div>
 							</q-badge>
@@ -58,7 +55,9 @@
 								>Blocked</q-chip
 							>
 
-							<div class="ml-auto flex items-center gap-2">
+						</div>
+
+						<div class="flex flex-wrap items-center gap-2 mt-4">
 								<q-btn
 									flat
 									dense
@@ -71,11 +70,10 @@
 									label="Edit Profile"
 									icon="edit"
 									@click="openEdit" />
-							</div>
 						</div>
 					</div>
 
-					<div class="text-right hidden sm:flex flex-col items-end">
+					<div class="member-since text-left lg:text-right flex flex-col lg:items-end">
 						<div class="text-xs text-muted">Member since</div>
 						<div class="text-sm font-semibold">
 							{{
@@ -92,9 +90,9 @@
 			</div>
 
 			<!-- Grid -->
-			<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+			<div class="profile-grid grid grid-cols-1 xl:grid-cols-3 gap-5">
 				<!-- Left: summary -->
-				<q-card class="p-4 rounded-2xl shadow-lg border border-surface-2">
+				<q-card class="summary-card p-4 rounded-2xl shadow border border-surface-2">
 					<div class="flex flex-col items-center gap-4">
 						<q-avatar
 							size="112px"
@@ -165,8 +163,8 @@
 				</q-card>
 
 				<!-- Right: details (span 2) -->
-				<div class="lg:col-span-2 space-y-4">
-					<q-card class="p-6 rounded-2xl shadow-lg border border-surface-2">
+				<div class="xl:col-span-2 space-y-4">
+					<q-card class="details-card p-5 md:p-6 rounded-2xl shadow border border-surface-2">
 						<div class="flex items-center justify-between mb-4">
 							<div>
 								<div class="text-lg font-extrabold">Company Details</div>
@@ -429,6 +427,15 @@
 			"Helvetica Neue", Arial;
 	}
 
+	.profile-shell {
+		margin-left: 0;
+		padding-left: 4px;
+	}
+
+	.profile-grid {
+		align-items: start;
+	}
+
 	/* Hero */
 	.hero-card {
 		background: linear-gradient(
@@ -437,7 +444,7 @@
 			rgba(99, 102, 241, 0.02)
 		);
 		border-radius: 16px;
-		border: 1px solid rgba(99, 102, 241, 0.06);
+		border: 1px solid rgba(99, 102, 241, 0.1);
 		padding: 22px;
 	}
 	.hero-avatar {
@@ -481,18 +488,24 @@
 
 	/* Cards */
 	.q-card {
-		transition: transform 0.18s ease, box-shadow 0.18s ease;
+		transition: box-shadow 0.16s ease;
 	}
 	.q-card:hover {
-		transform: translateY(-6px);
-		box-shadow: 0 20px 40px rgba(2, 6, 23, 0.06);
+		box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+	}
+	.summary-card,
+	.details-card {
+		background: #fff;
+	}
+
+	.member-since {
+		min-width: 140px;
 	}
 	.stat {
-		transition: transform 0.16s ease, box-shadow 0.16s ease;
+		transition: background 0.14s ease;
 	}
 	.stat:hover {
-		transform: translateY(-4px);
-		box-shadow: 0 12px 28px rgba(2, 6, 23, 0.06);
+		background: #e8edf2 !important;
 	}
 
 	/* Labels */
@@ -515,28 +528,23 @@
 		border-top-right-radius: 12px;
 	}
 
-	/* Avatar pop animation */
-	.avatar-pop-enter-active {
-		animation: pop-in 0.36s cubic-bezier(0.2, 0.9, 0.2, 1);
-	}
-	@keyframes pop-in {
-		from {
-			transform: scale(0.88);
-			opacity: 0;
-		}
-		to {
-			transform: scale(1);
-			opacity: 1;
-		}
-	}
+	/* Avatar pop animation — removed */
 
 	/* Responsive tweaks */
 	@media (max-width: 900px) {
+		.profile-shell {
+			padding-left: 0;
+		}
+
 		.hero-card {
 			padding: 14px;
 		}
 		.hero-card .text-2xl {
 			font-size: 1.5rem;
+		}
+
+		.member-since {
+			min-width: auto;
 		}
 	}
 </style>
