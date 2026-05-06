@@ -16,7 +16,13 @@
 								((profile.company_name?.charCodeAt(0) || 40) + 40) % 360
 							} 70% 44%))`,
 						}">
-						<q-icon name="store" size="36px" class="text-white" />
+						<img
+							v-if="hasAvatar"
+							:src="displayAvatar"
+							alt="Seller avatar"
+							class="w-full h-full object-cover"
+							@error="avatarLoadError = true" />
+						<q-icon v-else name="store" size="36px" class="text-white" />
 					</q-avatar>
 
 					<div class="flex-1 min-w-0">
@@ -104,7 +110,13 @@
 									((profile.company_name?.charCodeAt(0) || 80) + 48) % 360
 								} 68% 43%))`,
 							}">
-							<q-icon name="storefront" size="40px" class="text-white" />
+								<img
+									v-if="hasAvatar"
+									:src="displayAvatar"
+									alt="Seller avatar"
+									class="w-full h-full object-cover"
+									@error="avatarLoadError = true" />
+								<q-icon v-else name="storefront" size="40px" class="text-white" />
 						</q-avatar>
 
 						<div class="text-center">
@@ -203,10 +215,14 @@
 								<div class="value">{{ profile.address || "—" }}</div>
 							</div>
 
-							<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+							<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-3">
 								<div>
 									<div class="label">City</div>
 									<div class="value">{{ profile.city || "—" }}</div>
+								</div>
+								<div>
+									<div class="label">State</div>
+									<div class="value">{{ profile.state || "—" }}</div>
 								</div>
 								<div>
 									<div class="label">Postal Code</div>
@@ -263,6 +279,30 @@
 				</q-card-section>
 
 				<q-card-section class="q-gutter-md p-6 bg-surface-1">
+					<q-file
+						v-model="avatarFile"
+						label="Profile Picture"
+						filled
+						dense
+						accept="image/*"
+						standout="bg-white"
+						@update:model-value="onAvatarSelected" />
+					<div v-if="avatarPreviewUrl" class="q-mt-sm">
+						<img :src="avatarPreviewUrl" alt="Avatar preview" style="width: 84px; height: 84px; border-radius: 12px; object-fit: cover; border: 1px solid #cbd5e1;" />
+					</div>
+					<q-input
+						v-model="edit.name"
+						label="Owner Name"
+						filled
+						dense
+						standout="bg-white" />
+					<q-input
+						v-model="edit.email"
+						label="Email"
+						type="email"
+						filled
+						dense
+						standout="bg-white" />
 					<q-input
 						v-model="edit.company_name"
 						label="Company Name"
@@ -285,6 +325,12 @@
 						<q-input
 							v-model="edit.city"
 							label="City"
+							filled
+							dense
+							standout="bg-white" />
+						<q-input
+							v-model="edit.state"
+							label="State"
 							filled
 							dense
 							standout="bg-white" />
@@ -317,17 +363,21 @@
 </template>
 
 <script setup>
-	import { ref, onMounted } from "vue";
+	import { ref, onMounted, computed, watch } from "vue";
 	import axios from "@/api/axios";
 	import { useRouter } from "vue-router";
 
 	const router = useRouter();
 
 	const profile = ref({
+		avatar: "",
+		name: "",
+		email: "",
 		company_name: "",
 		phone: "",
 		address: "",
 		city: "",
+		state: "",
 		postal_code: "",
 		country: "",
 		is_approved: 0,
@@ -362,16 +412,57 @@
 
 	const showEdit = ref(false);
 	const edit = ref({ ...profile.value });
+	const avatarLoadError = ref(false);
+	const avatarFile = ref(null);
+	const avatarPreviewUrl = ref("");
+
+	function normalizeAvatarUrl(path) {
+		if (!path) return "";
+		if (/^(https?:)?\/\//i.test(path) || path.startsWith("blob:") || path.startsWith("data:")) {
+			return path;
+		}
+
+		const base = axios?.defaults?.baseURL || "";
+		let origin = typeof window !== "undefined" ? window.location.origin : "";
+		try {
+			if (base) origin = new URL(base, origin || "http://localhost").origin;
+		} catch {
+			// keep fallback origin if base URL parsing fails
+		}
+
+		if (path.startsWith("/")) return `${origin}${path}`;
+		return `${origin}/${String(path).replace(/^\/+/, "")}`;
+	}
+
+	const displayAvatar = computed(() => avatarPreviewUrl.value || normalizeAvatarUrl(profile.value.avatar) || "");
+	const hasAvatar = computed(() => !!displayAvatar.value && !avatarLoadError.value);
+
+	function onAvatarSelected(file) {
+		if (avatarPreviewUrl.value) {
+			URL.revokeObjectURL(avatarPreviewUrl.value);
+		}
+		avatarPreviewUrl.value = file ? URL.createObjectURL(file) : "";
+		avatarLoadError.value = false;
+	}
+
+	const hydrateProfile = (raw = {}) => {
+		profile.value = {
+			...profile.value,
+			...raw,
+		};
+		avatarLoadError.value = false;
+	};
+
+	async function fetchProfile() {
+		const res = await axios.get("/seller/profile");
+		if (res.data.success && res.data.data) {
+			hydrateProfile(res.data.data);
+		}
+	}
 
 	onMounted(async () => {
 		try {
-			const res = await axios.get("/seller/profile");
-			if (res.data.success && res.data.data) {
-				profile.value = {
-					...profile.value,
-					...res.data.data,
-				};
-			}
+			await fetchProfile();
 		} catch (error) {
 			console.error("Failed to fetch profile:", error);
 		}
@@ -379,14 +470,41 @@
 
 	function openEdit() {
 		edit.value = { ...profile.value };
+		avatarFile.value = null;
+		if (avatarPreviewUrl.value) {
+			URL.revokeObjectURL(avatarPreviewUrl.value);
+			avatarPreviewUrl.value = "";
+		}
 		showEdit.value = true;
 	}
 
 	async function saveProfile() {
 		try {
-			const res = await axios.patch("/seller/profile", { ...edit.value });
+			const payload = new FormData();
+			payload.append("_method", "PATCH");
+			payload.append("name", edit.value.name || "");
+			payload.append("email", edit.value.email || "");
+			payload.append("company_name", edit.value.company_name || "");
+			payload.append("phone", edit.value.phone || "");
+			payload.append("address", edit.value.address || "");
+			payload.append("city", edit.value.city || "");
+			payload.append("state", edit.value.state || "");
+			payload.append("postal_code", edit.value.postal_code || "");
+			payload.append("country", edit.value.country || "");
+			if (avatarFile.value) {
+				payload.append("avatar", avatarFile.value);
+			}
+
+			const res = await axios.post("/seller/profile", payload, {
+				headers: { "Content-Type": "multipart/form-data" },
+			});
 			if (res.data.success && res.data.data) {
-				profile.value = { ...profile.value, ...res.data.data };
+				hydrateProfile(res.data.data);
+				avatarFile.value = null;
+				if (avatarPreviewUrl.value) {
+					URL.revokeObjectURL(avatarPreviewUrl.value);
+					avatarPreviewUrl.value = "";
+				}
 				showEdit.value = false;
 			} else {
 				alert(res.data.message || "Profile update failed.");
@@ -397,14 +515,8 @@
 	}
 
 	function reloadProfile() {
-		// keep same API logic; simply re-run onMounted fetch
-		onMounted(async () => {
-			try {
-				const res = await axios.get("/seller/profile");
-				if (res.data.success && res.data.data) {
-					profile.value = { ...profile.value, ...res.data.data };
-				}
-			} catch (e) {}
+		fetchProfile().catch(() => {
+			// silent refresh failure to keep UI responsive
 		});
 	}
 
@@ -419,6 +531,13 @@
 			alert("Deactivated (demo)");
 		}
 	}
+
+	watch(
+		() => profile.value.avatar,
+		() => {
+			avatarLoadError.value = false;
+		}
+	);
 </script>
 
 <style scoped>

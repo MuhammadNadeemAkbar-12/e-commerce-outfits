@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <q-page class="q-pa-md dark:bg-gray-900 transition-colors duration-300">
     <!-- Header -->
     <div class="row items-center justify-between q-mb-md">
@@ -7,6 +7,14 @@
         <p class="text-subtitle2 text-grey-7 dark:text-gray-400">Manage and monitor all platform users</p>
       </div>
       <div class="row q-gutter-sm">
+        <q-btn
+          @click="openCreateUser"
+          icon="person_add"
+          label="Add Customer"
+          color="positive"
+          unelevated
+          class="hover:scale-105 transition-transform duration-200"
+        />
         <q-btn 
           @click="refreshUsers" 
           icon="refresh" 
@@ -157,10 +165,21 @@
             <q-inner-loading showing color="primary" />
           </template>
 
-          <template v-slot:body-cell-avatar="props">
+          <template v-slot:body-cell-profile="props">
             <q-td :props="props">
-              <q-avatar size="42px" class="border-2 border-gray-300 dark:border-gray-600">
-                <img :src="props.row.avatar || 'https://cdn.quasar.dev/img/boy-avatar.png'" />
+              <q-avatar v-if="resolveUrl(props.row.avatar)" size="42px">
+                <img
+                  :src="resolveUrl(props.row.avatar)"
+                  :alt="props.row.name"
+                  @error="e => { e.target.style.display='none'; e.target.parentElement.style.background=avatarColor(props.row.name); e.target.parentElement.innerHTML='<span style=color:#fff;font-weight:600;font-size:16px>' + initials(props.row.name) + '</span>' }"
+                />
+              </q-avatar>
+              <q-avatar
+                v-else
+                size="42px"
+                :style="{ background: avatarColor(props.row.name), color: '#fff', fontWeight: 600, fontSize: '16px' }"
+              >
+                {{ initials(props.row.name) }}
               </q-avatar>
             </q-td>
           </template>
@@ -188,6 +207,14 @@
             <q-td :props="props">
               <div class="q-gutter-x-sm">
                 <q-btn
+                  @click="openEditUser(props.row)"
+                  icon="edit"
+                  color="warning"
+                  size="sm"
+                  round
+                  flat
+                />
+                <q-btn
                   @click="toggleUserStatus(props.row)"
                   :label="props.row.status === 'blocked' ? 'Unblock' : 'Block'"
                   :color="props.row.status === 'blocked' ? 'positive' : 'negative'"
@@ -203,6 +230,14 @@
                   round
                   flat
                   class="hover:bg-primary hover:text-white transition-colors duration-200"
+                />
+                <q-btn
+                  @click="askDeleteUser(props.row)"
+                  icon="delete"
+                  color="negative"
+                  size="sm"
+                  round
+                  flat
                 />
               </div>
             </q-td>
@@ -255,7 +290,7 @@
           <div class="row q-col-gutter-md">
             <div class="col-12">
               <q-avatar size="100px" class="q-mx-auto block border-2 border-gray-300 dark:border-gray-600">
-                <img :src="selectedUser?.avatar || 'https://cdn.quasar.dev/img/boy-avatar.png'" />
+                <img :src="normalizeAvatarUrl(selectedUser?.avatar) || 'https://cdn.quasar.dev/img/boy-avatar.png'" @error="(e) => e.target.src = 'https://cdn.quasar.dev/img/boy-avatar.png'" />
               </q-avatar>
             </div>
             <div class="col-12">
@@ -342,6 +377,59 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <!-- Create/Edit User Dialog -->
+    <q-dialog v-model="showUserForm" persistent>
+      <q-card style="min-width: 540px" class="dark:bg-gray-800 dark:border-gray-700">
+        <q-card-section>
+          <div class="text-h6 dark:text-white">{{ userFormMode === 'create' ? 'Add Customer' : 'Edit Customer' }}</div>
+        </q-card-section>
+        <q-card-section>
+          <div class="row q-col-gutter-md">
+            <!-- Avatar Upload -->
+            <div class="col-12 flex flex-center">
+              <div class="column items-center q-gutter-xs">
+                <q-avatar size="80px" class="border-2 border-gray-300">
+                  <img :src="userFormAvatarPreview || 'https://cdn.quasar.dev/img/boy-avatar.png'" />
+                </q-avatar>
+                <q-btn flat dense size="sm" color="primary" icon="photo_camera" label="Choose Avatar"
+                  @click="$refs.userAvatarInput.click()" />
+                <input ref="userAvatarInput" type="file" accept="image/*" style="display:none"
+                  @change="onUserAvatarSelected" />
+              </div>
+            </div>
+            <div class="col-12 col-md-6"><q-input v-model="userForm.name" label="Name" dense outlined /></div>
+            <div class="col-12 col-md-6"><q-input v-model="userForm.email" label="Email" dense outlined type="email" /></div>
+            <div class="col-12 col-md-6"><q-input v-model="userForm.password" :label="userFormMode === 'create' ? 'Password' : 'Password (optional)'" dense outlined type="password" /></div>
+            <div class="col-12 col-md-6"><q-input v-model="userForm.phone" label="Phone" dense outlined /></div>
+            <div class="col-12"><q-input v-model="userForm.address" label="Address" dense outlined /></div>
+            <div class="col-12 col-md-4"><q-input v-model="userForm.city" label="City" dense outlined /></div>
+            <div class="col-12 col-md-4"><q-input v-model="userForm.state" label="State" dense outlined /></div>
+            <div class="col-12 col-md-4"><q-input v-model="userForm.postal_code" label="Postal Code" dense outlined /></div>
+            <div class="col-12"><q-input v-model="userForm.country" label="Country" dense outlined /></div>
+          </div>
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Cancel" color="grey" v-close-popup />
+          <q-btn :loading="userFormLoading" unelevated color="primary" :label="userFormMode === 'create' ? 'Create' : 'Update'" @click="submitUserForm" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <q-dialog v-model="showDeleteDialog" persistent>
+      <q-card class="dark:bg-gray-800 dark:border-gray-700" style="min-width: 360px">
+        <q-card-section>
+          <div class="text-h6 dark:text-white">Delete Customer</div>
+        </q-card-section>
+        <q-card-section class="dark:text-gray-300">
+          Are you sure you want to delete {{ confirmConfigDelete.name }}?
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Cancel" color="grey" v-close-popup />
+          <q-btn unelevated color="negative" label="Delete" :loading="confirmDeleteLoading" @click="confirmDeleteUser" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -350,6 +438,10 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useUserStore } from '@/stores/user'
 import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
+import adminApi from '@/services/adminApi'
+import { resolveUrl } from '@/utils/imageUrl'
+
+const normalizeAvatarUrl = resolveUrl
 
 const $q = useQuasar()
 const userStore = useUserStore()
@@ -370,11 +462,27 @@ const confirmLoading = ref(false)
 const showUserDetails = ref(false)
 const selectedUser = ref(null)
 const newStatus = ref('')
+const showUserForm = ref(false)
+const userFormLoading = ref(false)
+const userFormMode = ref('create')
+const userFormCustomerId = ref(null)
+const userFormAvatarFile = ref(null)
+const userFormAvatarPreview = ref('')
+const userForm = ref({
+  name: '',
+  email: '',
+  password: '',
+  phone: '',
+  address: '',
+  city: '',
+  state: '',
+  postal_code: '',
+  country: '',
+})
 
 // Table columns
 const columns = [
-  { name: 'avatar', label: 'Avatar', field: 'avatar', align: 'center' },
-  { name: 'customer_id', label: 'Customer ID', field: 'customer_id', align: 'left', sortable: true },
+  { name: 'profile', label: 'Profile', field: 'name', align: 'center' },
   { name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true },
   { name: 'email', label: 'Email', field: 'email', align: 'left', sortable: true },
   { name: 'phone', label: 'Phone', field: row => row.profile?.phone || 'N/A', align: 'left' },
@@ -569,6 +677,117 @@ const viewUserDetails = (user) => {
   showUserDetails.value = true
 }
 
+const onUserAvatarSelected = (e) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+  userFormAvatarFile.value = file
+  userFormAvatarPreview.value = URL.createObjectURL(file)
+}
+
+const resetUserForm = () => {
+  userFormAvatarFile.value = null
+  userFormAvatarPreview.value = ''
+  userForm.value = {
+    name: '',
+    email: '',
+    password: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    postal_code: '',
+    country: '',
+  }
+}
+
+const openCreateUser = () => {
+  userFormMode.value = 'create'
+  userFormCustomerId.value = null
+  resetUserForm()
+  showUserForm.value = true
+}
+
+const openEditUser = (user) => {
+  userFormMode.value = 'edit'
+  userFormCustomerId.value = user.customer_id
+  userFormAvatarFile.value = null
+  userFormAvatarPreview.value = normalizeAvatarUrl(user.avatar) || ''
+  userForm.value = {
+    name: user.name || '',
+    email: user.email || '',
+    password: '',
+    phone: user.profile?.phone || '',
+    address: user.profile?.address || '',
+    city: user.profile?.city || '',
+    state: user.profile?.state || '',
+    postal_code: user.profile?.postal_code || '',
+    country: user.profile?.country || '',
+  }
+  showUserForm.value = true
+}
+
+const submitUserForm = async () => {
+  userFormLoading.value = true
+  try {
+    let response
+    if (userFormAvatarFile.value) {
+      const fd = new FormData()
+      if (userFormMode.value === 'edit') fd.append('_method', 'PATCH')
+      Object.entries(userForm.value).forEach(([k, v]) => { if (k !== 'password' || v) fd.append(k, v) })
+      fd.append('avatar', userFormAvatarFile.value)
+      const url = userFormMode.value === 'create' ? '/admin/customers' : `/admin/customers/${userFormCustomerId.value}`
+      const res = await axios.post(url, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      response = { success: true, data: res.data }
+    } else {
+      const payload = { ...userForm.value }
+      if (userFormMode.value === 'edit' && !payload.password) {
+        delete payload.password
+      }
+      response = userFormMode.value === 'create'
+        ? await adminApi.createAdminCustomer(payload)
+        : await adminApi.updateAdminCustomer(userFormCustomerId.value, payload)
+    }
+
+    if (!response.success || response.data?.success === false) {
+      throw new Error(response.message || response.data?.message || 'Operation failed')
+    }
+
+    $q.notify({ type: 'positive', message: userFormMode.value === 'create' ? 'Customer created successfully' : 'Customer updated successfully', position: 'top' })
+    showUserForm.value = false
+    await fetchUsers()
+  } catch (error) {
+    $q.notify({ type: 'negative', message: error.message || 'Failed to save customer', position: 'top' })
+  } finally {
+    userFormLoading.value = false
+  }
+}
+
+const askDeleteUser = (user) => {
+  confirmConfigDelete.value = { customerId: user.customer_id, name: user.name }
+  showDeleteDialog.value = true
+}
+
+const showDeleteDialog = ref(false)
+const confirmDeleteLoading = ref(false)
+const confirmConfigDelete = ref({ customerId: null, name: '' })
+
+const confirmDeleteUser = async () => {
+  confirmDeleteLoading.value = true
+  try {
+    const response = await adminApi.deleteAdminCustomer(confirmConfigDelete.value.customerId)
+    if (!response.success || response.data?.success === false) {
+      throw new Error(response.message || response.data?.message || 'Delete failed')
+    }
+    $q.notify({ type: 'positive', message: 'Customer deleted successfully', position: 'top' })
+    showDeleteDialog.value = false
+    await fetchUsers()
+  } catch (error) {
+    $q.notify({ type: 'negative', message: error.message || 'Failed to delete customer', position: 'top' })
+  } finally {
+    confirmDeleteLoading.value = false
+  }
+}
+
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A'
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -576,6 +795,20 @@ const formatDate = (dateString) => {
     month: 'short',
     day: 'numeric'
   })
+}
+
+// Avatar helpers
+const AVATAR_COLORS = ['#1976D2','#388E3C','#7B1FA2','#F57C00','#C2185B','#0097A7','#5D4037','#455A64']
+function initials(name) {
+  if (!name) return '?'
+  const parts = name.trim().split(/\s+/)
+  return parts.length >= 2 ? (parts[0][0] + parts[1][0]).toUpperCase() : parts[0].slice(0, 2).toUpperCase()
+}
+function avatarColor(name) {
+  if (!name) return AVATAR_COLORS[0]
+  let hash = 0
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
 }
 
 const onPageChange = (page) => {

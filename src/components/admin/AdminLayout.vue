@@ -46,6 +46,41 @@
       >
         <q-scroll-area class="fit">
           <q-list padding>
+            <!-- Analytics Section (Moved to top) -->
+            <q-item-label header class="text-weight-bold text-info">Analytics &amp; Reports</q-item-label>
+            
+            <q-item clickable v-ripple to="/admin/dashboard" class="hover:bg-cyan-100 dark:hover:bg-cyan-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
+              <q-item-section avatar>
+                <q-icon name="dashboard" color="info" class="text-cyan-600 dark:text-cyan-400" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Dashboard</q-item-label>
+                <q-item-label caption class="text-gray-600 dark:text-gray-400">Platform overview</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item clickable v-ripple to="/admin/reports" class="hover:bg-cyan-100 dark:hover:bg-cyan-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
+              <q-item-section avatar>
+                <q-icon name="bar_chart" color="info" class="text-cyan-600 dark:text-cyan-400" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Reports</q-item-label>
+                <q-item-label caption class="text-gray-600 dark:text-gray-400">Sales &amp; inventory reports</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item clickable v-ripple to="/admin/platform-stats" class="hover:bg-cyan-100 dark:hover:bg-cyan-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
+              <q-item-section avatar>
+                <q-icon name="analytics" color="info" class="text-cyan-600 dark:text-cyan-400" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Platform Stats</q-item-label>
+                <q-item-label caption class="text-gray-600 dark:text-gray-400">Advanced analytics</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-separator spaced />
+
             <!-- Buyers Section -->
             <q-item-label header class="text-weight-bold text-primary dark:text-blue-300">Buyers</q-item-label>
             
@@ -93,16 +128,6 @@
               </q-item-section>
             </q-item>
 
-
-            <q-item clickable v-ripple to="/admin/seller-orders" class="hover:bg-green-100 dark:hover:bg-green-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
-              <q-item-section avatar>
-                <q-icon name="receipt_long" color="secondary" class="text-green-600 dark:text-green-400" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Seller Orders</q-item-label>
-                <q-item-label caption class="text-gray-600 dark:text-gray-400">Order fulfillment</q-item-label>
-              </q-item-section>
-            </q-item>
 
             <q-separator spaced />
 
@@ -154,43 +179,6 @@
                 <q-item-label caption class="text-gray-600 dark:text-gray-400">Return requests</q-item-label>
               </q-item-section>
             </q-item>
-
-            <q-separator spaced />
-
-            <!-- Analytics Section -->
-            <q-item-label header class="text-weight-bold text-info">Analytics &amp; Reports</q-item-label>
-            
-            <q-item clickable v-ripple to="/admin/dashboard" class="hover:bg-cyan-100 dark:hover:bg-cyan-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
-              <q-item-section avatar>
-                <q-icon name="dashboard" color="info" class="text-cyan-600 dark:text-cyan-400" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Dashboard</q-item-label>
-                <q-item-label caption class="text-gray-600 dark:text-gray-400">Platform overview</q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <q-item clickable v-ripple to="/admin/reports" class="hover:bg-cyan-100 dark:hover:bg-cyan-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
-              <q-item-section avatar>
-                <q-icon name="bar_chart" color="info" class="text-cyan-600 dark:text-cyan-400" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Reports</q-item-label>
-                <q-item-label caption class="text-gray-600 dark:text-gray-400">Sales &amp; inventory reports</q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <q-item clickable v-ripple to="/admin/platform-stats" class="hover:bg-cyan-100 dark:hover:bg-cyan-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
-              <q-item-section avatar>
-                <q-icon name="analytics" color="info" class="text-cyan-600 dark:text-cyan-400" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Platform Stats</q-item-label>
-                <q-item-label caption class="text-gray-600 dark:text-gray-400">Advanced analytics</q-item-label>
-              </q-item-section>
-            </q-item>
-
-
 
             <!-- Settings & System -->
             <q-separator spaced />

@@ -229,6 +229,7 @@ import { ref, onMounted, onBeforeUnmount, computed } from "vue";
 import { useRouter } from "vue-router";
 import axios from "@/api/axios";
 import { useAuthStore } from '@/stores/auth'
+import { resolveUrl } from '@/utils/imageUrl'
 
 const open = ref(false);
 const loading = ref(false);
@@ -249,9 +250,9 @@ const localName = computed(() => {
 });
 
 const avatarUrl = computed(() => {
-	if (profile.value?.avatar) return profile.value.avatar;
+	if (profile.value?.avatar) return resolveUrl(profile.value.avatar);
 	const u = authStore.currentUser || authStore.user || null
-	if (u?.avatar) return u.avatar;
+	if (u?.avatar) return resolveUrl(u.avatar);
 	return null;
 });
 

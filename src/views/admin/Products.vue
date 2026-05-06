@@ -1,6 +1,9 @@
 <template>
   <div class="q-pa-md dark:bg-gray-900 transition-colors duration-300">
-    <div class="text-h4 q-mb-md dark:text-white">All Products</div>
+    <div class="row items-center justify-between q-mb-md">
+      <div class="text-h4 dark:text-white">All Products</div>
+      <q-btn color="positive" icon="add" label="Add Product" unelevated @click="openCreateProduct" />
+    </div>
     
     <!-- Bulk Actions -->
     <div v-if="selectedProducts.length > 0" class="row items-center q-mb-md q-pa-sm bg-blue-1 dark:bg-blue-900/30 rounded-borders">
@@ -153,6 +156,14 @@
             <q-td :props="props">
               <div class="q-gutter-x-sm">
                 <q-btn
+                  @click="openEditProduct(props.row)"
+                  icon="edit"
+                  color="warning"
+                  size="sm"
+                  round
+                  flat
+                />
+                <q-btn
                   v-if="!props.row.is_approved"
                   @click="approveProduct(props.row)"
                   label="Approve"
@@ -200,6 +211,34 @@
       :loading="confirmLoading"
       @confirm="handleConfirm"
     />
+
+    <q-dialog v-model="showProductForm" persistent>
+      <q-card style="min-width: 620px" class="dark:bg-gray-800 dark:border-gray-700">
+        <q-card-section>
+          <div class="text-h6 dark:text-white">{{ productFormMode === 'create' ? 'Add Product' : 'Edit Product' }}</div>
+        </q-card-section>
+        <q-card-section>
+          <div class="row q-col-gutter-md">
+            <div class="col-12 col-md-6">
+              <q-select v-model="productForm.seller_id" :options="sellerOptions" option-label="label" option-value="value" emit-value map-options dense outlined label="Seller" />
+            </div>
+            <div class="col-12 col-md-6">
+              <q-select v-model="productForm.category_id" :options="categoryOptions" option-label="label" option-value="value" emit-value map-options dense outlined label="Category" />
+            </div>
+            <div class="col-12 col-md-6"><q-input v-model="productForm.name" dense outlined label="Product Name" /></div>
+            <div class="col-12 col-md-6"><q-input v-model="productForm.sku" dense outlined label="SKU" /></div>
+            <div class="col-12"><q-input v-model="productForm.description" dense outlined label="Description" type="textarea" autogrow /></div>
+            <div class="col-12 col-md-4"><q-input v-model.number="productForm.price" dense outlined type="number" label="Price" /></div>
+            <div class="col-12 col-md-4"><q-input v-model.number="productForm.stock" dense outlined type="number" label="Stock" /></div>
+            <div class="col-12 col-md-4"><q-input v-model.number="productForm.reorder_level" dense outlined type="number" label="Reorder Level" /></div>
+          </div>
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Cancel" color="grey" v-close-popup />
+          <q-btn :loading="productFormLoading" unelevated color="primary" :label="productFormMode === 'create' ? 'Create' : 'Update'" @click="submitProductForm" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </div>
 </template>
 
@@ -208,6 +247,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import adminApi from '@/services/adminApi'
 import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
+import { resolveUrl } from '@/utils/imageUrl'
 
 const $q = useQuasar()
 
@@ -230,6 +270,22 @@ const loading = ref(false)
 const showConfirmDialog = ref(false)
 const confirmLoading = ref(false)
 const confirmConfig = ref({ title: '', message: '', type: 'danger', confirmLabel: 'Confirm', onConfirm: null })
+const showProductForm = ref(false)
+const productFormLoading = ref(false)
+const productFormMode = ref('create')
+const productFormId = ref(null)
+const sellerOptions = ref([])
+const categoryOptions = ref([])
+const productForm = ref({
+  seller_id: null,
+  category_id: null,
+  name: '',
+  sku: '',
+  description: '',
+  price: 0,
+  stock: 0,
+  reorder_level: 0,
+})
 
 // Filter and search variables
 const searchQuery = ref('')
@@ -320,14 +376,86 @@ const fetchProducts = async () => {
   }
 }
 
+const fetchFormOptions = async () => {
+  const [sellersRes, categoriesRes] = await Promise.all([
+    adminApi.getAdminSellers(),
+    adminApi.getSellerCategories(),
+  ])
+
+  const sellers = sellersRes?.data?.data || []
+  const categories = categoriesRes?.data?.data || []
+
+  sellerOptions.value = sellers.map(s => ({ value: s.seller_id, label: s.name || s.email || `Seller #${s.seller_id}` }))
+  categoryOptions.value = categories.map(c => ({ value: c.id, label: c.name }))
+}
+
+const resetProductForm = () => {
+  productForm.value = {
+    seller_id: null,
+    category_id: null,
+    name: '',
+    sku: '',
+    description: '',
+    price: 0,
+    stock: 0,
+    reorder_level: 0,
+  }
+}
+
+const openCreateProduct = async () => {
+  productFormMode.value = 'create'
+  productFormId.value = null
+  resetProductForm()
+  await fetchFormOptions()
+  showProductForm.value = true
+}
+
+const openEditProduct = async (product) => {
+  productFormMode.value = 'edit'
+  productFormId.value = product.id
+  productForm.value = {
+    seller_id: product.seller_id || product.seller?.id || null,
+    category_id: product.category_id || product.category?.id || null,
+    name: product.name || '',
+    sku: product.sku || '',
+    description: product.description || '',
+    price: Number(product.price || 0),
+    stock: Number(product.stock || 0),
+    reorder_level: Number(product.reorder_level || 0),
+  }
+  await fetchFormOptions()
+  showProductForm.value = true
+}
+
+const submitProductForm = async () => {
+  productFormLoading.value = true
+  try {
+    const payload = { ...productForm.value }
+    const response = productFormMode.value === 'create'
+      ? await adminApi.createAdminProduct(payload)
+      : await adminApi.updateAdminProduct(productFormId.value, payload)
+
+    if (!response.success || response.data?.success === false) {
+      throw new Error(response.message || response.data?.message || 'Save failed')
+    }
+
+    $q.notify({ type: 'positive', message: productFormMode.value === 'create' ? 'Product created successfully' : 'Product updated successfully', position: 'top' })
+    showProductForm.value = false
+    await fetchProducts()
+  } catch (error) {
+    $q.notify({ type: 'negative', message: error.message || 'Failed to save product', position: 'top' })
+  } finally {
+    productFormLoading.value = false
+  }
+}
+
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-US').format(amount || 0)
 }
 
 const getProductImage = (product) => {
-  // Get the first image URL if available, otherwise use placeholder
-  const firstImage = product.images?.[0]?.url
-  return firstImage || 'https://cdn.quasar.dev/img/boy-avatar.png'
+  const raw = product.images?.[0]?.url || product.image || ''
+  return resolveUrl(raw) || 'https://cdn.quasar.dev/img/boy-avatar.png'
 }
 
 const getStatusColor = (product) => {

@@ -13,9 +13,123 @@
 					color="primary"
 					text-color="white"
 					icon="shopping_bag">
-					{{ pagination.total }} total orders
+					{{ filteredOrders.length }} / {{ pagination.total }} orders
 				</q-chip>
 			</div>
+		</div>
+
+		<!-- Analytics + Filters -->
+		<div v-if="!loading && orders.length > 0" class="q-mb-lg">
+			<div class="analytics-grid q-mb-md">
+				<q-card flat bordered class="metric-card">
+					<q-card-section>
+						<div class="metric-label">Visible Orders</div>
+						<div class="metric-value">{{ analytics.visibleOrders }}</div>
+					</q-card-section>
+				</q-card>
+				<q-card flat bordered class="metric-card">
+					<q-card-section>
+						<div class="metric-label">Visible Spend</div>
+						<div class="metric-value">Rs {{ formatPrice(analytics.visibleRevenue) }}</div>
+					</q-card-section>
+				</q-card>
+				<q-card flat bordered class="metric-card">
+					<q-card-section>
+						<div class="metric-label">Delivered</div>
+						<div class="metric-value">{{ analytics.deliveredCount }}</div>
+					</q-card-section>
+				</q-card>
+				<q-card flat bordered class="metric-card">
+					<q-card-section>
+						<div class="metric-label">Cancelled</div>
+						<div class="metric-value">{{ analytics.cancelledCount }}</div>
+					</q-card-section>
+				</q-card>
+			</div>
+
+			<q-card flat bordered class="filter-paper">
+				<q-card-section>
+					<div class="row items-center justify-between q-col-gutter-md q-row-gutter-sm">
+						<div class="col-12 col-md-4">
+							<q-input
+								v-model="searchQuery"
+								dense
+								outlined
+								clearable
+								label="Search by Order ID or Address"
+								placeholder="e.g. ORD-2026..."
+								debounce="250">
+								<template #prepend>
+									<q-icon name="search" />
+								</template>
+							</q-input>
+						</div>
+						<div class="col-12 col-sm-6 col-md-2">
+							<q-select
+								v-model="statusFilter"
+								:options="statusOptions"
+								dense
+								outlined
+								emit-value
+								map-options
+								label="Status" />
+						</div>
+						<div class="col-12 col-sm-6 col-md-2">
+							<q-select
+								v-model="sortBy"
+								:options="sortOptions"
+								dense
+								outlined
+								emit-value
+								map-options
+								label="Sort" />
+						</div>
+						<div class="col-6 col-md-2">
+							<q-input
+								v-model.number="amountMin"
+								type="number"
+								dense
+								outlined
+								min="0"
+								label="Min Amount" />
+						</div>
+						<div class="col-6 col-md-2">
+							<q-input
+								v-model.number="amountMax"
+								type="number"
+								dense
+								outlined
+								min="0"
+								label="Max Amount" />
+						</div>
+						<div class="col-6 col-md-2">
+							<q-input
+								v-model="dateFrom"
+								type="date"
+								dense
+								outlined
+								label="From" />
+						</div>
+						<div class="col-6 col-md-2">
+							<q-input
+								v-model="dateTo"
+								type="date"
+								dense
+								outlined
+								label="To" />
+						</div>
+						<div class="col-12 col-md-2 flex items-center justify-end">
+							<q-btn
+								flat
+								color="primary"
+								icon="restart_alt"
+								label="Reset"
+								no-caps
+								@click="resetFilters" />
+						</div>
+					</div>
+				</q-card-section>
+			</q-card>
 		</div>
 
 		<!-- Loading State -->
@@ -37,10 +151,21 @@
 			</div>
 		</div>
 
+		<div v-else-if="filteredOrders.length === 0" class="row justify-center q-py-xl">
+			<div class="col-auto text-center">
+				<q-icon name="filter_alt_off" size="72px" color="grey-5" />
+				<div class="text-h6 q-mt-md text-grey-8">No orders match these filters</div>
+				<div class="text-body2 text-grey-6 q-mt-sm q-mb-md">
+					Try a different status, date range, or amount range
+				</div>
+				<q-btn color="primary" flat no-caps icon="refresh" label="Clear Filters" @click="resetFilters" />
+			</div>
+		</div>
+
 		<!-- Orders List -->
 		<div v-else class="q-gutter-md">
 			<q-card
-				v-for="(order, idx) in orders"
+				v-for="(order, idx) in filteredOrders"
 				:key="order.order_number + idx"
 				flat
 				bordered
@@ -267,7 +392,7 @@
 </template>
 
 <script setup>
-	import { ref, onMounted } from "vue";
+	import { ref, computed, onMounted } from "vue";
 	import ordersService from "@/services/orders";
 
 	const orders = ref([]);
@@ -281,6 +406,31 @@
 		total: 0,
 		next_page_url: null,
 	});
+
+	const searchQuery = ref("");
+	const statusFilter = ref("all");
+	const sortBy = ref("latest");
+	const amountMin = ref(null);
+	const amountMax = ref(null);
+	const dateFrom = ref("");
+	const dateTo = ref("");
+
+	const statusOptions = [
+		{ label: "All Statuses", value: "all" },
+		{ label: "Processing", value: "processing" },
+		{ label: "Shipped", value: "shipped" },
+		{ label: "Delivered", value: "delivered" },
+		{ label: "Cancelled", value: "cancelled" },
+		{ label: "Refunded", value: "refunded" },
+		{ label: "Disputed", value: "disputed" },
+	];
+
+	const sortOptions = [
+		{ label: "Latest First", value: "latest" },
+		{ label: "Oldest First", value: "oldest" },
+		{ label: "Amount High to Low", value: "amount_desc" },
+		{ label: "Amount Low to High", value: "amount_asc" },
+	];
 
 	const fetchOrders = async (page = 1) => {
 		loading.value = true;
@@ -346,6 +496,85 @@
 	const changePage = (page) => {
 		if (!page || page < 1) return;
 		fetchOrders(page);
+	};
+
+	const normalizeStatus = (status) => String(status || "").toLowerCase().trim();
+
+	const getOrderTimestamp = (order) => {
+		const t = new Date(order?.created_at || 0).getTime();
+		return Number.isFinite(t) ? t : 0;
+	};
+
+	const getOrderAmount = (order) => Number(order?.total ?? 0);
+
+	const filteredOrders = computed(() => {
+		const term = searchQuery.value.trim().toLowerCase();
+		const min = amountMin.value == null || amountMin.value === "" ? null : Number(amountMin.value);
+		const max = amountMax.value == null || amountMax.value === "" ? null : Number(amountMax.value);
+
+		const fromTs = dateFrom.value ? new Date(`${dateFrom.value}T00:00:00`).getTime() : null;
+		const toTs = dateTo.value ? new Date(`${dateTo.value}T23:59:59`).getTime() : null;
+
+		const list = orders.value.filter((order) => {
+			const status = normalizeStatus(order.status);
+			if (statusFilter.value !== "all" && status !== statusFilter.value) return false;
+
+			const amount = getOrderAmount(order);
+			if (min != null && Number.isFinite(min) && amount < min) return false;
+			if (max != null && Number.isFinite(max) && amount > max) return false;
+
+			const createdAt = getOrderTimestamp(order);
+			if (fromTs != null && createdAt < fromTs) return false;
+			if (toTs != null && createdAt > toTs) return false;
+
+			if (term) {
+				const haystack = [
+					order.order_number,
+					formatShippingAddress(order.shipping_address),
+					status,
+				]
+					.filter(Boolean)
+					.join(" ")
+					.toLowerCase();
+				if (!haystack.includes(term)) return false;
+			}
+
+			return true;
+		});
+
+		return [...list].sort((a, b) => {
+			switch (sortBy.value) {
+				case "oldest":
+					return getOrderTimestamp(a) - getOrderTimestamp(b);
+				case "amount_desc":
+					return getOrderAmount(b) - getOrderAmount(a);
+				case "amount_asc":
+					return getOrderAmount(a) - getOrderAmount(b);
+				case "latest":
+				default:
+					return getOrderTimestamp(b) - getOrderTimestamp(a);
+			}
+		});
+	});
+
+	const analytics = computed(() => {
+		const list = filteredOrders.value;
+		return {
+			visibleOrders: list.length,
+			visibleRevenue: list.reduce((sum, o) => sum + getOrderAmount(o), 0),
+			deliveredCount: list.filter((o) => normalizeStatus(o.status) === "delivered").length,
+			cancelledCount: list.filter((o) => normalizeStatus(o.status) === "cancelled").length,
+		};
+	});
+
+	const resetFilters = () => {
+		searchQuery.value = "";
+		statusFilter.value = "all";
+		sortBy.value = "latest";
+		amountMin.value = null;
+		amountMax.value = null;
+		dateFrom.value = "";
+		dateTo.value = "";
 	};
 
 	// Utility Functions
@@ -441,9 +670,56 @@
 		border-radius: 12px;
 	}
 
+	.analytics-grid {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 12px;
+	}
+
+	.metric-card {
+		border-radius: 14px;
+		background: linear-gradient(180deg, #ffffff 0%, #f7fafc 100%);
+	}
+
+	.metric-label {
+		font-size: 12px;
+		color: #64748b;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		font-weight: 700;
+	}
+
+	.metric-value {
+		font-size: 24px;
+		font-weight: 800;
+		line-height: 1.2;
+		color: #0f172a;
+		margin-top: 8px;
+	}
+
+	.filter-paper {
+		border-radius: 16px;
+		background:
+			radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 45%),
+			#ffffff;
+		border-color: #dbe7ff;
+	}
+
 	.order-card:hover {
 		transform: translateY(-2px);
 		box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+	}
+
+	@media (max-width: 1024px) {
+		.analytics-grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	@media (max-width: 599px) {
+		.analytics-grid {
+			grid-template-columns: 1fr;
+		}
 	}
 
 	.order-detail-card {

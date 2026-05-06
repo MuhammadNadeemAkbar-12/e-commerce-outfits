@@ -16,7 +16,7 @@
 					<div class="flex-1 text-center md:text-left">
 						<div
 							class="inline-block px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white/90 text-sm font-medium mb-6 border border-white/30">
-							✨ New Collections Available
+							 New Collections Available
 						</div>
 						<h1
 							class="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-white leading-tight mb-6">

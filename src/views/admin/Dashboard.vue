@@ -429,7 +429,7 @@ const fetchDashboardStats = async () => {
   try {
     const response = await AdminService.getDashboardStats();
     if (response.success) {
-      const d = response.data;
+      const d = response.data?.data ?? response.data;
       // Map the API response to our expected format
       stats.value = {
         totalUsers:    d.users?.total        || 0,

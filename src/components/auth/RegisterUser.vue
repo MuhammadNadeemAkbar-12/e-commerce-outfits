@@ -213,6 +213,18 @@
                       <div v-if="buyer.submitted && !validBuyerEmail" class="text-red-500 text-sm mt-1">Valid email is required</div>
                     </div>
 
+                    <!-- Profile Picture -->
+                    <div>
+                      <label for="bAvatar" class="block text-sm font-semibold text-gray-700 mb-2">Profile Picture (optional)</label>
+                      <input
+                        id="bAvatar"
+                        type="file"
+                        accept="image/*"
+                        @change="onBuyerAvatarSelected"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+                      />
+                    </div>
+
                     <!-- Phone -->
                     <div>
                       <label for="bPhone" class="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
@@ -532,6 +544,18 @@
                       <div v-if="seller.submitted && !validSellerEmail" class="text-red-500 text-sm mt-1">Valid email is required</div>
                     </div>
 
+                    <!-- Profile Picture -->
+                    <div>
+                      <label for="sAvatar" class="block text-sm font-semibold text-gray-700 mb-2">Profile Picture (optional)</label>
+                      <input
+                        id="sAvatar"
+                        type="file"
+                        accept="image/*"
+                        @change="onSellerAvatarSelected"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+                      />
+                    </div>
+
                     <!-- Phone -->
                     <div>
                       <label for="sPhone" class="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
@@ -633,6 +657,21 @@
                         required
                       />
                       <div v-if="seller.submitted && !seller.city" class="text-red-500 text-sm mt-1">City is required</div>
+                    </div>
+
+                    <!-- State -->
+                    <div>
+                      <label for="sState" class="block text-sm font-semibold text-gray-700 mb-2">State</label>
+                      <input
+                        id="sState"
+                        type="text"
+                        v-model.trim="seller.state"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+                        :class="{ 'border-red-500 bg-red-50': seller.submitted && !seller.state }"
+                        placeholder="Your state"
+                        required
+                      />
+                      <div v-if="seller.submitted && !seller.state" class="text-red-500 text-sm mt-1">State is required</div>
                     </div>
 
                     <!-- Postal Code -->
@@ -780,6 +819,7 @@ const buyer = ref({
   success: false,
   name: "",
   email: "",
+  avatarFile: null,
   phone: "",
   password: "",
   confirm: "",
@@ -796,6 +836,10 @@ const buyer = ref({
 
 const validBuyerEmail = computed(() => /\S+@\S+\.\S+/.test(buyer.value.email));
 const buyerPasswordsMatch = computed(() => buyer.value.password === buyer.value.confirm);
+
+function onBuyerAvatarSelected(event) {
+  buyer.value.avatarFile = event?.target?.files?.[0] || null;
+}
 
 function validateBuyerDetails() {
   buyer.value.submitted = true;
@@ -824,21 +868,25 @@ async function requestBuyerOtp() {
   
   buyer.value.loading = true;
   try {
-    const payload = {
-      name: buyer.value.name,
-      email: buyer.value.email,
-      phone: buyer.value.phone,
-      password: buyer.value.password,
-      password_confirmation: buyer.value.confirm,
-      address: buyer.value.address,
-      city: buyer.value.city,
-      state: buyer.value.state,
-      postal_code: buyer.value.postalCode,
-      country: buyer.value.country,
-    };
+    const payload = new FormData();
+    payload.append("name", buyer.value.name);
+    payload.append("email", buyer.value.email);
+    payload.append("phone", buyer.value.phone);
+    payload.append("password", buyer.value.password);
+    payload.append("password_confirmation", buyer.value.confirm);
+    payload.append("address", buyer.value.address);
+    payload.append("city", buyer.value.city);
+    payload.append("state", buyer.value.state);
+    payload.append("postal_code", buyer.value.postalCode);
+    payload.append("country", buyer.value.country);
+    if (buyer.value.avatarFile) {
+      payload.append("avatar", buyer.value.avatarFile);
+    }
 
     buyer.value.lastPayload = payload;
-    await axios.post("/customers/register/request-otp", payload);
+    await axios.post("/customers/register/request-otp", payload, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     
     buyer.value.step = 2;
     startBuyerResendTimer();
@@ -933,6 +981,7 @@ function resetBuyer() {
     success: false,
     name: "",
     email: "",
+    avatarFile: null,
     phone: "",
     password: "",
     confirm: "",
@@ -957,12 +1006,14 @@ const seller = ref({
   registered: false,
   name: "",
   email: "",
+  avatarFile: null,
   phone: "",
   companyName: "",
   password: "",
   confirm: "",
   address: "",
   city: "",
+  state: "",
   postalCode: "",
   country: "",
   acceptTerms: false,
@@ -970,6 +1021,10 @@ const seller = ref({
 
 const validSellerEmail = computed(() => /\S+@\S+\.\S+/.test(seller.value.email));
 const sellerPasswordsMatch = computed(() => seller.value.password === seller.value.confirm);
+
+function onSellerAvatarSelected(event) {
+  seller.value.avatarFile = event?.target?.files?.[0] || null;
+}
 
 function validateSeller() {
   seller.value.submitted = true;
@@ -982,6 +1037,7 @@ function validateSeller() {
     !sellerPasswordsMatch.value ||
     !s.address ||
     !s.city ||
+    !s.state ||
     !s.postalCode ||
     !s.country ||
     !s.acceptTerms
@@ -997,21 +1053,26 @@ async function handleSellerRegister() {
   
   seller.value.loading = true;
   try {
-    const payload = {
-      name: seller.value.name,
-      email: seller.value.email,
-      phone: seller.value.phone,
-      password: seller.value.password,
-      password_confirmation: seller.value.confirm,
-      role: "seller",
-      company_name: seller.value.companyName,
-      address: seller.value.address,
-      city: seller.value.city,
-      postal_code: seller.value.postalCode,
-      country: seller.value.country,
-    };
+    const payload = new FormData();
+    payload.append("name", seller.value.name);
+    payload.append("email", seller.value.email);
+    payload.append("phone", seller.value.phone);
+    payload.append("password", seller.value.password);
+    payload.append("password_confirmation", seller.value.confirm);
+    payload.append("role", "seller");
+    payload.append("company_name", seller.value.companyName || "");
+    payload.append("address", seller.value.address);
+    payload.append("city", seller.value.city);
+    payload.append("state", seller.value.state);
+    payload.append("postal_code", seller.value.postalCode);
+    payload.append("country", seller.value.country);
+    if (seller.value.avatarFile) {
+      payload.append("avatar", seller.value.avatarFile);
+    }
 
-    const response = await axios.post("/sellers/register", payload);
+    const response = await axios.post("/sellers/register", payload, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     if (response?.data?.success) {
       errorMessage.value = "";
       seller.value.registered = true;
@@ -1033,12 +1094,14 @@ function resetSeller() {
     registered: false,
     name: "",
     email: "",
+    avatarFile: null,
     phone: "",
     companyName: "",
     password: "",
     confirm: "",
     address: "",
     city: "",
+    state: "",
     postalCode: "",
     country: "",
     acceptTerms: false,

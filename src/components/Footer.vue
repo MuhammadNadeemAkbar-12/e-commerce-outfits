@@ -271,6 +271,23 @@ onUnmounted(() => {
   flex: 1;
 }
 
+.newsletter-input :deep(.q-field__control) {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: rgba(148, 163, 184, 0.35) !important;
+  color: #e2e8f0;
+}
+
+.newsletter-input :deep(.q-field__native),
+.newsletter-input :deep(input) {
+  color: #e2e8f0 !important;
+}
+
+.newsletter-input :deep(.q-field__native::placeholder),
+.newsletter-input :deep(input::placeholder) {
+  color: #94a3b8 !important;
+  opacity: 1;
+}
+
 .subscribe-btn {
   min-width: 44px;
   border-radius: 10px;

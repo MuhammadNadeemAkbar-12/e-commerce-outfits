@@ -1,15 +1,9 @@
-<template>
-  <div class="q-pa-md">
-    <div class="text-h4 q-mb-md">Product Approval</div>
-    <q-card>
-      <q-card-section>
-        <q-table
-          :rows="pendingProducts"
-          :columns="columns"
-          row-key="id"
-          flat
-          bordered
-        >
+<script setup>
+import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+const router = useRouter()
+onMounted(() => router.replace({ name: 'SellerProductsList' }))
+</script>
           <template v-slot:body-cell-image="props">
             <q-td :props="props">
               <q-avatar>

@@ -32,6 +32,45 @@ class AdminService {
     }
   }
 
+  async createAdminCustomer(payload) {
+    try {
+      const response = await axios.post('/admin/customers', payload);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to create customer',
+        error,
+      };
+    }
+  }
+
+  async updateAdminCustomer(customerId, payload) {
+    try {
+      const response = await axios.patch(`/admin/customers/${customerId}`, payload);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to update customer',
+        error,
+      };
+    }
+  }
+
+  async deleteAdminCustomer(customerId) {
+    try {
+      const response = await axios.delete(`/admin/customers/${customerId}`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to delete customer',
+        error,
+      };
+    }
+  }
+
   async updateCustomerStatus(customerId, status) {
     try {
       const block = status === "blocked";
@@ -106,6 +145,45 @@ class AdminService {
         success: false,
         message:
           error.response?.data?.message || "Failed to fetch seller details",
+        error,
+      };
+    }
+  }
+
+  async createAdminSeller(payload) {
+    try {
+      const response = await axios.post('/admin/sellers', payload);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to create seller',
+        error,
+      };
+    }
+  }
+
+  async updateAdminSeller(sellerId, payload) {
+    try {
+      const response = await axios.patch(`/admin/sellers/${sellerId}`, payload);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to update seller',
+        error,
+      };
+    }
+  }
+
+  async deleteAdminSeller(sellerId) {
+    try {
+      const response = await axios.delete(`/admin/sellers/${sellerId}`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to delete seller',
         error,
       };
     }
@@ -379,6 +457,32 @@ class AdminService {
         success: false,
         message:
           error.response?.data?.message || "Failed to fetch all products",
+        error,
+      };
+    }
+  }
+
+  async createAdminProduct(payload) {
+    try {
+      const response = await axios.post('/admin/products', payload);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to create product',
+        error,
+      };
+    }
+  }
+
+  async updateAdminProduct(productId, payload) {
+    try {
+      const response = await axios.patch(`/admin/products/${productId}`, payload);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to update product',
         error,
       };
     }

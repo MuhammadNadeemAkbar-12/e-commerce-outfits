@@ -29,6 +29,50 @@
       </div>
     </div>
 
+    <!-- Analytics Cards -->
+    <div class="row q-col-gutter-md q-mb-md">
+      <div class="col-6 col-sm-4 col-md-2">
+        <q-card flat bordered>
+          <q-card-section class="text-center q-pa-sm">
+            <div class="text-caption text-grey-6">Total Products</div>
+            <div class="text-h6 text-weight-bold text-primary">{{ productAnalytics.total }}</div>
+          </q-card-section>
+        </q-card>
+      </div>
+      <div class="col-6 col-sm-4 col-md-2">
+        <q-card flat bordered>
+          <q-card-section class="text-center q-pa-sm">
+            <div class="text-caption text-grey-6">Approved</div>
+            <div class="text-h6 text-weight-bold text-positive">{{ productAnalytics.approved }}</div>
+          </q-card-section>
+        </q-card>
+      </div>
+      <div class="col-6 col-sm-4 col-md-2">
+        <q-card flat bordered>
+          <q-card-section class="text-center q-pa-sm">
+            <div class="text-caption text-grey-6">Pending</div>
+            <div class="text-h6 text-weight-bold text-orange">{{ productAnalytics.pending }}</div>
+          </q-card-section>
+        </q-card>
+      </div>
+      <div class="col-6 col-sm-4 col-md-2">
+        <q-card flat bordered>
+          <q-card-section class="text-center q-pa-sm">
+            <div class="text-caption text-grey-6">Blocked</div>
+            <div class="text-h6 text-weight-bold text-negative">{{ productAnalytics.blocked }}</div>
+          </q-card-section>
+        </q-card>
+      </div>
+      <div class="col-6 col-sm-4 col-md-2">
+        <q-card flat bordered>
+          <q-card-section class="text-center q-pa-sm">
+            <div class="text-caption text-grey-6">Out of Stock</div>
+            <div class="text-h6 text-weight-bold text-grey-7">{{ productAnalytics.outOfStock }}</div>
+          </q-card-section>
+        </q-card>
+      </div>
+    </div>
+
     <!-- Bulk Actions -->
     <div v-if="selectedProducts.length > 0" class="row items-center q-mb-md q-pa-sm bg-blue-1 rounded-borders">
       <div class="col-auto q-mr-md">
@@ -139,7 +183,7 @@
           flat 
           bordered 
           :loading="loading"
-          :pagination="{ rowsPerPage: 10 }"
+          :pagination="{ rowsPerPage: 10, sortBy: 'id', descending: true }"
           selection="multiple"
           v-model:selected="selectedProducts"
         >
@@ -150,7 +194,7 @@
           <template v-slot:body-cell-image="props">
             <q-td :props="props">
               <q-avatar size="48px">
-                <img :src="props.row.image || 'https://cdn.quasar.dev/img/boy-avatar.png'" />
+                <img :src="resolveUrl(props.row.image) || 'https://cdn.quasar.dev/img/boy-avatar.png'" @error="e => e.target.src='https://cdn.quasar.dev/img/boy-avatar.png'" />
               </q-avatar>
             </q-td>
           </template>
@@ -170,17 +214,12 @@
 
           <template v-slot:body-cell-status="props">
             <q-td :props="props">
-              <q-chip
-                :color="getStatusColor(props.row.status)"
-                text-color="white"
-                size="sm"
+              <q-badge
+                :color="props.row.is_blocked ? 'negative' : props.row.is_approved ? 'positive' : 'orange'"
+                class="text-capitalize q-px-sm q-py-xs"
               >
-                {{ props.row.status || 'No Status' }}
-              </q-chip>
-              <div class="text-caption text-grey-7">
-                Approved: {{ props.row.is_approved }}, 
-                Blocked: {{ props.row.is_blocked }}
-              </div>
+                {{ props.row.is_blocked ? 'Blocked' : props.row.is_approved ? 'Approved' : 'Pending' }}
+              </q-badge>
             </q-td>
           </template>
 
@@ -240,6 +279,7 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import adminApi from '@/services/adminApi'
+import { resolveUrl } from '@/utils/imageUrl'
 
 const $q = useQuasar()
 
@@ -318,6 +358,17 @@ const filteredProducts = computed(() => {
   }
 
   return filtered
+})
+
+const productAnalytics = computed(() => {
+  const all = sellerProducts.value
+  return {
+    total:      all.length,
+    approved:   all.filter(p => p.is_approved && !p.is_blocked).length,
+    pending:    all.filter(p => !p.is_approved && !p.is_blocked).length,
+    blocked:    all.filter(p => p.is_blocked).length,
+    outOfStock: all.filter(p => (p.stock ?? 0) <= 0).length,
+  }
 })
 
 // Refresh products method

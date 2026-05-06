@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 	<div class="profile-page min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
 		<!-- Animated background elements -->
 		<div class="fixed inset-0 overflow-hidden pointer-events-none">
@@ -28,10 +28,12 @@
 						<div class="avatar-container relative group">
 							<div class="avatar-glow"></div>
 							<div class="avatar-wrap relative">
-								<div
-									v-if="profile?.avatar"
+								<img
+									v-if="hasAvatar"
 									class="avatar-img"
-									:style="{ backgroundImage: `url(${profile.avatar})` }"></div>
+									:src="displayAvatar"
+									alt="Profile avatar"
+									@error="avatarLoadError = true" />
 								<div v-else class="avatar-fallback">
 									<span class="avatar-text">{{ initials }}</span>
 									<div class="avatar-rings">
@@ -49,10 +51,10 @@
 							<div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
 								<div class="profile-info">
 									<h1 class="profile-name">
-										{{ profile?.name || profile?.full_name || "—" }}
+										{{ profile?.name || profile?.full_name || "â€”" }}
 									</h1>
 									<div class="profile-email">
-										{{ profile?.email || "—" }}
+										{{ profile?.email || "â€”" }}
 									</div>
 									<div class="profile-role">
 										<div class="role-badge">
@@ -189,6 +191,24 @@
 
 						<form @submit.prevent="saveProfile" novalidate>
 							<div class="form-grid">
+								<div class="form-group full-width">
+									<label class="form-label">
+										<span class="label-text">Profile Picture</span>
+									</label>
+									<div class="input-wrapper">
+										<input
+											type="file"
+											accept="image/*"
+											@change="onAvatarSelected"
+											class="form-input"
+											placeholder="Select image" />
+										<div class="input-focus-ring"></div>
+									</div>
+									<div v-if="avatarPreviewUrl" class="mt-3">
+										<img :src="avatarPreviewUrl" alt="Avatar preview" class="w-20 h-20 rounded-xl object-cover border border-slate-200" />
+									</div>
+								</div>
+
 								<div class="form-group">
 									<label class="form-label">
 										<span class="label-text">Full Name</span>
@@ -225,7 +245,7 @@
 											<svg
 												width="16"
 												height="16"
-												viewBox="0 0 24 24"
+												:src="displayAvatar"
 												fill="none"
 												stroke="currentColor"
 												stroke-width="2">
@@ -313,6 +333,26 @@
 									<transition name="error-fade">
 										<div v-if="formErrors.city" class="field-error">
 											{{ formErrors.city }}
+										</div>
+									</transition>
+								</div>
+
+								<div class="form-group">
+									<label class="form-label">
+										<span class="label-text">State</span>
+									</label>
+									<div class="input-wrapper">
+										<input
+											v-model="form.state"
+											type="text"
+											class="form-input"
+											:class="{ 'input-error': formErrors.state }"
+											placeholder="California" />
+										<div class="input-focus-ring"></div>
+									</div>
+									<transition name="error-fade">
+										<div v-if="formErrors.state" class="field-error">
+											{{ formErrors.state }}
 										</div>
 									</transition>
 								</div>
@@ -473,6 +513,7 @@ const form = reactive({
 	phone: "",
 	address: "",
 	city: "",
+	state: "",
 	postal_code: "",
 	country: "",
 });
@@ -482,6 +523,7 @@ const formErrors = reactive({
 	phone: null,
 	address: null,
 	city: null,
+	state: null,
 	postal_code: null,
 	country: null,
 });
@@ -490,6 +532,36 @@ function clearErrors() {
 	for (const k in formErrors) formErrors[k] = null;
 	serverMessage.value = null;
 	successMessage.value = null;
+}
+
+const avatarLoadError = ref(false);
+const avatarFile = ref(null);
+const avatarPreviewUrl = ref("");
+
+function normalizeAvatarUrl(path) {
+if (!path) return "";
+const base = axios?.defaults?.baseURL || "";
+let origin = "http://13.60.78.97";
+try { if (base) origin = new URL(base, "http://localhost").origin; } catch { }
+if (/^https?:\/\//i.test(path)) {
+return path.replace(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i, origin);
+}
+if (path.startsWith("blob:") || path.startsWith("data:")) return path;
+if (path.startsWith("/")) return `${origin}${path}`;
+return `${origin}/${String(path).replace(/^\/+/, "")}`;
+}
+
+const displayAvatar = computed(() => avatarPreviewUrl.value || normalizeAvatarUrl(profile.value?.avatar) || "");
+const hasAvatar = computed(() => !!displayAvatar.value && !avatarLoadError.value);
+
+function onAvatarSelected(event) {
+	const file = event?.target?.files?.[0] || null;
+	avatarFile.value = file;
+	if (avatarPreviewUrl.value) {
+		URL.revokeObjectURL(avatarPreviewUrl.value);
+	}
+	avatarPreviewUrl.value = file ? URL.createObjectURL(file) : "";
+	avatarLoadError.value = false;
 }
 
 function mapServerErrors(err) {
@@ -508,7 +580,7 @@ function mapServerErrors(err) {
 }
 
 function formatLocation() {
-	const parts = [profile.value?.city, profile.value?.address].filter(Boolean);
+	const parts = [profile.value?.city, profile.value?.state, profile.value?.address].filter(Boolean);
 	
 	if (parts.length === 0) return "Location not provided";
 	if (parts.length === 1) return parts[0];
@@ -526,10 +598,10 @@ async function fetchProfile() {
 	const stored = authStore.currentUser || authStore.user || null;
 	const role = stored?.role?.toString?.().toLowerCase?.() || null;
 
-	const customerEndpoints = ["/customer/profile", "/customer/me"];
-	const sellerEndpoints = ["/seller/profile", "/seller/me", "/seller"];
+	const customerEndpoints = ["/customer/profile"];
+	const sellerEndpoints = ["/seller/profile"];
 	const tryList =
-		role === "seller"
+		role === "seller" || role === "manager"
 			? [...sellerEndpoints, ...customerEndpoints]
 			: [...customerEndpoints, ...sellerEndpoints];
 
@@ -547,6 +619,7 @@ async function fetchProfile() {
 			form.phone = payload.phone ?? "";
 			form.address = payload.address ?? "";
 			form.city = payload.city ?? "";
+			form.state = payload.state ?? "";
 			form.postal_code = payload.postal_code ?? payload.zip ?? "";
 			form.country = payload.country ?? payload.country_name ?? "";
 			lastErr = null;
@@ -578,6 +651,7 @@ function toggleEdit() {
 		form.phone = profile.value.phone ?? "";
 		form.address = profile.value.address ?? "";
 		form.city = profile.value.city ?? "";
+		form.state = profile.value.state ?? "";
 		form.postal_code = profile.value.postal_code ?? profile.value.zip ?? "";
 		form.country = profile.value.country ?? profile.value.country_name ?? "";
 	}
@@ -593,6 +667,7 @@ function cancelEdit() {
 		form.phone = profile.value.phone ?? "";
 		form.address = profile.value.address ?? "";
 		form.city = profile.value.city ?? "";
+		form.state = profile.value.state ?? "";
 		form.postal_code = profile.value.postal_code ?? profile.value.zip ?? "";
 		form.country = profile.value.country ?? profile.value.country_name ?? "";
 	}
@@ -604,23 +679,35 @@ async function saveProfile() {
 	successMessage.value = null;
 
 	try {
-		const payload = {
-			name: form.name ?? "",
-			phone: form.phone ?? "",
-			address: form.address ?? "",
-			city: form.city ?? "",
-			postal_code: form.postal_code ?? "",
-			country: form.country ?? "",
-		};
+		const payload = new FormData();
+		payload.append("_method", "PATCH");
+		payload.append("name", form.name ?? "");
+		payload.append("phone", form.phone ?? "");
+		payload.append("address", form.address ?? "");
+		payload.append("city", form.city ?? "");
+		payload.append("state", form.state ?? "");
+		payload.append("postal_code", form.postal_code ?? "");
+		payload.append("country", form.country ?? "");
+		if (avatarFile.value) {
+			payload.append("avatar", avatarFile.value);
+		}
 
 		const patchTarget =
 			profileSource.value === "seller"
 				? "/seller/profile"
 				: "/customer/profile";
 
-		const res = await axios.patch(patchTarget, payload);
+		const res = await axios.post(patchTarget, payload, {
+			headers: { "Content-Type": "multipart/form-data" },
+		});
 		const updated = res?.data?.data ?? res?.data ?? res;
 		profile.value = updated;
+		avatarLoadError.value = false;
+		if (avatarPreviewUrl.value) {
+			URL.revokeObjectURL(avatarPreviewUrl.value);
+		}
+		avatarPreviewUrl.value = "";
+		avatarFile.value = null;
 
 		try {
 			// Keep in-memory auth store in sync with updated profile
@@ -670,6 +757,13 @@ const initials = computed(() => {
 		.join("");
 });
 
+watch(
+	() => profile.value?.avatar,
+	() => {
+		avatarLoadError.value = false;
+	}
+);
+
 onMounted(fetchProfile);
 
 watch(
@@ -683,6 +777,7 @@ watch(
 				form.phone = profile.value.phone ?? "";
 				form.address = profile.value.address ?? "";
 				form.city = profile.value.city ?? "";
+				form.state = profile.value.state ?? "";
 				form.postal_code =
 					profile.value.postal_code ?? profile.value.zip ?? "";
 				form.country =
@@ -832,9 +927,9 @@ watch(
 .avatar-img {
 	width: 96px;
 	height: 96px;
+	display: block;
+	object-fit: cover;
 	border-radius: 24px;
-	background-size: cover;
-	background-position: center;
 	border: 4px solid white;
 	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
 	transition: all 0.3s ease;
@@ -1166,6 +1261,8 @@ watch(
 .edit-card {
 	position: relative;
 	overflow: hidden;
+	background: rgba(15, 23, 42, 0.86) !important;
+	border-color: rgba(148, 163, 184, 0.25) !important;
 }
 
 .edit-header {
@@ -1177,7 +1274,7 @@ watch(
 .edit-title {
 	font-size: 1.75rem;
 	font-weight: 800;
-	background: linear-gradient(135deg, #1e293b, #475569);
+	background: linear-gradient(135deg, #f8fafc, #cbd5e1);
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 	background-clip: text;
@@ -1185,7 +1282,7 @@ watch(
 }
 
 .edit-subtitle {
-	color: #64748b;
+	color: #cbd5e1;
 	font-size: 0.875rem;
 	font-weight: 500;
 }
@@ -1210,7 +1307,7 @@ watch(
 	margin-bottom: 8px;
 	font-size: 0.875rem;
 	font-weight: 600;
-	color: #374151;
+	color: #e2e8f0;
 }
 
 .label-required {
@@ -1225,12 +1322,12 @@ watch(
 .form-input {
 	width: 100%;
 	padding: 16px 18px;
-	border: 2px solid #e5e7eb;
+	border: 2px solid #475569;
 	border-radius: 16px;
-	background: white;
+	background: rgba(30, 41, 59, 0.9);
 	font-size: 0.875rem;
 	font-weight: 500;
-	color: #1f2937;
+	color: #f8fafc;
 	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 	outline: none;
 	position: relative;
@@ -1238,19 +1335,34 @@ watch(
 }
 
 .form-input:focus {
-	border-color: #8b5cf6;
+	border-color: #60a5fa;
 	transform: translateY(-1px);
-	box-shadow: 0 12px 32px rgba(139, 92, 246, 0.15);
+	box-shadow: 0 12px 32px rgba(96, 165, 250, 0.2);
 }
 
 .form-input::placeholder {
-	color: #9ca3af;
+	color: #94a3b8;
 	font-weight: 400;
 }
 
+.form-input[type="file"] {
+	padding: 10px 12px;
+	color: #e2e8f0;
+}
+
+.form-input[type="file"]::file-selector-button {
+	background: #334155;
+	color: #f8fafc;
+	border: 1px solid #475569;
+	border-radius: 10px;
+	padding: 8px 12px;
+	margin-right: 10px;
+	cursor: pointer;
+}
+
 .input-readonly {
-	background: #f9fafb;
-	color: #6b7280;
+	background: rgba(30, 41, 59, 0.7);
+	color: #cbd5e1;
 	cursor: not-allowed;
 	position: relative;
 }
@@ -1260,7 +1372,7 @@ watch(
 	top: 50%;
 	right: 16px;
 	transform: translateY(-50%);
-	color: #9ca3af;
+	color: #94a3b8;
 	pointer-events: none;
 }
 
@@ -1295,7 +1407,7 @@ watch(
 }
 
 .field-error::before {
-	content: "⚠";
+	content: "âš ";
 	font-size: 0.875rem;
 }
 
@@ -1306,7 +1418,7 @@ watch(
 	gap: 16px;
 	flex-wrap: wrap;
 	padding-top: 24px;
-	border-top: 1px solid rgba(0, 0, 0, 0.06);
+	border-top: 1px solid rgba(148, 163, 184, 0.2);
 }
 
 .btn-primary {
@@ -1379,9 +1491,9 @@ watch(
 	align-items: center;
 	gap: 8px;
 	padding: 14px 24px;
-	background: white;
-	color: #6b7280;
-	border: 2px solid #e5e7eb;
+	background: rgba(30, 41, 59, 0.8);
+	color: #e2e8f0;
+	border: 2px solid #475569;
 	border-radius: 16px;
 	font-weight: 600;
 	font-size: 0.875rem;
@@ -1390,10 +1502,10 @@ watch(
 }
 
 .btn-secondary:hover:not(:disabled) {
-	background: #f9fafb;
-	border-color: #d1d5db;
+	background: rgba(51, 65, 85, 0.9);
+	border-color: #64748b;
 	transform: translateY(-1px);
-	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
 .btn-secondary:disabled {
@@ -1472,9 +1584,9 @@ watch(
 }
 
 .debug-details {
-	background: rgba(255, 255, 255, 0.7);
+	background: rgba(15, 23, 42, 0.72);
 	backdrop-filter: blur(8px);
-	border: 1px solid rgba(255, 255, 255, 0.3);
+	border: 1px solid rgba(148, 163, 184, 0.25);
 	border-radius: 16px;
 	overflow: hidden;
 	transition: all 0.3s ease;
@@ -1487,15 +1599,15 @@ watch(
 	padding: 16px 20px;
 	font-size: 0.875rem;
 	font-weight: 600;
-	color: #6b7280;
+	color: #cbd5e1;
 	cursor: pointer;
-	background: rgba(255, 255, 255, 0.5);
+	background: rgba(30, 41, 59, 0.75);
 	transition: all 0.3s ease;
 }
 
 .debug-summary:hover {
-	background: rgba(255, 255, 255, 0.8);
-	color: #374151;
+	background: rgba(51, 65, 85, 0.9);
+	color: #f8fafc;
 }
 
 .debug-content {
@@ -1601,6 +1713,7 @@ watch(
 	.profile-name {
 		background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
 		-webkit-background-clip: text;
+		background-clip: text;
 		-webkit-text-fill-color: transparent;
 	}
 

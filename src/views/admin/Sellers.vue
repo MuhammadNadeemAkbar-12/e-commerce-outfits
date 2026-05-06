@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <q-page class="q-pa-md body--dark transition-colors duration-300">
     <!-- Header -->
     <div class="row items-center justify-between q-mb-md">
@@ -7,6 +7,14 @@
         <p class="text-subtitle2 text-grey-7 dark:text-gray-400">Manage and monitor all platform sellers</p>
       </div>
       <div class="row q-gutter-sm">
+        <q-btn 
+          @click="openCreateSeller" 
+          icon="add_business" 
+          label="Add Seller" 
+          color="positive" 
+          unelevated
+          class="hover:scale-105 transition-transform duration-200"
+        />
         <q-btn 
           @click="refreshSellers" 
           icon="refresh" 
@@ -161,8 +169,9 @@
               <div class="row items-center no-wrap q-gutter-x-sm">
                 <q-avatar size="38px" class="shadow-sm">
                   <img
-                    :src="props.row.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(props.row.name || 'S')}&background=6366f1&color=fff&size=80`"
+                    :src="normalizeAvatarUrl(props.row.avatar) || `https://ui-avatars.com/api/?name=${encodeURIComponent(props.row.name || 'S')}&background=6366f1&color=fff&size=80`"
                     :alt="props.row.name"
+                    @error="(e) => e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(props.row.name || 'S')}&background=6366f1&color=fff&size=80`"
                   />
                 </q-avatar>
                 <div>
@@ -228,6 +237,13 @@
 
                     <q-separator spaced />
 
+                    <q-item clickable v-close-popup @click="openEditSeller(props.row)" class="rounded-lg">
+                      <q-item-section avatar>
+                        <q-icon name="edit" color="warning" size="18px" />
+                      </q-item-section>
+                      <q-item-section class="text-sm text-warning font-medium">Edit</q-item-section>
+                    </q-item>
+
                     <!-- Approve (only if not yet approved) -->
                     <q-item v-if="!props.row.is_approved" clickable v-close-popup @click="approveSeller(props.row)" class="rounded-lg">
                       <q-item-section avatar>
@@ -252,6 +268,13 @@
                       <q-item-section :class="['text-sm font-medium', props.row.is_blocked ? 'text-positive' : 'text-warning']">
                         {{ props.row.is_blocked ? 'Unblock' : 'Suspend' }}
                       </q-item-section>
+                    </q-item>
+
+                    <q-item clickable v-close-popup @click="askDeleteSeller(props.row)" class="rounded-lg">
+                      <q-item-section avatar>
+                        <q-icon name="delete" color="negative" size="18px" />
+                      </q-item-section>
+                      <q-item-section class="text-sm text-negative font-medium">Delete</q-item-section>
                     </q-item>
                   </q-list>
                 </q-menu>
@@ -287,13 +310,51 @@
     <!-- Confirmation Dialog -->
     <ConfirmDialog
       v-model="showConfirmDialog"
-      :title="pendingAction === 'approve' ? 'Approve Seller' : pendingAction === 'unapprove' ? 'Unapprove Seller' : pendingAction === 'block' ? 'Block Seller' : 'Unblock Seller'"
-      :message="pendingAction === 'approve' ? 'Approve this seller? They will be able to list products.' : pendingAction === 'unapprove' ? 'Unapprove this seller? Their products will be hidden.' : pendingAction === 'block' ? 'Block this seller? They will not be able to access the platform.' : 'Unblock this seller? They will regain access to the platform.'"
+      :title="pendingAction === 'approve' ? 'Approve Seller' : pendingAction === 'unapprove' ? 'Unapprove Seller' : pendingAction === 'block' ? 'Block Seller' : pendingAction === 'delete' ? 'Delete Seller' : 'Unblock Seller'"
+      :message="pendingAction === 'approve' ? 'Approve this seller? They will be able to list products.' : pendingAction === 'unapprove' ? 'Unapprove this seller? Their products will be hidden.' : pendingAction === 'block' ? 'Block this seller? They will not be able to access the platform.' : pendingAction === 'delete' ? 'Delete this seller account permanently?' : 'Unblock this seller? They will regain access to the platform.'"
       :type="pendingAction === 'approve' || pendingAction === 'unblock' ? 'success' : pendingAction === 'unapprove' ? 'warning' : 'danger'"
-      :confirm-label="pendingAction === 'approve' ? 'Approve' : pendingAction === 'unapprove' ? 'Unapprove' : pendingAction === 'block' ? 'Block' : 'Unblock'"
+      :confirm-label="pendingAction === 'approve' ? 'Approve' : pendingAction === 'unapprove' ? 'Unapprove' : pendingAction === 'block' ? 'Block' : pendingAction === 'delete' ? 'Delete' : 'Unblock'"
       :loading="confirmLoading"
       @confirm="executeConfirmedAction"
     />
+
+    <q-dialog v-model="showSellerForm" persistent>
+      <q-card style="min-width: 560px" class="dark:bg-gray-800 dark:border-gray-700">
+        <q-card-section>
+          <div class="text-h6 dark:text-white">{{ sellerFormMode === 'create' ? 'Add Seller' : 'Edit Seller' }}</div>
+        </q-card-section>
+        <q-card-section>
+          <div class="row q-col-gutter-md">
+            <!-- Avatar Upload -->
+            <div class="col-12 flex flex-center">
+              <div class="column items-center q-gutter-xs">
+                <q-avatar size="80px" class="border-2 border-gray-300">
+                  <img :src="sellerFormAvatarPreview || 'https://cdn.quasar.dev/img/boy-avatar.png'" />
+                </q-avatar>
+                <q-btn flat dense size="sm" color="primary" icon="photo_camera" label="Choose Avatar"
+                  @click="$refs.sellerAvatarInput.click()" />
+                <input ref="sellerAvatarInput" type="file" accept="image/*" style="display:none"
+                  @change="onSellerAvatarSelected" />
+              </div>
+            </div>
+            <div class="col-12 col-md-6"><q-input v-model="sellerForm.name" label="Name" dense outlined /></div>
+            <div class="col-12 col-md-6"><q-input v-model="sellerForm.email" label="Email" type="email" dense outlined /></div>
+            <div class="col-12 col-md-6"><q-input v-model="sellerForm.password" :label="sellerFormMode === 'create' ? 'Password' : 'Password (optional)'" type="password" dense outlined /></div>
+            <div class="col-12 col-md-6"><q-input v-model="sellerForm.company_name" label="Company Name" dense outlined /></div>
+            <div class="col-12 col-md-6"><q-input v-model="sellerForm.phone" label="Phone" dense outlined /></div>
+            <div class="col-12"><q-input v-model="sellerForm.address" label="Address" dense outlined /></div>
+            <div class="col-12 col-md-4"><q-input v-model="sellerForm.city" label="City" dense outlined /></div>
+            <div class="col-12 col-md-4"><q-input v-model="sellerForm.state" label="State" dense outlined /></div>
+            <div class="col-12 col-md-4"><q-input v-model="sellerForm.postal_code" label="Postal Code" dense outlined /></div>
+            <div class="col-12"><q-input v-model="sellerForm.country" label="Country" dense outlined /></div>
+          </div>
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Cancel" color="grey" v-close-popup />
+          <q-btn :loading="sellerFormLoading" unelevated color="primary" :label="sellerFormMode === 'create' ? 'Create' : 'Update'" @click="submitSellerForm" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
 
     <!-- Seller Details Dialog -->
     <q-dialog v-model="showSellerDetails" persistent>
@@ -306,7 +367,7 @@
           <div class="row q-col-gutter-md">
             <div class="col-12">
               <q-avatar size="100px" class="q-mx-auto block">
-                <img :src="selectedSeller.logo || 'https://cdn.quasar.dev/img/boy-avatar.png'" />
+                <img :src="normalizeAvatarUrl(selectedSeller.avatar) || 'https://cdn.quasar.dev/img/boy-avatar.png'" @error="(e) => e.target.src = 'https://cdn.quasar.dev/img/boy-avatar.png'" />
               </q-avatar>
             </div>
             <div class="col-12">
@@ -392,6 +453,10 @@ import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
 import adminApi from '@/services/adminApi'
 import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
+import axios from '@/api/axios'
+import { resolveUrl, getInitials, getAvatarColor } from '@/utils/imageUrl'
+
+const normalizeAvatarUrl = resolveUrl
 
 const $q = useQuasar()
 
@@ -412,6 +477,24 @@ const showConfirmDialog = ref(false)
 const confirmLoading = ref(false)
 const pendingAction = ref(null)  // 'approve' | 'unapprove' | 'block' | 'unblock'
 const pendingTarget = ref(null)
+const showSellerForm = ref(false)
+const sellerFormLoading = ref(false)
+const sellerFormMode = ref('create')
+const sellerFormId = ref(null)
+const sellerFormAvatarFile = ref(null)
+const sellerFormAvatarPreview = ref('')
+const sellerForm = ref({
+  name: '',
+  email: '',
+  password: '',
+  company_name: '',
+  phone: '',
+  address: '',
+  city: '',
+  state: '',
+  postal_code: '',
+  country: '',
+})
 
 // Table columns
 const columns = [
@@ -574,6 +657,99 @@ const viewSellerDetails = (seller) => {
   showSellerDetails.value = true
 }
 
+const onSellerAvatarSelected = (e) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+  sellerFormAvatarFile.value = file
+  sellerFormAvatarPreview.value = URL.createObjectURL(file)
+}
+
+const resetSellerForm = () => {
+  sellerFormAvatarFile.value = null
+  sellerFormAvatarPreview.value = ''
+  sellerForm.value = {
+    name: '',
+    email: '',
+    password: '',
+    company_name: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    postal_code: '',
+    country: '',
+  }
+}
+
+const openCreateSeller = () => {
+  sellerFormMode.value = 'create'
+  sellerFormId.value = null
+  resetSellerForm()
+  showSellerForm.value = true
+}
+
+const openEditSeller = (seller) => {
+  sellerFormMode.value = 'edit'
+  sellerFormId.value = seller.id
+  sellerFormAvatarFile.value = null
+  sellerFormAvatarPreview.value = normalizeAvatarUrl(seller.avatar) || ''
+  sellerForm.value = {
+    name: seller.name || '',
+    email: seller.email || '',
+    password: '',
+    company_name: seller.profile?.company_name || seller.businessName || '',
+    phone: seller.profile?.phone || '',
+    address: seller.profile?.address || '',
+    city: seller.profile?.city || '',
+    state: seller.profile?.state || '',
+    postal_code: seller.profile?.postal_code || '',
+    country: seller.profile?.country || '',
+  }
+  showSellerForm.value = true
+}
+
+const submitSellerForm = async () => {
+  sellerFormLoading.value = true
+  try {
+    let response
+    if (sellerFormAvatarFile.value) {
+      const fd = new FormData()
+      if (sellerFormMode.value === 'edit') fd.append('_method', 'PATCH')
+      Object.entries(sellerForm.value).forEach(([k, v]) => { if (k !== 'password' || v) fd.append(k, v) })
+      fd.append('avatar', sellerFormAvatarFile.value)
+      const url = sellerFormMode.value === 'create' ? '/admin/sellers' : `/admin/sellers/${sellerFormId.value}`
+      const res = await axios.post(url, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      response = { success: true, data: res.data }
+    } else {
+      const payload = { ...sellerForm.value }
+      if (sellerFormMode.value === 'edit' && !payload.password) {
+        delete payload.password
+      }
+      response = sellerFormMode.value === 'create'
+        ? await adminApi.createAdminSeller(payload)
+        : await adminApi.updateAdminSeller(sellerFormId.value, payload)
+    }
+
+    if (!response.success || response.data?.success === false) {
+      throw new Error(response.message || response.data?.message || 'Save failed')
+    }
+
+    $q.notify({ type: 'positive', message: sellerFormMode.value === 'create' ? 'Seller created successfully' : 'Seller updated successfully', position: 'top' })
+    showSellerForm.value = false
+    await fetchSellers()
+  } catch (error) {
+    $q.notify({ type: 'negative', message: error.message || 'Failed to save seller', position: 'top' })
+  } finally {
+    sellerFormLoading.value = false
+  }
+}
+
+const askDeleteSeller = (seller) => {
+  pendingTarget.value = seller
+  pendingAction.value = 'delete'
+  showConfirmDialog.value = true
+}
+
 const approveSeller = (seller) => {
   pendingTarget.value = seller
   pendingAction.value = 'approve'
@@ -620,6 +796,12 @@ const executeConfirmedAction = async () => {
         const idx = sellers.value.findIndex(s => s.id === seller.id)
         if (idx !== -1) { sellers.value[idx].is_blocked = block; sellers.value[idx].status = block ? 'suspended' : 'verified' }
         $q.notify({ type: 'positive', message: `Seller ${block ? 'blocked' : 'unblocked'} successfully`, position: 'top' })
+      }
+    } else if (action === 'delete') {
+      response = await adminApi.deleteAdminSeller(seller.id)
+      if (response.success && response.data?.success !== false) {
+        sellers.value = sellers.value.filter(s => s.id !== seller.id)
+        $q.notify({ type: 'positive', message: 'Seller deleted successfully', position: 'top' })
       }
     }
   } catch (error) {

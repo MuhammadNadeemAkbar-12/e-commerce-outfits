@@ -22,7 +22,7 @@
 						</span>
 						<img
 							v-else
-							:src="user.avatar"
+							:src="resolveUrl(user.avatar)"
 							alt="Profile"
 							class="w-full h-full object-cover" />
 					</q-avatar>
@@ -59,7 +59,7 @@
 						</span>
 						<img
 							v-else
-							:src="user.avatar"
+							:src="resolveUrl(user.avatar)"
 							alt="Profile"
 							class="w-full h-full object-cover" />
 					</q-avatar>
@@ -128,9 +128,9 @@
 						</q-item-section>
 					</q-item>
 
-					<!-- View All Orders - visible for customers/buyers only -->
+					<!-- View past orders for customer-side roles -->
 					<q-item
-						v-if="(profile?.role || user?.role) === 'customer' || (profile?.role || user?.role) === 'buyer'"
+						v-if="canViewPastOrders"
 						clickable
 						v-close-popup
 						@click="goToOrders"
@@ -141,7 +141,7 @@
 							</div>
 						</q-item-section>
 						<q-item-section>
-							<q-item-label class="font-medium text-gray-800">View All Orders</q-item-label>
+							<q-item-label class="font-medium text-gray-800">View Your Past Orders</q-item-label>
 							<q-item-label caption class="text-gray-500">See all your past orders</q-item-label>
 						</q-item-section>
 						<q-item-section side>
@@ -249,6 +249,7 @@
 	import { useAuthStore } from "../../stores/auth";
 	import { useRouter } from "vue-router";
 	import axios from "@/api/axios";
+	import { resolveUrl } from '@/utils/imageUrl'
 
 	const authStore = useAuthStore();
 	const router = useRouter();
@@ -259,6 +260,16 @@
 	const profile = ref(null);
 	const profileSource = ref(null); // 'customer' | 'seller' | null
 	const profileDropdown = ref(null);
+
+	const currentRole = computed(() => {
+		return String(profile.value?.role || user.value?.role || "")
+			.toLowerCase()
+			.trim();
+	});
+
+	const canViewPastOrders = computed(() => {
+		return ["customer", "buyer", "salesman"].includes(currentRole.value);
+	});
 
 
 
@@ -314,6 +325,7 @@
 	});
 
 	async function tryEndpointsSequential(list) {
+		if (!list || list.length === 0) throw new Error("All endpoints failed");
 		for (const ep of list) {
 			try {
 				const res = await axios.get(ep);
@@ -336,13 +348,16 @@
 		const stored = authStore.currentUser || authStore.user || null;
 		const role = stored?.role?.toString()?.toLowerCase?.() || null;
 
-		const customerEndpoints = ["/customer/profile", "/customer/me"];
-		const sellerEndpoints = ["/seller/profile", "/seller/me", "/seller"];
+		const customerEndpoints = ["/customer/profile"];
+		const sellerEndpoints = ["/seller/profile"];
 
 		// Prefer endpoints based on known role, then try the other group as fallback
+		// Admins have no dedicated profile endpoint — fallback to cached user handles them
 		const tryList =
-			role === "seller"
+			role === "seller" || role === "manager"
 				? [...sellerEndpoints, ...customerEndpoints]
+				: role === "admin"
+				? [] // no admin profile endpoint; fallback handles it
 				: [...customerEndpoints, ...sellerEndpoints];
 
 		try {
@@ -352,11 +367,18 @@
 				? "seller"
 				: "customer";
 		} catch (err) {
-			error.value =
-				err?.response?.data?.message ||
-				err?.message ||
-				"Failed to load profile";
-			console.error("fetch profile error", err);
+			// API failed — use cached auth store user as fallback so menu still works
+			if (stored && (stored.id || stored.name || stored.email)) {
+				profile.value = stored;
+				profileSource.value = (role === "seller" || role === "manager") ? "seller" : "customer";
+				error.value = null; // suppress error since we have fallback data
+			} else {
+				error.value =
+					err?.response?.data?.message ||
+					err?.message ||
+					"Failed to load profile";
+			}
+			console.warn("fetchProfile fallback to cached user:", err?.message);
 		} finally {
 			loading.value = false;
 		}
