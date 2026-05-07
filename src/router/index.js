@@ -100,6 +100,31 @@ const routes = [
         component: () => import('@/views/admin/PlatformStats.vue'),
       },
       {
+        path: 'invoices',
+        name: 'AdminInvoices',
+        component: () => import('@/views/admin/Invoices.vue'),
+      },
+      {
+        path: 'stock-movements',
+        name: 'AdminStockMovements',
+        component: () => import('@/views/admin/StockMovements.vue'),
+      },
+      {
+        path: 'biz-customers',
+        name: 'AdminBizCustomers',
+        component: () => import('@/views/admin/BizCustomers.vue'),
+      },
+      {
+        path: 'suppliers',
+        name: 'AdminSuppliers',
+        component: () => import('@/views/admin/Suppliers.vue'),
+      },
+      {
+        path: 'audit-logs',
+        name: 'AdminAuditLogs',
+        component: () => import('@/views/admin/AuditLogs.vue'),
+      },
+      {
         path: 'settings',
         name: 'Settings',
         component: () => import('@/views/admin/Settings.vue'),

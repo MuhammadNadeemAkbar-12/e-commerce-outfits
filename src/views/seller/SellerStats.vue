@@ -1,90 +1,145 @@
 <template>
-	<div>
-		<div class="text-2xl font-bold mb-2 text-gray-800">Seller Performance</div>
-		<div class="text-gray-500 mb-6">
-			Your sales, returns, and revenue overview
-		</div>
-		<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-			<q-card
-				class="shadow-lg hover:shadow-2xl transition-all duration-300 border-t-4 border-green-500"
-				style="background: linear-gradient(135deg, #e0f7fa 0%, #fff 100%)">
-				<q-card-section class="flex flex-col items-center">
-					<q-icon
-						name="trending_up"
-						color="green"
-						size="40px"
-						class="mb-2 animate-bounce" />
-					<div class="text-lg font-semibold text-green-700 mb-1">
-						Total Sales
-					</div>
-					<div class="text-3xl font-bold text-green-600">120</div>
-					<div class="text-xs text-gray-500 mt-1">This month</div>
-				</q-card-section>
-			</q-card>
-			<q-card
-				class="shadow-lg hover:shadow-2xl transition-all duration-300 border-t-4 border-red-500"
-				style="background: linear-gradient(135deg, #ffebee 0%, #fff 100%)">
-				<q-card-section class="flex flex-col items-center">
-					<q-icon
-						name="undo"
-						color="red"
-						size="40px"
-						class="mb-2 animate-spin-slow" />
-					<div class="text-lg font-semibold text-red-700 mb-1">Returns</div>
-					<div class="text-3xl font-bold text-red-600">5</div>
-					<div class="text-xs text-gray-500 mt-1">This month</div>
-				</q-card-section>
-			</q-card>
-			<q-card
-				class="shadow-lg hover:shadow-2xl transition-all duration-300 border-t-4 border-blue-500"
-				style="background: linear-gradient(135deg, #e3f2fd 0%, #fff 100%)">
-				<q-card-section class="flex flex-col items-center">
-					<q-icon
-						name="attach_money"
-						color="blue"
-						size="40px"
-						class="mb-2 animate-pulse" />
-					<div class="text-lg font-semibold text-blue-700 mb-1">Revenue</div>
-					<div class="text-3xl font-bold text-blue-600">PKR 250,000</div>
-					<div class="text-xs text-gray-500 mt-1">This month</div>
-				</q-card-section>
-			</q-card>
-		</div>
-		<q-card class="shadow-lg transition-all duration-300">
-			<q-card-section>
-				<div class="text-lg font-semibold mb-2 text-gray-700">
-					Monthly Sales Chart
-				</div>
-				<div
-					class="bg-gradient-to-r from-blue-100 to-blue-50 rounded h-40 flex items-center justify-center text-blue-400 font-bold text-xl animate-fade-in">
-					[Chart Placeholder]
-				</div>
-			</q-card-section>
-		</q-card>
-	</div>
+  <div class="p-6 max-w-3xl mx-auto">
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-slate-900">Account Settings</h1>
+      <p class="text-sm text-slate-500 mt-1">Manage your profile and security preferences</p>
+    </div>
+
+    <!-- Change Password Card -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-5">
+      <div class="flex items-center gap-3 mb-5">
+        <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+          <q-icon name="lock" color="indigo" size="20px" />
+        </div>
+        <div>
+          <h2 class="text-lg font-semibold text-slate-800">Change Password</h2>
+          <p class="text-sm text-slate-500">Update your account password</p>
+        </div>
+      </div>
+
+      <form @submit.prevent="changePassword" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Current Password *</label>
+          <input v-model="pwForm.current_password" type="password" class="input-base w-full max-w-md" required />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">New Password *</label>
+          <input v-model="pwForm.new_password" type="password" class="input-base w-full max-w-md" required minlength="8" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Confirm New Password *</label>
+          <input v-model="pwForm.new_password_confirmation" type="password" class="input-base w-full max-w-md" required />
+        </div>
+        <div v-if="pwError" class="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2">{{ pwError }}</div>
+        <div v-if="pwSuccess" class="text-green-600 text-sm bg-green-50 border border-green-200 rounded-lg px-3 py-2">{{ pwSuccess }}</div>
+        <div>
+          <q-btn unelevated color="primary" type="submit" label="Update Password" :loading="pwLoading" />
+        </div>
+      </form>
+    </div>
+
+    <!-- Notification Preferences Card -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-5">
+      <div class="flex items-center gap-3 mb-5">
+        <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+          <q-icon name="notifications" color="amber-8" size="20px" />
+        </div>
+        <div>
+          <h2 class="text-lg font-semibold text-slate-800">Notifications</h2>
+          <p class="text-sm text-slate-500">Choose what you want to be notified about</p>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div v-for="item in notifications" :key="item.key" class="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
+          <div>
+            <div class="text-sm font-medium text-slate-700">{{ item.label }}</div>
+            <div class="text-xs text-slate-400">{{ item.desc }}</div>
+          </div>
+          <q-toggle v-model="item.enabled" color="indigo" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Display Preferences Card -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+      <div class="flex items-center gap-3 mb-5">
+        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+          <q-icon name="palette" color="blue" size="20px" />
+        </div>
+        <div>
+          <h2 class="text-lg font-semibold text-slate-800">Display</h2>
+          <p class="text-sm text-slate-500">Appearance and interface preferences</p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between py-2">
+        <div>
+          <div class="text-sm font-medium text-slate-700">Dark Mode</div>
+          <div class="text-xs text-slate-400">Toggle dark/light theme</div>
+        </div>
+        <q-toggle :model-value="$q.dark.isActive" @update:model-value="toggleDark" color="indigo" />
+      </div>
+    </div>
+  </div>
 </template>
 
+<script setup>
+import { ref, reactive } from 'vue'
+import { useQuasar } from 'quasar'
+import axios from '@/api/axios'
+
+const $q = useQuasar()
+
+const pwForm = reactive({ current_password: '', new_password: '', new_password_confirmation: '' })
+const pwLoading = ref(false)
+const pwError = ref('')
+const pwSuccess = ref('')
+
+const notifications = reactive([
+  { key: 'new_order', label: 'New Order', desc: 'When a new order is placed', enabled: true },
+  { key: 'low_stock', label: 'Low Stock Alert', desc: 'When a product falls below threshold', enabled: true },
+  { key: 'invoice_paid', label: 'Invoice Paid', desc: 'When an invoice payment is received', enabled: true },
+  { key: 'return_request', label: 'Return Requests', desc: 'When a customer submits a return', enabled: false },
+])
+
+async function changePassword() {
+  pwError.value = ''
+  pwSuccess.value = ''
+  if (pwForm.new_password !== pwForm.new_password_confirmation) {
+    pwError.value = 'New passwords do not match.'
+    return
+  }
+  if (pwForm.new_password.length < 8) {
+    pwError.value = 'Password must be at least 8 characters.'
+    return
+  }
+  pwLoading.value = true
+  try {
+    await axios.patch('/seller/profile/password', {
+      current_password: pwForm.current_password,
+      new_password: pwForm.new_password,
+      new_password_confirmation: pwForm.new_password_confirmation,
+    })
+    pwSuccess.value = 'Password updated successfully.'
+    pwForm.current_password = ''
+    pwForm.new_password = ''
+    pwForm.new_password_confirmation = ''
+  } catch (e) {
+    pwError.value = e?.response?.data?.message || 'Failed to update password.'
+  } finally {
+    pwLoading.value = false
+  }
+}
+
+function toggleDark(v) {
+  $q.dark.set(v)
+  localStorage.setItem('theme', v ? 'dark' : 'light')
+}
+</script>
+
 <style scoped>
-	@keyframes spin-slow {
-		0% {
-			transform: rotate(0deg);
-		}
-		100% {
-			transform: rotate(360deg);
-		}
-	}
-	.animate-spin-slow {
-		animation: spin-slow 2s linear infinite;
-	}
-	@keyframes fade-in {
-		from {
-			opacity: 0;
-		}
-		to {
-			opacity: 1;
-		}
-	}
-	.animate-fade-in {
-		animation: fade-in 1s ease;
-	}
+.input-base {
+  @apply border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500;
+}
 </style>

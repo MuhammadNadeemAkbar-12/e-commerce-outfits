@@ -182,6 +182,60 @@
 
             <!-- Settings & System -->
             <q-separator spaced />
+            <q-item-label header class="text-weight-bold">Business Operations</q-item-label>
+
+            <q-item clickable v-ripple to="/admin/invoices" class="hover:bg-teal-100 dark:hover:bg-teal-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
+              <q-item-section avatar>
+                <q-icon name="receipt_long" color="teal" class="text-teal-600 dark:text-teal-400" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Sales Invoices</q-item-label>
+                <q-item-label caption class="text-gray-600 dark:text-gray-400">All invoice records</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item clickable v-ripple to="/admin/stock-movements" class="hover:bg-teal-100 dark:hover:bg-teal-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
+              <q-item-section avatar>
+                <q-icon name="swap_vert" color="teal" class="text-teal-600 dark:text-teal-400" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Stock Movements</q-item-label>
+                <q-item-label caption class="text-gray-600 dark:text-gray-400">Stock in/out log</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item clickable v-ripple to="/admin/biz-customers" class="hover:bg-teal-100 dark:hover:bg-teal-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
+              <q-item-section avatar>
+                <q-icon name="business" color="teal" class="text-teal-600 dark:text-teal-400" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Biz Customers</q-item-label>
+                <q-item-label caption class="text-gray-600 dark:text-gray-400">B2B customer accounts</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item clickable v-ripple to="/admin/suppliers" class="hover:bg-teal-100 dark:hover:bg-teal-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
+              <q-item-section avatar>
+                <q-icon name="local_shipping" color="teal" class="text-teal-600 dark:text-teal-400" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Suppliers</q-item-label>
+                <q-item-label caption class="text-gray-600 dark:text-gray-400">Supplier master data</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item clickable v-ripple to="/admin/audit-logs" class="hover:bg-teal-100 dark:hover:bg-teal-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
+              <q-item-section avatar>
+                <q-icon name="manage_history" color="teal" class="text-teal-600 dark:text-teal-400" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Audit Logs</q-item-label>
+                <q-item-label caption class="text-gray-600 dark:text-gray-400">Activity trail</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <!-- Settings & System -->
+            <q-separator spaced />
             <q-item-label header class="text-weight-bold">System</q-item-label>
 
             <q-item clickable v-ripple to="/admin/settings" class="hover:bg-gray-100 dark:hover:bg-gray-800/30 hover:shadow-md transition-all duration-200 rounded-lg">
