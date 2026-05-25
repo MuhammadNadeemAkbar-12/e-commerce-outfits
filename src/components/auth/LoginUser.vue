@@ -12,12 +12,12 @@
     </div>
 
     <!-- Main Container -->
-    <div class="relative z-10 w-full max-w-6xl mx-auto">
-      <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-white/20">
-        <div class="flex flex-col lg:flex-row min-h-[600px]">
+    <div class="relative z-10 w-full max-w-6xl mx-auto px-2 sm:px-4">
+      <div class="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border border-white/20">
+        <div class="flex flex-col lg:flex-row min-h-[auto] lg:min-h-[600px]">
           
           <!-- Left Side - Hero Section -->
-          <div class="lg:w-1/2 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-8 lg:p-12 flex flex-col justify-center items-center text-white relative overflow-hidden">
+          <div class="lg:w-1/2 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-6 sm:p-8 lg:p-12 flex flex-col justify-center items-center text-white relative overflow-hidden min-h-[280px] sm:min-h-[340px] lg:min-h-[600px]">
             <!-- Background Pattern -->
             <div class="absolute inset-0 bg-pattern opacity-10"></div>
             
@@ -29,7 +29,7 @@
                     <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                   </svg>
                 </div>
-                <h1 class="text-4xl lg:text-5xl font-bold mb-2 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold mb-2 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
                   StyleHub
                 </h1>
                 <div class="w-16 h-1 bg-gradient-to-r from-pink-300 to-blue-300 mx-auto rounded-full"></div>
@@ -37,14 +37,14 @@
 
               <!-- Welcome Text -->
               <div class="mb-8">
-                <h2 class="text-2xl lg:text-3xl font-semibold mb-4">Welcome Back!</h2>
-                <p class="text-lg opacity-90 leading-relaxed max-w-md">
+                <h2 class="text-xl sm:text-2xl lg:text-3xl font-semibold mb-4">Welcome Back!</h2>
+                <p class="text-base sm:text-lg opacity-90 leading-relaxed max-w-md mx-auto">
                   Step into your style sanctuary. Manage your wardrobe, discover trends, and express your unique fashion identity.
                 </p>
               </div>
 
               <!-- Features -->
-              <div class="space-y-4 mb-8">
+              <div class="space-y-3 sm:space-y-4 mb-6 sm:mb-8 w-full max-w-md">
                 <div class="flex items-center justify-center space-x-3">
                   <div class="w-2 h-2 bg-pink-300 rounded-full"></div>
                   <span class="text-sm opacity-80">Personalized Style Recommendations</span>
@@ -62,7 +62,7 @@
               <!-- Mobile CTA -->
               <button 
                 @click="scrollToForm" 
-                class="lg:hidden bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-300 px-8 py-3 rounded-full font-semibold flex items-center mx-auto space-x-2"
+                class="lg:hidden w-full max-w-xs bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-300 px-8 py-3 rounded-full font-semibold flex items-center justify-center mx-auto space-x-2"
               >
                 <span>Get Started</span>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -73,16 +73,16 @@
           </div>
 
           <!-- Right Side - Login Form -->
-          <div class="lg:w-1/2 p-8 lg:p-12 flex items-center justify-center">
+          <div class="lg:w-1/2 p-4 sm:p-8 lg:p-12 flex items-center justify-center">
             <div class="w-full max-w-md" ref="formRef">
               <!-- Form Header -->
-              <div class="text-center mb-8">
-                <h3 class="text-3xl font-bold text-gray-800 mb-2">Sign In</h3>
-                <p class="text-gray-600">Welcome back! Please sign in to your account</p>
+              <div class="text-center mb-6 sm:mb-8">
+                <h3 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Sign In</h3>
+                <p class="text-sm sm:text-base text-gray-600">Welcome back! Please sign in to your account</p>
               </div>
 
               <!-- Login Form -->
-              <form @submit.prevent="handleLogin" class="space-y-6" novalidate>
+              <form @submit.prevent="handleLogin" class="space-y-5 sm:space-y-6" novalidate>
                 <!-- Email Field -->
                 <div class="space-y-2">
                   <label for="email" class="block text-sm font-semibold text-gray-700">
@@ -157,14 +157,18 @@
                 </div>
 
                 <!-- Remember Me & Forgot Password -->
-                <div class="flex items-center justify-between">
+                <div class="flex flex-col sm:flex-row gap-3 sm:gap-0 sm:items-center sm:justify-between">
                   <label class="flex items-center">
                     <input type="checkbox" v-model="rememberMe" class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                     <span class="ml-2 text-sm text-gray-600">Remember me</span>
                   </label>
-                  <a href="#" class="text-sm text-indigo-600 hover:text-indigo-500 font-medium">
+                  <button
+                    type="button"
+                    @click="openForgotPassword"
+                    class="text-sm text-indigo-600 hover:text-indigo-500 font-medium self-start sm:self-auto"
+                  >
                     Forgot password?
-                  </a>
+                  </button>
                 </div>
 
                 <!-- Submit Button -->
@@ -207,7 +211,7 @@
                 </div>
 
                 <!-- Social Login -->
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <button
                     type="button"
                     :disabled="googleLoading"
@@ -253,7 +257,7 @@
                   <p class="text-xs text-gray-500 mb-2">Are you an administrator?</p>
                   <router-link 
                     to="/admin/login" 
-                    class="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors duration-200 flex items-center justify-center gap-1"
+                    class="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors duration-200 inline-flex items-center justify-center gap-1"
                   >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m7 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -267,7 +271,7 @@
                   <button
                     type="button"
                     @click="router.push('/')"
-                    class="text-gray-500 hover:text-gray-700 font-medium transition-colors duration-200 flex items-center mx-auto space-x-1"
+                    class="text-gray-500 hover:text-gray-700 font-medium transition-colors duration-200 inline-flex items-center mx-auto space-x-1"
                   >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
@@ -281,17 +285,90 @@
         </div>
       </div>
     </div>
+
+    <div v-if="showForgotModal" class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+      <div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-gray-200 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h4 class="text-xl font-bold text-gray-800">Reset Password</h4>
+          <button type="button" @click="closeForgotPassword" class="text-gray-500 hover:text-gray-700">✕</button>
+        </div>
+
+        <div class="space-y-5">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+            <input
+              v-model.trim="forgotEmail"
+              type="email"
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              placeholder="Enter your registered email"
+            />
+          </div>
+
+          <button
+            type="button"
+            @click="requestResetLink"
+            :disabled="forgotLoading"
+            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-semibold disabled:opacity-60"
+          >
+            <span v-if="!forgotLoading">Send Reset Link</span>
+            <span v-else>Sending...</span>
+          </button>
+
+          <div class="border-t border-gray-200 pt-4">
+            <p class="text-sm font-semibold text-gray-700 mb-3">Already got token? Reset now</p>
+            <div class="space-y-3">
+              <input
+                v-model.trim="resetToken"
+                type="text"
+                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                placeholder="Enter reset token"
+              />
+              <input
+                v-model="newPassword"
+                type="password"
+                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                placeholder="New password"
+              />
+              <input
+                v-model="confirmPassword"
+                type="password"
+                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                placeholder="Confirm new password"
+              />
+            </div>
+            <button
+              type="button"
+              @click="submitPasswordReset"
+              :disabled="resetLoading"
+              class="mt-3 w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-semibold disabled:opacity-60"
+            >
+              <span v-if="!resetLoading">Reset Password</span>
+              <span v-else>Resetting...</span>
+            </button>
+          </div>
+
+          <p v-if="forgotStatus" class="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+            {{ forgotStatus }}
+          </p>
+          <p v-if="forgotError" class="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+            {{ forgotError }}
+          </p>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
-import { useRouter } from "vue-router";
+import { ref, computed, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
+import authApi from "@/services/authApi";
 import { firebaseGoogleLogin } from "@/services/firebaseAuth";
 import axios from "@/api/axios";
 
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
 
 // Form data
@@ -304,6 +381,15 @@ const googleLoading = ref(false);
 const formRef = ref(null);
 const formSubmitted = ref(false);
 const errorMessage = ref("");
+const showForgotModal = ref(false);
+const forgotEmail = ref("");
+const resetToken = ref("");
+const newPassword = ref("");
+const confirmPassword = ref("");
+const forgotLoading = ref(false);
+const resetLoading = ref(false);
+const forgotStatus = ref("");
+const forgotError = ref("");
 
 // Computed properties
 const validEmail = computed(() => /\S+@\S+\.\S+/.test(email.value));
@@ -391,6 +477,87 @@ const handleGoogleLogin = async () => {
     googleLoading.value = false;
   }
 };
+
+const openForgotPassword = () => {
+  const query = email.value ? { email: email.value } : {};
+  router.push({ path: '/password-recovery', query });
+};
+
+const closeForgotPassword = () => {
+  showForgotModal.value = false;
+};
+
+const requestResetLink = async () => {
+  forgotStatus.value = "";
+  forgotError.value = "";
+
+  if (!/\S+@\S+\.\S+/.test(forgotEmail.value)) {
+    forgotError.value = "Please enter a valid email address.";
+    return;
+  }
+
+  forgotLoading.value = true;
+  try {
+    const res = await authApi.forgotPassword(forgotEmail.value);
+    if (res.success) {
+      forgotStatus.value = res.message || "Reset link sent. Please check your email.";
+    } else {
+      forgotError.value = res.message || "Unable to send reset link.";
+    }
+  } catch (e) {
+    forgotError.value = e?.message || "Unable to send reset link.";
+  } finally {
+    forgotLoading.value = false;
+  }
+};
+
+const submitPasswordReset = async () => {
+  forgotStatus.value = "";
+  forgotError.value = "";
+
+  if (!forgotEmail.value || !resetToken.value || !newPassword.value || !confirmPassword.value) {
+    forgotError.value = "Please complete all reset fields.";
+    return;
+  }
+  if (newPassword.value !== confirmPassword.value) {
+    forgotError.value = "Passwords do not match.";
+    return;
+  }
+
+  resetLoading.value = true;
+  try {
+    const res = await authApi.resetPassword({
+      email: forgotEmail.value,
+      token: resetToken.value,
+      password: newPassword.value,
+      password_confirmation: confirmPassword.value,
+    });
+
+    if (res.success) {
+      forgotStatus.value = res.message || "Password reset successful. You can now login.";
+      resetToken.value = "";
+      newPassword.value = "";
+      confirmPassword.value = "";
+    } else {
+      forgotError.value = res.message || "Failed to reset password.";
+    }
+  } catch (e) {
+    forgotError.value = e?.message || "Failed to reset password.";
+  } finally {
+    resetLoading.value = false;
+  }
+};
+
+onMounted(() => {
+  const tokenFromQuery = typeof route.query.reset_token === 'string' ? route.query.reset_token : '';
+  const emailFromQuery = typeof route.query.email === 'string' ? route.query.email : '';
+
+  if (tokenFromQuery || emailFromQuery) {
+    showForgotModal.value = true;
+    if (tokenFromQuery) resetToken.value = tokenFromQuery;
+    if (emailFromQuery) forgotEmail.value = emailFromQuery;
+  }
+});
 </script>
 
 <style scoped>
@@ -447,23 +614,36 @@ input:focus {
 /* Responsive adjustments */
 @media (max-width: 1024px) {
   .min-h-screen {
-    min-height: 100vh;
+    min-height: 100dvh;
   }
 }
 
 @media (max-width: 768px) {
+  .flex.flex-col.lg\:flex-row.min-h-\[auto\].lg\:min-h-\[600px\] {
+    min-height: auto;
+  }
+
   .rounded-3xl {
     border-radius: 1.5rem;
   }
 }
 
 @media (max-width: 640px) {
+  .relative.z-10.w-full.max-w-6xl.mx-auto.px-2.sm\:px-4 {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
   .rounded-3xl {
     border-radius: 0;
   }
   
   .min-h-screen {
-    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  .bg-white\/95 {
+    border-radius: 0;
   }
 }
 </style>

@@ -288,10 +288,20 @@ const routes = [
     component: () => import('@/components/auth/LoginUser.vue'),
   },
   {
+    path: '/password-recovery',
+    name: 'PasswordRecovery',
+    component: () => import('@/views/auth/PasswordRecovery.vue'),
+  },
+  {
     path: '/admin/login',
     name: 'AdminLogin',
     component: () => import('@/views/admin/AdminLogin.vue'),
     meta: { requiresGuest: true },
+  },
+  {
+    path: '/admin/password-recovery',
+    name: 'AdminPasswordRecovery',
+    component: () => import('@/views/admin/AdminPasswordRecovery.vue'),
   },
 ]
 
@@ -345,7 +355,7 @@ router.beforeEach(async (to, from, next) => {
   }
 
   // Redirect logged-in users away from login/register
-  if ((to.path === '/loginuser' || to.path === '/registeruser' || to.path === '/admin/login') && authStore.isLoggedIn) {
+  if ((to.path === '/loginuser' || to.path === '/registeruser' || to.path === '/admin/login' || to.path === '/password-recovery' || to.path === '/admin/password-recovery') && authStore.isLoggedIn) {
     const r = authStore.role
     if (r === 'admin') next('/admin/dashboard')
     else if (r === 'seller' || r === 'manager') next('/seller/dashboard')

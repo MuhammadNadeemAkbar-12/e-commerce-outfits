@@ -149,6 +149,38 @@ class AuthService {
       }
     }
   }
+
+  // Request password reset email
+  async forgotPassword(email) {
+    try {
+      const response = await axios.post('/forgot-password', { email })
+      return {
+        success: true,
+        message: response.data?.message || 'Password reset link sent successfully.'
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to send reset link'
+      }
+    }
+  }
+
+  // Reset password using email + token + new password
+  async resetPassword(payload) {
+    try {
+      const response = await axios.post('/reset-password', payload)
+      return {
+        success: true,
+        message: response.data?.message || 'Password reset successful.'
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to reset password'
+      }
+    }
+  }
 }
 
 export default new AuthService()

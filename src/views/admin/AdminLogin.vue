@@ -4,22 +4,22 @@
     <div class="login-left">
       <div class="brand-section">
         <div class="brand-logo">
-          <q-icon name="admin_panel_settings" size="64px" color="indigo-500" />
+          <q-icon name="admin_panel_settings" size="64px" class="text-indigo-500" />
         </div>
         <h1 class="brand-title">Admin Panel</h1>
         <p class="brand-subtitle">Stock, Inventory & Sales Management</p>
       </div>
       <div class="brand-features">
         <div class="feature-item">
-          <q-icon name="security" size="24px" color="indigo-400" />
+          <q-icon name="security" size="24px" class="text-indigo-400" />
           <p>Secure Admin Access</p>
         </div>
         <div class="feature-item">
-          <q-icon name="dashboard" size="24px" color="indigo-400" />
+          <q-icon name="dashboard" size="24px" class="text-indigo-400" />
           <p>Comprehensive Dashboard</p>
         </div>
         <div class="feature-item">
-          <q-icon name="analytics" size="24px" color="indigo-400" />
+          <q-icon name="analytics" size="24px" class="text-indigo-400" />
           <p>Real-time Reports</p>
         </div>
       </div>
@@ -38,17 +38,18 @@
         </div>
 
         <!-- Form -->
-        <form @submit.prevent="handleLogin" class="login-form">
+        <form @submit.prevent="handleLogin" class="login-form" novalidate>
           <!-- Email Field -->
           <div class="form-group">
             <label for="email" class="form-label">Email Address</label>
             <input
               id="email"
-              v-model="form.email"
+              v-model.trim="form.email"
               type="email"
               placeholder="admin@example.com"
               class="form-input"
               :disabled="isLoading"
+              autocomplete="email"
               required
             />
           </div>
@@ -59,11 +60,12 @@
             <div class="password-wrapper">
               <input
                 id="password"
-                v-model="form.password"
+                v-model.trim="form.password"
                 :type="showPassword ? 'text' : 'password'"
                 placeholder="Enter your password"
                 class="form-input"
                 :disabled="isLoading"
+                autocomplete="current-password"
                 required
               />
               <button
@@ -89,6 +91,14 @@
               Signing in...
             </span>
           </button>
+
+          <button
+            type="button"
+            class="w-full mt-3 text-sm text-indigo-600 hover:text-indigo-500 font-medium"
+            @click="openForgotPassword"
+          >
+            Forgot password?
+          </button>
         </form>
 
         <!-- Divider -->
@@ -106,6 +116,7 @@
         </p>
       </div>
     </div>
+
   </div>
 </template>
 
@@ -126,38 +137,69 @@ const isLoading = ref(false)
 const errorMessage = ref('')
 const showPassword = ref(false)
 
+const normalizeRole = (roles) => {
+  if (Array.isArray(roles)) {
+    const firstRole = roles[0]
+    return typeof firstRole === 'object' ? firstRole?.name || 'admin' : firstRole || 'admin'
+  }
+
+  if (roles && typeof roles === 'object') {
+    if (typeof roles.toArray === 'function') {
+      const arrayRoles = roles.toArray()
+      return arrayRoles?.[0] || 'admin'
+    }
+
+    return roles?.name || 'admin'
+  }
+
+  if (typeof roles === 'string' && roles.trim()) {
+    return roles
+  }
+
+  return 'admin'
+}
+
+const persistAuthSession = (user, token) => {
+  authStore.user = user
+  authStore.token = token
+  authStore.isAuthenticated = true
+
+  try {
+    localStorage.setItem('token', token)
+    localStorage.setItem('user', JSON.stringify(user))
+    localStorage.setItem('role', user.role)
+  } catch (e) {
+    console.warn('Failed to persist auth data to localStorage', e)
+  }
+}
+
 const handleLogin = async () => {
   try {
     errorMessage.value = ''
     isLoading.value = true
+
+    if (!form.value.email || !form.value.password) {
+      errorMessage.value = 'Email and password are required'
+      return
+    }
 
     const response = await axios.post('/admin/login', {
       email: form.value.email,
       password: form.value.password,
     })
 
-    const { success, message, data } = response.data
+    const payload = response.data || {}
+    const { success, message, data } = payload
 
-    if (success) {
+    if (success && data?.user && data?.token) {
       const { user, token, roles } = data
 
-      // Attach role to user object so auth store works the same as normal login
-      const userWithRole = { ...user, role: Array.isArray(roles) ? roles[0] : (roles?.toArray?.()[0] ?? roles?.[0] ?? 'admin') }
+      // Keep auth store shape consistent with the normal login flow.
+      const userWithRole = { ...user, role: normalizeRole(roles ?? user?.role) }
 
-      // Persist to auth store + localStorage (same pattern as auth store login action)
-      authStore.user = userWithRole
-      authStore.token = token
-      authStore.isAuthenticated = true
+      persistAuthSession(userWithRole, token)
 
-      try {
-        localStorage.setItem('token', token)
-        localStorage.setItem('user', JSON.stringify(userWithRole))
-        localStorage.setItem('role', userWithRole.role)
-      } catch (e) {
-        console.warn('Failed to persist auth data to localStorage', e)
-      }
-
-      router.push('/admin/dashboard')
+      router.replace('/admin/dashboard')
     } else {
       errorMessage.value = message || 'Login failed'
     }
@@ -177,13 +219,20 @@ const handleLogin = async () => {
     isLoading.value = false
   }
 }
+
+const openForgotPassword = () => {
+  const query = form.value.email ? { email: form.value.email } : {}
+  router.push({ path: '/admin/password-recovery', query })
+}
 </script>
 
 <style scoped>
 .admin-login-page {
   display: flex;
-  height: 100vh;
+  min-height: 100vh;
+  min-height: 100dvh;
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  overflow: hidden;
 }
 
 /* Left Panel */
@@ -193,14 +242,15 @@ const handleLogin = async () => {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 3rem;
+  padding: clamp(2rem, 4vw, 4rem);
   background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   color: white;
 }
 
 .brand-section {
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: clamp(1.5rem, 3vw, 3rem);
+  max-width: 28rem;
 }
 
 .brand-logo {
@@ -214,7 +264,7 @@ const handleLogin = async () => {
 }
 
 .brand-title {
-  font-size: 2.2rem;
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
   font-weight: 700;
   margin: 0.5rem 0;
   background: linear-gradient(135deg, #6366f1, #a78bfa);
@@ -225,27 +275,35 @@ const handleLogin = async () => {
 
 .brand-subtitle {
   color: #cbd5e1;
-  font-size: 0.95rem;
+  font-size: clamp(0.9rem, 1.5vw, 1rem);
   margin: 0;
+  line-height: 1.6;
 }
 
 .brand-features {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  max-width: 320px;
+  gap: 1rem;
+  width: 100%;
+  max-width: 20rem;
 }
 
 .feature-item {
   display: flex;
   align-items: center;
   gap: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(10px);
 }
 
 .feature-item p {
   margin: 0;
   color: #cbd5e1;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
 }
 
 /* Right Panel */
@@ -254,17 +312,24 @@ const handleLogin = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3rem;
+  padding: clamp(1.25rem, 3vw, 3rem);
   background: #f8fafc;
+  overflow-y: auto;
 }
 
 .login-container {
   width: 100%;
-  max-width: 420px;
+  max-width: min(100%, 26rem);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 24px;
+  padding: clamp(1.5rem, 3vw, 2.25rem);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+  backdrop-filter: blur(16px);
 }
 
 .login-title {
-  font-size: 1.75rem;
+  font-size: clamp(1.5rem, 2.6vw, 1.9rem);
   font-weight: 700;
   color: #0f172a;
   margin: 0 0 0.5rem;
@@ -272,8 +337,9 @@ const handleLogin = async () => {
 
 .login-description {
   color: #64748b;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   margin: 0 0 2rem;
+  line-height: 1.6;
 }
 
 .error-alert {
@@ -304,8 +370,8 @@ const handleLogin = async () => {
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  margin-bottom: 2rem;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .form-group {
@@ -321,6 +387,7 @@ const handleLogin = async () => {
 }
 
 .form-input {
+  width: 100%;
   padding: 0.75rem 1rem;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
@@ -345,6 +412,7 @@ const handleLogin = async () => {
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
 }
 
 .password-toggle {
@@ -382,6 +450,7 @@ const handleLogin = async () => {
   justify-content: center;
   gap: 0.5rem;
   min-height: 44px;
+  width: 100%;
 }
 
 .login-btn:hover:not(:disabled) {
@@ -408,7 +477,7 @@ const handleLogin = async () => {
   text-align: center;
   color: #cbd5e1;
   font-size: 0.85rem;
-  margin: 1.5rem 0;
+  margin: 1.25rem 0;
   position: relative;
 }
 
@@ -466,32 +535,135 @@ const handleLogin = async () => {
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .admin-login-page {
     flex-direction: column;
   }
 
+  .login-left,
+  .login-right {
+    flex: none;
+    width: 100%;
+  }
+
   .login-left {
-    padding: 2rem;
-    min-height: 40vh;
+    min-height: 34vh;
+    padding: 2rem 1.5rem;
   }
 
   .brand-features {
-    max-width: 100%;
+    max-width: 34rem;
     flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .feature-item {
+    flex: 1 1 16rem;
+    max-width: 18rem;
   }
 
   .login-right {
-    padding: 2rem 1.5rem;
-    min-height: 60vh;
+    min-height: 66vh;
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .login-left {
+    min-height: auto;
+    padding: 1.5rem 1.25rem;
+  }
+
+  .brand-section {
+    margin-bottom: 1.25rem;
+  }
+
+  .brand-features {
+    flex-direction: column;
+    max-width: 100%;
+  }
+
+  .login-right {
+    min-height: auto;
+    padding: 1rem;
   }
 
   .login-container {
     max-width: 100%;
+    padding: 1.25rem;
+    border-radius: 20px;
   }
 
   .brand-title {
-    font-size: 1.75rem;
+    font-size: 1.6rem;
+  }
+
+  .login-title {
+    font-size: 1.45rem;
+  }
+
+  .divider::before,
+  .divider::after {
+    width: 32%;
+  }
+
+  .grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .back-link,
+  .support-text {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-login-page {
+    background: #0f172a;
+  }
+
+  .login-left {
+    padding: 1.25rem 1rem;
+  }
+
+  .brand-logo :deep(svg),
+  .brand-logo .q-icon {
+    font-size: 3rem !important;
+  }
+
+  .brand-features {
+    gap: 0.75rem;
+  }
+
+  .feature-item {
+    padding: 0.8rem 0.9rem;
+  }
+
+  .login-right {
+    padding: 0.75rem;
+  }
+
+  .login-container {
+    padding: 1rem;
+    border-radius: 18px;
+  }
+
+  .login-description {
+    margin-bottom: 1.5rem;
+  }
+
+  .login-form {
+    gap: 0.9rem;
+  }
+
+  .divider {
+    margin: 1rem 0;
+  }
+
+  .divider::before,
+  .divider::after {
+    width: 28%;
   }
 }
 </style>
