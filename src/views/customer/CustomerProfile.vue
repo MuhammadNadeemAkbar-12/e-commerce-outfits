@@ -541,8 +541,8 @@ const avatarPreviewUrl = ref("");
 function normalizeAvatarUrl(path) {
 if (!path) return "";
 const base = axios?.defaults?.baseURL || "";
-let origin = "http://13.60.78.97";
-try { if (base) origin = new URL(base, "http://localhost").origin; } catch { }
+let origin = typeof window !== "undefined" ? window.location.origin : "";
+try { if (base) origin = new URL(base, origin || "http://localhost").origin; } catch { }
 if (/^https?:\/\//i.test(path)) {
 return path.replace(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i, origin);
 }

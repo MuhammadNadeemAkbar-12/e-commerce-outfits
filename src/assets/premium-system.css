@@ -1,0 +1,169 @@
+:root {
+  --sh-ink: #18211d;
+  --sh-muted: #66716b;
+  --sh-primary: #315f55;
+  --sh-primary-dark: #244a42;
+  --sh-warm: #987454;
+  --sh-canvas: #f5f4f0;
+  --sh-surface: #ffffff;
+  --sh-surface-soft: #faf9f6;
+  --sh-border: #e2e3de;
+  --sh-border-strong: #cfd4ce;
+  --sh-radius-sm: 8px;
+  --sh-radius: 12px;
+  --sh-radius-lg: 18px;
+  --sh-shadow-sm: 0 1px 2px rgba(24, 33, 29, .04), 0 5px 16px rgba(24, 33, 29, .035);
+  --sh-shadow: 0 14px 38px rgba(24, 33, 29, .075);
+  color: var(--sh-ink);
+  background: var(--sh-canvas);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+html { min-width: 320px; background: var(--sh-canvas); scroll-behavior: smooth; }
+body { min-width: 320px; min-height: 100vh; margin: 0; background: var(--sh-canvas); color: var(--sh-ink); }
+::selection { background: #d8e6e1; color: #17342d; }
+
+/* Tailwind's reset is loaded after the icon package; restore ligature rendering. */
+.material-icons,
+.q-icon.material-icons {
+  font-family: 'Material Icons' !important;
+  font-weight: normal !important;
+  font-style: normal !important;
+  line-height: 1 !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  white-space: nowrap !important;
+  word-wrap: normal !important;
+  direction: ltr !important;
+  font-feature-settings: 'liga' !important;
+  -webkit-font-feature-settings: 'liga' !important;
+  -webkit-font-smoothing: antialiased !important;
+}
+
+a, button, .q-btn, .q-item { -webkit-tap-highlight-color: transparent; }
+:where(a, button, [role="button"], .q-field__native, .q-field__input):focus-visible {
+  outline: 3px solid rgba(49, 95, 85, .28);
+  outline-offset: 2px;
+}
+
+.app-workspace,
+.app-customer { background: var(--sh-canvas); color: var(--sh-ink); }
+
+.app-workspace .admin-drawer,
+.app-workspace .admin-drawer .q-drawer__content {
+  background: #17241f !important;
+  color: #e9efeb !important;
+}
+
+.app-workspace :where(.q-page),
+.app-customer > .q-page-container { background: var(--sh-canvas); }
+
+.app-workspace :where(h1, .text-h4),
+.app-customer :where(h1, .text-h4) {
+  color: var(--sh-ink);
+  font-weight: 750 !important;
+  letter-spacing: -.035em;
+  line-height: 1.12;
+}
+
+.app-workspace :where(h2, .text-h5),
+.app-customer :where(h2, .text-h5) {
+  color: var(--sh-ink);
+  letter-spacing: -.02em;
+}
+
+.app-workspace :where(.q-card),
+.app-customer :where(.q-card) {
+  border-color: var(--sh-border) !important;
+  border-radius: var(--sh-radius) !important;
+  background: var(--sh-surface);
+  box-shadow: var(--sh-shadow-sm);
+}
+
+.app-workspace :where(.q-card):not(.no-hover-card),
+.app-customer :where(.q-card):not(.no-hover-card) {
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.app-workspace :where(.q-table__container) {
+  overflow: hidden;
+  border: 1px solid var(--sh-border);
+  border-radius: var(--sh-radius);
+  background: var(--sh-surface);
+  box-shadow: var(--sh-shadow-sm);
+}
+
+.app-workspace :where(.q-table thead tr) { background: #f0f2ee; }
+.app-workspace :where(.q-table th) {
+  height: 48px;
+  color: #4f5d56;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+}
+.app-workspace :where(.q-table tbody td) { height: 52px; border-color: #eceeea; color: #27322d; }
+.app-workspace :where(.q-table tbody tr) { transition: background-color .15s ease; }
+.app-workspace :where(.q-table tbody tr:hover) { background: #f8faf7; }
+.app-workspace :where(.q-table__bottom) { min-height: 54px; border-top: 1px solid var(--sh-border); }
+
+.app-workspace :where(.q-field--outlined .q-field__control::before),
+.app-customer :where(.q-field--outlined .q-field__control::before) { border-color: var(--sh-border-strong); }
+.app-workspace :where(.q-field--outlined .q-field__control),
+.app-customer :where(.q-field--outlined .q-field__control) { border-radius: var(--sh-radius-sm); background: var(--sh-surface); }
+.app-workspace :where(.q-field--focused .q-field__control::after),
+.app-customer :where(.q-field--focused .q-field__control::after) { border-width: 1.5px; }
+.app-workspace :where(.q-field__label),
+.app-customer :where(.q-field__label) { color: #68736d; font-weight: 500; }
+
+.app-workspace :where(.q-btn),
+.app-customer :where(.q-btn) {
+  min-height: 40px;
+  border-radius: var(--sh-radius-sm);
+  font-weight: 650;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.app-workspace :where(.q-btn--rectangle),
+.app-customer :where(.q-btn--rectangle) { padding-inline: 16px; }
+.app-workspace :where(.q-btn):not(.q-btn--flat),
+.app-customer :where(.q-btn):not(.q-btn--flat) { box-shadow: none; }
+
+.q-menu { overflow: hidden; border: 1px solid var(--sh-border); border-radius: var(--sh-radius) !important; box-shadow: var(--sh-shadow) !important; }
+.q-menu .q-item { min-height: 44px; }
+.q-dialog__backdrop { background: rgba(15, 23, 19, .55); backdrop-filter: blur(2px); }
+.q-dialog .q-card { max-width: min(94vw, 920px); border-radius: var(--sh-radius-lg) !important; box-shadow: 0 28px 80px rgba(15, 23, 19, .24) !important; }
+.q-dialog .q-card__actions { min-height: 64px; border-top: 1px solid var(--sh-border); padding: 12px 20px; }
+.q-chip, .q-badge { font-weight: 650; letter-spacing: .01em; }
+.q-chip { border-radius: 999px; }
+.q-notification { border-radius: var(--sh-radius) !important; box-shadow: var(--sh-shadow) !important; }
+
+.app-customer > .q-page-container > :where(div, main, .q-page) { min-width: 0; }
+.app-customer .q-page { padding-top: clamp(20px, 3vw, 36px); padding-bottom: clamp(28px, 5vw, 56px); }
+
+.body--dark {
+  --sh-ink: #edf2ee;
+  --sh-muted: #aab5ae;
+  --sh-canvas: #111814;
+  --sh-surface: #19221e;
+  --sh-surface-soft: #202b26;
+  --sh-border: #303d37;
+  --sh-border-strong: #435249;
+}
+
+@media (max-width: 767px) {
+  .app-workspace :where(.q-page),
+  .app-customer :where(.q-page) { padding: 16px !important; }
+  .app-workspace :where(h1, .text-h4),
+  .app-customer :where(h1, .text-h4) { font-size: clamp(1.65rem, 8vw, 2rem) !important; }
+  .q-dialog .q-card { max-width: calc(100vw - 20px) !important; min-width: 0 !important; }
+  .q-dialog .q-card__section { padding-right: 16px; padding-left: 16px; }
+  .q-dialog .q-card__actions { padding: 10px 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}

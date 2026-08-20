@@ -691,21 +691,55 @@ class AdminService {
   }
 
   // =========================
-  // System Backup
+  // Backup & Restore
   // =========================
 
-  async exportSystemBackup() {
+  async listBackups(params = {}) {
     try {
-      const response = await axios.get("/admin/system/backup/export", {
-        responseType: "blob",
-      });
+      const response = await axios.get('/admin/backups', { params });
       return { success: true, data: response.data };
     } catch (error) {
       return {
         success: false,
-        message: error.response?.data?.message || "Failed to export backup",
+        message: error.response?.data?.message || 'Failed to load backups',
         error,
       };
+    }
+  }
+
+  async createBackup() {
+    try {
+      const response = await axios.post('/admin/backups');
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Failed to create backup', error };
+    }
+  }
+
+  async downloadBackup(id) {
+    try {
+      const response = await axios.get(`/admin/backups/${id}/download`, { responseType: 'blob' });
+      return { success: true, data: response.data, filename: response.headers['content-disposition'] };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Failed to download backup', error };
+    }
+  }
+
+  async restoreBackup(id, confirmation) {
+    try {
+      const response = await axios.post(`/admin/backups/${id}/restore`, { confirmation });
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Restore failed', error };
+    }
+  }
+
+  async deleteBackup(id) {
+    try {
+      const response = await axios.delete(`/admin/backups/${id}`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Failed to delete backup', error };
     }
   }
 

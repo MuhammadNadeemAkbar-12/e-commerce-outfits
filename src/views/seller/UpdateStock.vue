@@ -115,7 +115,7 @@ function normalizeProducts(arr) {
 async function fetchProducts() {
 	loading.value = true;
 	try {
-		const res = await axios.get("/seller/products");
+		const res = await axios.get("/seller/products", { params: { per_page: 100 } });
 		const d = res?.data ?? res;
 		const payload = d?.data ?? d;
 		const list = Array.isArray(payload)

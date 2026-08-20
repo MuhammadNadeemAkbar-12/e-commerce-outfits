@@ -133,7 +133,7 @@
 								<div class="text-xs text-muted">Orders</div>
 								<div class="text-lg font-bold">
 									{{
-										Number(localStorage?.getItem?.("sellerOrdersCount") || 0)
+										sellerOrdersCount
 									}}
 								</div>
 							</div>
@@ -142,7 +142,7 @@
 								<div class="text-lg font-bold">
 									${{
 										Number(
-											localStorage?.getItem?.("sellerRevenue") || 0
+											sellerRevenue
 										).toFixed(2)
 									}}
 								</div>
@@ -368,6 +368,8 @@
 	import { useRouter } from "vue-router";
 
 	const router = useRouter();
+	const sellerOrdersCount = ref(0);
+	const sellerRevenue = ref(0);
 
 	const profile = ref({
 		avatar: "",
@@ -461,6 +463,8 @@
 	}
 
 	onMounted(async () => {
+		sellerOrdersCount.value = Number(window.localStorage.getItem("sellerOrdersCount") || 0);
+		sellerRevenue.value = Number(window.localStorage.getItem("sellerRevenue") || 0);
 		try {
 			await fetchProfile();
 		} catch (error) {

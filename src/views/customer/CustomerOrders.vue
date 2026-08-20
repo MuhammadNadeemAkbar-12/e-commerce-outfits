@@ -1,6 +1,6 @@
 <template>
 	<div class="q-pa-md">
-		<div class="row items-center justify-between q-mb-lg">
+		<div class="orders-heading row items-center justify-between q-mb-lg">
 			<div class="col-auto">
 				<h2 class="text-h4 text-weight-bold q-ma-none">Your Orders</h2>
 				<p class="text-body2 text-grey-7 q-mt-xs q-mb-none">
@@ -8,6 +8,14 @@
 				</p>
 			</div>
 			<div class="col-auto">
+				<q-btn
+					color="primary"
+					outline
+					no-caps
+					icon="assignment_return"
+					label="My Return Requests"
+					class="q-mr-sm"
+					to="/customer/returns" />
 				<q-chip
 					v-if="!loading && orders.length > 0"
 					color="primary"
@@ -171,9 +179,9 @@
 				bordered
 				class="order-card">
 				<q-card-section class="q-pa-md">
-					<div class="row items-center justify-between">
+					<div class="order-card__row row items-center justify-between">
 						<!-- Order Info -->
-						<div class="col-auto">
+						<div class="order-card__info col-auto">
 							<div class="row items-center q-gutter-sm q-mb-xs">
 								<q-icon name="receipt_long" color="primary" size="20px" />
 								<span class="text-subtitle1 text-weight-bold">
@@ -197,7 +205,7 @@
 						</div>
 
 						<!-- Order Summary -->
-						<div class="col-auto text-right">
+						<div class="order-card__summary col-auto text-right">
 							<div class="text-h6 text-weight-bold q-mb-xs">
 								Rs {{ formatPrice(order.total) }}
 							</div>
@@ -244,7 +252,7 @@
 		<!-- Order Detail Dialog -->
 		<q-dialog v-model="showDetail" persistent>
 			<q-card
-				style="min-width: 400px; max-width: 800px"
+				style="width: 800px; max-width: 94vw"
 				class="order-detail-card">
 				<!-- Header -->
 				<q-card-section class="bg-primary text-white">
@@ -666,8 +674,21 @@
 
 <style scoped>
 	.order-card {
+		width: 100%;
+		min-width: 0;
+		max-width: 100%;
 		transition: all 0.3s ease;
 		border-radius: 12px;
+	}
+
+	.order-card__row,
+	.order-card__info {
+		min-width: 0;
+	}
+
+	.order-card__info span {
+		min-width: 0;
+		overflow-wrap: anywhere;
 	}
 
 	.analytics-grid {
@@ -717,6 +738,36 @@
 	}
 
 	@media (max-width: 599px) {
+		.orders-heading {
+			align-items: flex-start;
+			gap: 12px;
+		}
+
+		.orders-heading > .col-auto {
+			width: 100%;
+		}
+
+		.orders-heading .q-btn {
+			width: 100%;
+			margin-right: 0;
+		}
+
+		.order-card__row {
+			align-items: flex-start;
+			flex-direction: column;
+			gap: 12px;
+		}
+
+		.order-card__info,
+		.order-card__summary {
+			width: 100%;
+			max-width: 100%;
+		}
+
+		.order-card__summary {
+			text-align: left;
+		}
+
 		.analytics-grid {
 			grid-template-columns: 1fr;
 		}

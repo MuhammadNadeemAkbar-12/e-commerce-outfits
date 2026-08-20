@@ -11,13 +11,11 @@
 
 const BACKEND_ORIGIN = (() => {
   try {
-    // axios baseURL is 'http://13.60.78.97/api' → origin is 'http://13.60.78.97'
-    const { origin } = new URL(
-      import.meta.env.VITE_API_BASE_URL || 'http://13.60.78.97/api'
-    )
+    const fallbackOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost'
+    const { origin } = new URL(import.meta.env.VITE_API_BASE_URL || '/api', fallbackOrigin)
     return origin
   } catch {
-    return 'http://13.60.78.97'
+    return ''
   }
 })()
 

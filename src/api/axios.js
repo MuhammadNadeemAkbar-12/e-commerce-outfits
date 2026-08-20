@@ -6,8 +6,8 @@ import { getCurrentInstance } from 'vue'
 // Derive API base URL with priority:
 // 1. Explicit Vite env variable (import.meta.env.VITE_API_BASE_URL)
 // 2. Fallback to window.__API_BASE_URL__ (can be injected via script tag if needed)
-// 3. Hard-coded public IP (legacy fallback) - consider removing once envs are set in Vercel
-const FALLBACK_API = "http://13.60.78.97/api";
+// 3. Same-origin API path. Production deployments should set VITE_API_BASE_URL to an HTTPS API origin.
+const FALLBACK_API = "/api";
 let resolvedBase = FALLBACK_API;
 try {
   if (import.meta?.env?.VITE_API_BASE_URL) {

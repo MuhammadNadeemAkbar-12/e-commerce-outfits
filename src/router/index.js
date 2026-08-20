@@ -90,9 +90,14 @@ const routes = [
         component: () => import('@/views/admin/ReturnsRefunds.vue'),
       },
       {
+        path: 'sale-returns',
+        name: 'AdminSaleReturns',
+        component: () => import('@/views/seller/Returns.vue'),
+      },
+      {
         path: 'reports',
         name: 'Reports',
-        component: () => import('@/views/admin/Reports.vue'),
+        component: () => import('@/views/seller/Reports.vue'),
       },
       {
         path: 'platform-stats',
@@ -120,9 +125,19 @@ const routes = [
         component: () => import('@/views/admin/Suppliers.vue'),
       },
       {
+        path: 'purchases',
+        name: 'AdminPurchases',
+        component: () => import('@/views/seller/Purchases.vue'),
+      },
+      {
         path: 'audit-logs',
         name: 'AdminAuditLogs',
         component: () => import('@/views/admin/AuditLogs.vue'),
+      },
+      {
+        path: 'backups',
+        name: 'AdminBackups',
+        component: () => import('@/views/admin/BackupRestore.vue'),
       },
       {
         path: 'settings',
@@ -132,11 +147,11 @@ const routes = [
     ],
   },
 
-  // Manager routes (formerly seller)
+  // Manager routes (legacy path retained for compatibility with existing links).
   {
     path: '/seller',
     component: () => import('@/views/seller/SellerLayout.vue'),
-    meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] },
+    meta: { requiresAuth: true, requiresRole: 'manager' },
     children: [
       {
         path: '',
@@ -146,102 +161,118 @@ const routes = [
         path: 'dashboard',
         name: 'SellerDashboard',
         component: () => import('@/views/seller/SellerDashboard.vue'),
-        meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+        meta: { requiresAuth: true, requiresRole: 'manager' }
       },
       {
         path: 'products',
         name: 'SellerProducts',
         component: () => import('@/views/seller/ProductForm.vue'),
-        meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+        meta: { requiresAuth: true, requiresRole: 'manager' }
       },
       {
         path: 'products/add',
         name: 'AddProduct',
         component: () => import('@/views/seller/ProductForm.vue'),
-        meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+        meta: { requiresAuth: true, requiresRole: 'manager' }
       },
       {
         path: 'orders',
         name: 'SellerOrdersPanel',
         component: () => import('@/views/seller/OrderManagement.vue'),
-        meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+        meta: { requiresAuth: true, requiresRole: 'manager' }
       },
       {
         path: 'stock', name: 'SellerStock', component: () => import('@/views/seller/UpdateStock.vue'),
-        meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+        meta: { requiresAuth: true, requiresRole: 'manager' }
       },
       {
         path: 'invoices',
         name: 'SellerInvoices',
         component: () => import('@/views/seller/Invoices.vue'),
-        meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+        meta: { requiresAuth: true, requiresRole: 'manager' }
       },
       {
         path: 'invoices/create',
         name: 'CreateInvoice',
         component: () => import('@/views/seller/InvoiceCreate.vue'),
-        meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+        meta: { requiresAuth: true, requiresRole: 'manager' }
       },
         {
           path: 'stock-ledger',
           name: 'StockLedger',
           component: () => import('@/views/seller/StockLedger.vue'),
-          meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+          meta: { requiresAuth: true, requiresRole: 'manager' }
         },
         {
           path: 'returns',
           name: 'SaleReturns',
           component: () => import('@/views/seller/Returns.vue'),
-          meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+          meta: { requiresAuth: true, requiresRole: 'manager' }
         },
         {
           path: 'returns/create',
           name: 'ReturnCreate',
           component: () => import('@/views/seller/ReturnCreate.vue'),
-          meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+          meta: { requiresAuth: true, requiresRole: 'manager' }
         },
         {
           path: 'invoices/:id/print',
           name: 'InvoicePrint',
           component: () => import('@/views/seller/InvoicePrint.vue'),
-          meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+          meta: { requiresAuth: true, requiresRole: 'manager' }
         },
         {
           path: 'customers',
           name: 'BizCustomers',
           component: () => import('@/views/seller/Customers.vue'),
-          meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+          meta: { requiresAuth: true, requiresRole: 'manager' }
         },
         {
           path: 'suppliers',
           name: 'SellerSuppliers',
           component: () => import('@/views/seller/Suppliers.vue'),
-          meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+          meta: { requiresAuth: true, requiresRole: 'manager' }
+        },
+        {
+          path: 'purchases',
+          name: 'Purchases',
+          component: () => import('@/views/seller/Purchases.vue'),
+          meta: { requiresAuth: true, requiresRole: 'manager' }
         },
         {
           path: 'reports',
           name: 'SellerReports',
           component: () => import('@/views/seller/Reports.vue'),
-          meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
-        },
-        {
-          path: 'audit-logs',
-          name: 'SellerAuditLogs',
-          component: () => import('@/views/seller/AuditLogs.vue'),
-          meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+          meta: { requiresAuth: true, requiresRole: 'manager' }
         },
         {
         path: 'settings',
         name: 'SellerSettings',
         component: () => import('@/views/seller/SellerStats.vue'),
-        meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+        meta: { requiresAuth: true, requiresRole: 'manager' }
       },
       {
         path: 'profile',
         component: () => import('@/views/seller/Profile.vue'),
-        meta: { requiresAuth: true, requiresRole: ['seller', 'manager'] }
+        meta: { requiresAuth: true, requiresRole: 'manager' }
       }
     ]
+  },
+
+  // Salesman routes deliberately expose only sales, invoices, customers, and returns.
+  {
+    path: '/sales',
+    component: () => import('@/views/seller/SellerLayout.vue'),
+    meta: { requiresAuth: true, requiresRole: 'salesman' },
+    children: [
+      { path: '', redirect: '/sales/invoices' },
+      { path: 'invoices', component: () => import('@/views/seller/Invoices.vue'), meta: { requiresAuth: true, requiresRole: 'salesman' } },
+      { path: 'invoices/create', component: () => import('@/views/seller/InvoiceCreate.vue'), meta: { requiresAuth: true, requiresRole: 'salesman' } },
+      { path: 'invoices/:id/print', component: () => import('@/views/seller/InvoicePrint.vue'), meta: { requiresAuth: true, requiresRole: 'salesman' } },
+      { path: 'customers', component: () => import('@/views/seller/Customers.vue'), meta: { requiresAuth: true, requiresRole: 'salesman' } },
+      { path: 'returns', component: () => import('@/views/seller/Returns.vue'), meta: { requiresAuth: true, requiresRole: 'salesman' } },
+      { path: 'returns/create', component: () => import('@/views/seller/ReturnCreate.vue'), meta: { requiresAuth: true, requiresRole: 'salesman' } },
+    ],
   },
 
   // Buyer routes
@@ -262,18 +293,25 @@ const routes = [
     path: '/customer/profile',
     name: 'CustomerProfile',
     component: () => import('@/views/customer/CustomerProfile.vue'),
-    meta: { requiresAuth: true } // optional
+    meta: { requiresAuth: true, requiresRole: 'customer' }
   },
   {
     path: '/customer/orders',
     name: 'CustomerOrders',
     component: () => import('@/views/customer/CustomerOrders.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, requiresRole: 'customer' }
+  },
+  {
+    path: '/customer/returns',
+    name: 'CustomerReturns',
+    component: () => import('@/views/customer/CustomerReturns.vue'),
+    meta: { requiresAuth: true, requiresRole: 'customer' }
   },
   {
     path: '/checkout',
     name: 'Checkout',
-    component: () => import('@/views/customer/Checkout.vue')
+    component: () => import('@/views/customer/Checkout.vue'),
+    meta: { requiresAuth: true, requiresRole: 'customer' }
   },
 
   // User authentication routes
@@ -359,7 +397,7 @@ router.beforeEach(async (to, from, next) => {
     const r = authStore.role
     if (r === 'admin') next('/admin/dashboard')
     else if (r === 'seller' || r === 'manager') next('/seller/dashboard')
-    else if (r === 'salesman') next('/customer/orders')
+    else if (r === 'salesman') next('/sales/invoices')
     else next('/')
     return
   }

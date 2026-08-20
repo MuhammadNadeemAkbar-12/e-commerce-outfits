@@ -289,9 +289,6 @@ const route = useRoute()
 
 // Get sellerId from props or route params
 const sellerId = ref(props.sellerId || route.params.sellerId)
-console.log('Received sellerId from props:', props.sellerId); // Debug log
-console.log('Received sellerId from route params:', route.params.sellerId); // Debug log
-console.log('Final sellerId value:', sellerId.value); // Debug log
 
 const columns = [
   { name: 'image', label: 'Image', field: 'image', align: 'center' },
@@ -379,49 +376,37 @@ const refreshProducts = () => {
 
 // ✅ Helper to extract products safely
 const extractProducts = (response) => {
-  console.log('Extracting products from response:', response); // Debug log
   if (!response || !response.success) {
-    console.log('Response is not successful or empty');
     return []
   }
   
   if (Array.isArray(response.data)) {
-    console.log('Products found in response.data:', response.data);
     return response.data
   }
   
   if (Array.isArray(response.data?.data)) {
-    console.log('Products found in response.data.data:', response.data.data);
     return response.data.data
   }
 
   // Check if response.data.data.data is an array (pagination structure)
   if (Array.isArray(response.data?.data?.data)) {
-    console.log('Products found in response.data.data.data:', response.data.data.data);
     return response.data.data.data
   }
 
   // Check if response.data has a products array
   if (Array.isArray(response.data?.products)) {
-    console.log('Products found in response.data.products:', response.data.products);
     return response.data.products
   }
 
   // Check if response.data has an items array
   if (Array.isArray(response.data?.items)) {
-    console.log('Products found in response.data.items:', response.data.items);
     return response.data.items
   }
-
-  console.log('No products array found in response structure');
-  console.log('Response data structure:', response.data);
-  console.log('Response data.data structure:', response.data?.data);
 
   // If no array found, try to extract any array from the response data
   if (response.data && typeof response.data === 'object') {
     for (const key in response.data) {
       if (Array.isArray(response.data[key])) {
-        console.log(`Found array in response.data.${key}:`, response.data[key]);
         return response.data[key]
       }
     }
@@ -433,34 +418,11 @@ const extractProducts = (response) => {
   // ✅ Fetch products for one seller
   const fetchProductsForSeller = async (id) => {
     try {
-      console.log('Fetching products for seller ID:', id); // Debug log
       const response = await adminApi.getSellerProducts(id)
-      console.log('Products Response for Seller:', response); // Debug log
-      console.log('Checking if product status is updated correctly after approval.'); // Debug log
-      console.log('Full response structure:', JSON.stringify(response, null, 2)); // Debug the full structure
 
       const products = extractProducts(response)
-      console.log('Raw products from API:', products); // Debug log
-
-      // Check if any product has the expected status fields
-      if (products.length > 0) {
-        const sampleProduct = products[0];
-        console.log('Sample product keys:', Object.keys(sampleProduct));
-        console.log('Sample product status fields:', {
-          status: sampleProduct.status,
-          is_approved: sampleProduct.is_approved,
-          is_blocked: sampleProduct.is_blocked,
-          approval_status: sampleProduct.approval_status,
-          product_status: sampleProduct.product_status
-        });
-      }
 
       const processedProducts = products.map(product => {
-        console.log('Individual product data:', product); // Debug individual product
-        console.log('Product status:', product.status); // Debug status
-        console.log('Product is_approved:', product.is_approved); // Debug approval status
-        console.log('Product is_blocked:', product.is_blocked); // Debug block status
-        
         // Check for alternative status field names
         const status = product.status || product.product_status || 'pending';
         const is_approved = product.is_approved !== undefined ? product.is_approved : 
@@ -479,10 +441,8 @@ const extractProducts = (response) => {
         }
       })
       
-      console.log('Processed products for table:', processedProducts); // Debug log
       return processedProducts
     } catch (error) {
-      console.error('Error fetching products for seller:', error)
       return []
     }
   }
@@ -516,12 +476,10 @@ const fetchAllProducts = async () => {
 
 // ✅ Main fetch handler
 const fetchProducts = async () => {
-  console.log('Fetching products with sellerId:', sellerId.value); // Debug log
   if (sellerId.value) {
     loading.value = true
     try {
       const products = await fetchProductsForSeller(sellerId.value)
-      console.log('Final processed products for table:', products); // Debug log
       sellerProducts.value = products
 
       // Get seller info from the first product if available
@@ -533,7 +491,6 @@ const fetchProducts = async () => {
         sellerInfo.value = sellerResponse.success ? sellerResponse.data : null
       }
     } catch (error) {
-      console.error('Error fetching products:', error)
       sellerProducts.value = []
     } finally {
       loading.value = false
@@ -565,9 +522,7 @@ const getStatusColor = (status) => {
   // Product management methods
   const approveProduct = async (product) => {
     try {
-      console.log('Approving product:', product.id, 'Current status:', product.status, 'is_approved:', product.is_approved);
       const response = await adminApi.approveProduct(product.id)
-      console.log('Approve API response:', response);
       
       if (response.success) {
         // Update local state
@@ -575,7 +530,6 @@ const getStatusColor = (status) => {
         if (index !== -1) {
           sellerProducts.value[index].is_approved = true
           sellerProducts.value[index].status = 'approved'
-          console.log('Updated local state for product:', sellerProducts.value[index]);
         }
         $q.notify({
           type: 'positive',
@@ -585,7 +539,6 @@ const getStatusColor = (status) => {
         
         // Force refresh after a short delay to see if the API returns the updated status
         setTimeout(() => {
-          console.log('Refreshing products to check if status is persisted...');
           refreshProducts();
         }, 1000);
       } else {
@@ -596,7 +549,6 @@ const getStatusColor = (status) => {
         })
       }
     } catch (error) {
-      console.error('Error approving product:', error);
       $q.notify({
         type: 'negative',
         message: 'Failed to approve product',
@@ -607,9 +559,7 @@ const getStatusColor = (status) => {
 
 const rejectProduct = async (product) => {
   try {
-    console.log('Rejecting product:', product.id, 'Current status:', product.status, 'is_approved:', product.is_approved);
     const response = await adminApi.rejectProduct(product.id)
-    console.log('Reject API response:', response);
     
     if (response.success) {
       // Update local state
@@ -617,7 +567,6 @@ const rejectProduct = async (product) => {
       if (index !== -1) {
         sellerProducts.value[index].is_approved = false
         sellerProducts.value[index].status = 'rejected'
-        console.log('Updated local state for product:', sellerProducts.value[index]);
       }
       $q.notify({
         type: 'positive',
@@ -627,7 +576,6 @@ const rejectProduct = async (product) => {
       
       // Force refresh after a short delay to see if the API returns the updated status
       setTimeout(() => {
-        console.log('Refreshing products to check if status is persisted...');
         refreshProducts();
       }, 1000);
     } else {
@@ -638,7 +586,6 @@ const rejectProduct = async (product) => {
       })
     }
   } catch (error) {
-    console.error('Error rejecting product:', error);
     $q.notify({
       type: 'negative',
       message: 'Failed to reject product',
@@ -722,7 +669,6 @@ const deleteProduct = async (product) => {
 
 // Bulk action methods
 const approveSelected = async () => {
-  console.log("Approve Selected clicked"); // Debug log
   if (selectedProducts.value.length === 0) return
   
   $q.dialog({
@@ -954,9 +900,6 @@ watch(() => props.sellerId, () => {
 })
 
 onMounted(() => {
-  console.log('Component mounted with sellerId:', sellerId.value);
-  console.log('Route params:', route.params);
-  console.log('Props:', props);
   fetchProducts()
 })
 </script>

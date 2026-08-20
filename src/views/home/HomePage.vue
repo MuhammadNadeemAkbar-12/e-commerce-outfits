@@ -1,1154 +1,365 @@
 <template>
-	<div
-		class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
-		<!-- Hero Section - Enhanced -->
-		<section
-			class="relative overflow-hidden bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600">
-			<div class="absolute inset-0 bg-black/20"></div>
-			<div
-				class="absolute inset-0 bg-gradient-to-b from-transparent to-black/10"></div>
+  <main class="home-page">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="page-width hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">StyleHub collection</p>
+          <h1 id="hero-title">Thoughtful products for the spaces you use every day.</h1>
+          <p class="hero-description">
+            Browse the current collection, compare what is available, and add the pieces that suit your needs.
+          </p>
+          <div class="hero-actions">
+            <button class="button button--primary" type="button" @click="scrollTo('products')">Explore products</button>
+            <button class="button button--secondary" type="button" @click="scrollTo('categories')">Browse categories</button>
+          </div>
+        </div>
 
-			<!-- Floating Elements removed for cleaner look -->
+        <div class="hero-showcase" aria-label="Featured product preview">
+          <img v-if="heroProduct?.image" :src="heroProduct.image" :alt="heroProduct.name" class="hero-image" />
+          <div v-else class="hero-art" aria-hidden="true">
+            <span class="hero-art__sun"></span>
+            <span class="hero-art__arch"></span>
+            <span class="hero-art__base"></span>
+          </div>
+          <div v-if="heroProduct" class="hero-product">
+            <span class="hero-product__label">Available now</span>
+            <strong>{{ heroProduct.name }}</strong>
+            <span>{{ formatPrice(heroProduct.displayPrice) }}</span>
+          </div>
+          <div v-else-if="loadingProducts" class="hero-product hero-product--loading">Loading collection…</div>
+        </div>
+      </div>
+    </section>
 
-			<div
-				class="relative mx-auto max-w-7xl px-6 pt-16 pb-20 md:pt-24 md:pb-28">
-				<div class="flex flex-col md:flex-row gap-12 items-center">
-					<div class="flex-1 text-center md:text-left">
-						<div
-							class="inline-block px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white/90 text-sm font-medium mb-6 border border-white/30">
-							 New Collections Available
-						</div>
-						<h1
-							class="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-white leading-tight mb-6">
-							Elevate Your
-							<span
-								class="bg-gradient-to-r from-yellow-300 to-orange-400 bg-clip-text text-transparent">
-								Style
-							</span>
-							<br class="hidden md:block" />
-							<span class="text-4xl md:text-5xl lg:text-6xl"
-								>Discover Amazing</span
-							>
-							<span
-								class="bg-gradient-to-r from-pink-300 to-purple-400 bg-clip-text text-transparent ml-3">
-								Collections
-							</span>
-						</h1>
-						<p
-							class="text-xl md:text-2xl text-white/90 max-w-2xl mb-8 leading-relaxed">
-							Hand‑picked premium products with lightning-fast delivery,
-							ultra-secure checkout and hassle-free returns.
-						</p>
-						<div class="flex flex-wrap gap-4 justify-center md:justify-start">
-							<button
-								class="px-8 py-4 rounded-2xl border-2 border-white/30 text-white font-semibold text-lg backdrop-blur-sm hover:bg-white/10 transition-all duration-300">
-								View Catalog
-							</button>
-						</div>
-					</div>
-					<div class="flex-1 relative">
-						<div class="relative group">
-							<div
-								class="absolute -inset-4 bg-gradient-to-r from-pink-500 to-blue-500 rounded-3xl blur-2xl opacity-20"></div>
-							<div
-								class="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white/20 backdrop-blur-sm">
-								<img
-									class="w-full h-[420px] object-cover transition duration-300"
-									src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1200&q=80"
-									alt="Hero Fashion Banner"
-									loading="lazy" />
-								<div
-									class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</section>
+    <section id="categories" class="section page-width" aria-labelledby="categories-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Browse your way</p>
+          <h2 id="categories-title">Shop by category</h2>
+        </div>
+        <button v-if="selectedCategory" class="text-button" type="button" @click="selectCategory(null)">View all products</button>
+      </div>
 
-		<!-- Categories Section - Enhanced -->
-		<section class="max-w-7xl mx-auto px-6 -mt-8 relative z-10 mb-10">
-			<div
-				class="category-shell rounded-2xl border border-slate-200 bg-white shadow-xl p-6 md:p-7">
-				<div class="flex items-start justify-between gap-4 mb-5">
-					<div>
-						<h2 class="text-2xl md:text-3xl font-black tracking-tight text-slate-800 mb-1">
-							Browse Categories
-						</h2>
-						<p class="text-slate-500 text-sm md:text-base">
-							Discover products across different categories
-						</p>
-					</div>
-					<button
-						v-if="categoriesError"
-						@click="fetchCategoriesProducts"
-						class="px-4 py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition font-medium">
-						🔄 Retry
-					</button>
-				</div>
+      <div v-if="loadingCategories" class="category-grid" aria-label="Loading categories">
+        <div v-for="item in 4" :key="item" class="category-card category-card--skeleton"></div>
+      </div>
+      <div v-else-if="categoriesError" class="state-card state-card--error">
+        <p>{{ categoriesError }}</p>
+        <button class="text-button" type="button" @click="loadCategories">Try again</button>
+      </div>
+      <div v-else-if="categories.length" class="category-grid">
+        <button
+          v-for="category in categories"
+          :key="category.id"
+          class="category-card"
+          :class="{ 'category-card--active': selectedCategory?.id === category.id }"
+          type="button"
+          @click="selectCategory(category)">
+          <span class="category-card__index">{{ String(category.id).padStart(2, '0') }}</span>
+          <span class="category-card__name">{{ category.name }}</span>
+          <span v-if="typeof category.products_count === 'number'" class="category-card__count">
+            {{ category.products_count }} {{ category.products_count === 1 ? 'product' : 'products' }}
+          </span>
+          <span class="category-card__arrow" aria-hidden="true">↗</span>
+        </button>
+      </div>
+      <div v-else class="state-card">No categories are available yet.</div>
+    </section>
 
-				<div class="category-chip-wrap">
-					<button
-						class="cat-chip-enhanced"
-						:class="activeCategoryId === null ? 'cat-chip-enhanced--active' : ''"
-						@click="selectAll">
-						<span class="flex items-center gap-2">
-							View All
-							<span v-if="totalProductsAll" class="count-enhanced">{{ totalProductsAll }}</span>
-						</span>
-					</button>
+    <section id="products" class="section section--products" aria-labelledby="products-title">
+      <div class="page-width">
+        <div class="section-heading section-heading--products">
+          <div>
+            <p class="eyebrow">Current collection</p>
+            <h2 id="products-title">
+              {{ searchTerm ? `Search results for “${searchTerm}”` : selectedCategory ? selectedCategory.name : 'Featured products' }}
+            </h2>
+          </div>
+          <p v-if="!loadingProducts && products.length" class="result-count">{{ products.length }} {{ products.length === 1 ? 'product' : 'products' }} shown</p>
+        </div>
 
-					<template v-if="!loadingCategories && categories.length">
-						<button
-							v-for="c in categories"
-							:key="c.id"
-							class="cat-chip-enhanced"
-							:class="activeCategoryId === c.id ? 'cat-chip-enhanced--active' : ''"
-							@click="selectCategory(c)">
-							<span class="flex items-center gap-2">
-								{{ c.name }}
-								<span v-if="typeof c.products_count === 'number'" class="count-enhanced">{{ c.products_count }}</span>
-							</span>
-						</button>
-					</template>
+        <div v-if="loadingProducts" class="product-grid" aria-label="Loading products">
+          <article v-for="item in 4" :key="item" class="product-card product-card--skeleton">
+            <div class="product-card__media"></div><div class="product-card__body"></div>
+          </article>
+        </div>
+        <div v-else-if="productsError" class="state-card state-card--error">
+          <p>{{ productsError }}</p>
+          <button class="text-button" type="button" @click="loadProducts">Try again</button>
+        </div>
+        <div v-else-if="products.length" class="product-grid">
+          <article v-for="product in products" :key="product.id" class="product-card">
+            <div class="product-card__media">
+              <img v-if="product.image" :src="product.image" :alt="product.name" loading="lazy" />
+              <div v-else class="product-card__fallback" aria-hidden="true">{{ product.name.charAt(0) }}</div>
+              <span class="stock-pill" :class="product.stock > 0 ? 'stock-pill--in' : 'stock-pill--out'">
+                {{ product.stock > 0 ? 'In stock' : 'Out of stock' }}
+              </span>
+            </div>
+            <div class="product-card__body">
+              <p class="product-card__category">{{ product.categoryName }}</p>
+              <h3>{{ product.name }}</h3>
+              <p v-if="product.description" class="product-card__description">{{ product.description }}</p>
+              <div class="product-card__footer">
+                <div>
+                  <span v-if="product.salePrice && product.salePrice !== product.price" class="product-card__was">{{ formatPrice(product.price) }}</span>
+                  <strong>{{ formatPrice(product.displayPrice) }}</strong>
+                </div>
+                <div class="product-card__actions">
+                  <button class="text-button product-view" type="button" @click="openProduct(product)">View</button>
+                  <button
+                    v-if="canUseWishlist"
+                    class="icon-button"
+                    type="button"
+                    :aria-label="wishlistStore.isInWishlist(product.id) ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`"
+                    :aria-pressed="wishlistStore.isInWishlist(product.id)"
+                    @click="toggleWishlist(product)">
+                    {{ wishlistStore.isInWishlist(product.id) ? '♥' : '♡' }}
+                  </button>
+                  <button class="button button--compact" type="button" :disabled="product.stock <= 0" @click="addToCart(product)">Add to cart</button>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+        <div v-else class="state-card">
+          No products are available{{ searchTerm ? ` for “${searchTerm}”` : selectedCategory ? ' in this category' : '' }}.
+          <button v-if="selectedCategory" class="text-button" type="button" @click="selectCategory(null)">View all products</button>
+        </div>
+      </div>
+    </section>
 
-					<template v-else-if="loadingCategories">
-						<div
-							v-for="n in 6"
-							:key="'cat-skel-' + n"
-							class="animate-pulse h-14 w-32 rounded-2xl bg-gradient-to-r from-slate-200 to-slate-300" />
-					</template>
-				</div>
+    <section class="value-section">
+      <div class="page-width value-grid">
+        <div>
+          <p class="eyebrow">Simple product discovery</p>
+          <h2>Find the right product for your space.</h2>
+          <p>Use the live category list to narrow the collection, then add available products directly to your cart.</p>
+        </div>
+        <button class="button button--light" type="button" @click="scrollTo('products')">View all products</button>
+      </div>
+    </section>
 
-				<p
-					v-if="categoriesError"
-					class="mt-4 text-sm text-red-600 bg-red-50 p-3 rounded-xl">
-					{{ categoriesError }}
-				</p>
-			</div>
-		</section>
-
-		<!-- Enhanced Controls Section -->
-		<section class="max-w-7xl mx-auto px-6 mb-7">
-			<div class="control-shell rounded-2xl border border-slate-200 bg-white shadow-lg p-5 md:p-6">
-				<div class="flex flex-col xl:flex-row gap-4 xl:items-center xl:justify-between">
-					<div class="flex flex-1 flex-col md:flex-row gap-3">
-						<div class="relative flex-1">
-							<div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-xs font-medium tracking-wide">
-								Search
-							</div>
-							<input
-								v-model.trim="searchQuery"
-								type="text"
-								placeholder="Search products, brands, categories..."
-								class="w-full rounded-xl border border-slate-300 pl-20 pr-10 py-3.5 text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition" />
-							<button
-								v-if="searchQuery"
-								@click="searchQuery = ''"
-								class="absolute right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition">
-								×
-							</button>
-						</div>
-
-						<div class="relative">
-							<select
-								v-model="sortKey"
-								class="appearance-none rounded-xl border border-slate-300 px-4 py-3.5 text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none bg-white cursor-pointer min-w-[210px]">
-								<option value="featured">Featured</option>
-								<option value="price-asc">Price: Low to High</option>
-								<option value="price-desc">Price: High to Low</option>
-								<option value="stock-desc">Stock: High to Low</option>
-								<option value="name-asc">Name: A to Z</option>
-							</select>
-							<div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none">
-								▼
-							</div>
-						</div>
-
-						<button
-							@click="resetFilters"
-							class="px-5 py-3.5 rounded-xl border border-slate-300 bg-slate-50 text-slate-700 text-sm font-semibold hover:bg-slate-100 transition-all">
-							Reset
-						</button>
-					</div>
-
-					<div class="flex items-center gap-3 flex-wrap justify-end">
-						<div class="text-sm text-slate-600 bg-slate-100 border border-slate-200 px-4 py-2 rounded-lg">
-							Page
-							<span class="font-bold text-slate-800">{{ pagination.currentPage }}</span>
-							/ <span class="font-bold">{{ pagination.lastPage || 1 }}</span>
-						</div>
-
-						<div class="flex gap-2">
-							<button
-								@click="goPrev"
-								:disabled="pagination.currentPage <= 1 || loadingProducts"
-								class="pager-btn-enhanced">
-								Previous
-							</button>
-							<button
-								@click="goNext"
-								:disabled="pagination.currentPage >= pagination.lastPage || loadingProducts"
-								class="pager-btn-enhanced">
-								Next
-							</button>
-						</div>
-					</div>
-				</div>
-			</div>
-		</section>
-
-		<!-- Products Grid - Enhanced -->
-		<section class="max-w-7xl mx-auto px-6 pb-20">
-			<div class="flex items-center justify-between gap-4 mb-7 flex-wrap">
-				<div>
-					<h2 class="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-1">
-						{{ activeCategoryLabel }}
-					</h2>
-					<p class="text-slate-500">Curated picks with best value and fast shipping</p>
-				</div>
-				<div
-					v-if="!loadingProducts && displayProducts.length"
-					class="bg-blue-50 px-6 py-3 rounded-2xl border border-blue-200">
-					<span class="text-sm text-blue-600">Showing </span>
-					<span class="font-bold text-blue-800 text-lg">{{
-						displayProducts.length
-					}}</span>
-					<span class="text-sm text-blue-600"> premium items</span>
-				</div>
-			</div>
-
-			<!-- Enhanced Skeletons -->
-			<div
-				v-if="loadingProducts"
-				class="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-				<div
-					v-for="n in 8"
-					:key="'prod-skel-' + n"
-					class="group rounded-3xl bg-white border border-slate-200 overflow-hidden shadow-lg animate-pulse">
-					<div class="relative">
-						<div
-							class="h-64 w-full bg-gradient-to-br from-slate-200 to-slate-300"></div>
-						<div
-							class="absolute top-4 left-4 w-16 h-6 bg-slate-300 rounded-lg"></div>
-						<div
-							class="absolute top-4 right-4 w-12 h-6 bg-slate-300 rounded-lg"></div>
-					</div>
-					<div class="p-6 space-y-4">
-						<div class="h-6 w-3/4 bg-slate-200 rounded-lg"></div>
-						<div class="flex gap-2">
-							<div class="h-5 w-20 bg-slate-200 rounded-full"></div>
-							<div class="h-5 w-16 bg-slate-200 rounded-full"></div>
-						</div>
-						<div class="h-4 w-full bg-slate-200 rounded"></div>
-						<div class="h-4 w-4/5 bg-slate-200 rounded"></div>
-						<div class="flex justify-between items-center pt-4">
-							<div class="h-8 w-24 bg-slate-200 rounded-xl"></div>
-							<div class="flex gap-2">
-								<div class="h-8 w-16 bg-slate-200 rounded-xl"></div>
-								<div class="h-8 w-20 bg-slate-200 rounded-xl"></div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<!-- Enhanced Products Grid -->
-			<div
-				v-else
-				class="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-				<div
-					v-for="(product, idx) in visibleProducts"
-					:key="product.id ?? idx"
-					class="group relative flex flex-col bg-white border border-slate-200 rounded-xl shadow-none hover:shadow-sm transition-shadow duration-150 overflow-hidden"
-					@mouseenter="() => startAutoPlay(product)"
-					@mouseleave="() => stopAutoPlay(product)">
-					<div
-						class="relative w-full h-64 bg-slate-100 overflow-hidden cursor-pointer"
-						@click="openQuickView(product)"
-						@touchstart="(e) => onTouchStart(e, product)"
-						@touchend="(e) => onTouchEnd(e, product)">
-						<img
-							:src="
-								product.gallery.length
-									? product.gallery[product.currentIndex]
-									: product.image
-							"
-							:alt="product.name"
-							class="w-full h-full object-cover transition-opacity duration-300"
-							loading="lazy" />
-
-						<div
-							v-if="product.gallery.length > 1"
-							class="absolute bottom-3 left-0 right-0 flex justify-center gap-2">
-							<button
-								v-for="(g, i) in product.gallery"
-								:key="i"
-								@click.stop="selectImage(product, i)"
-								class="w-3 h-3 rounded-full transition-colors duration-200"
-								:class="
-									product.currentIndex === i
-										? 'bg-white shadow-lg'
-										: 'bg-white/60 hover:bg-white/80'
-								" />
-						</div>
-
-						<div class="absolute top-4 left-4">
-							<div
-								class="px-3 py-1 rounded-full text-xs font-semibold border shadow-sm"
-								:class="
-									product.stock > 0
-										? 'bg-emerald-500 text-white border-emerald-500'
-										: 'bg-red-500 text-white border-red-500'
-								">
-								{{ product.stock > 0 ? "In Stock" : "Out of Stock" }}
-							</div>
-						</div>
-
-						<div v-if="product.seller" class="absolute top-4 right-4">
-							<div
-								class="px-3 py-1 rounded-full text-xs font-semibold bg-white text-slate-700 border border-slate-200 shadow-sm">
-								{{ product.seller }}
-							</div>
-						</div>
-					</div>
-
-					<div class="flex flex-col flex-1 p-5 bg-white">
-						<h3
-							class="font-semibold text-slate-900 text-lg mb-2 line-clamp-1">
-							{{ product.name }}
-						</h3>
-
-						<div class="flex items-center gap-2 mb-2 flex-wrap">
-							<span
-								class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
-								{{ product.category }}
-							</span>
-						</div>
-
-						<p class="text-sm text-slate-600 line-clamp-2 mb-3 leading-relaxed">
-							{{ product.description }}
-						</p>
-
-						<div class="mt-auto">
-							<div class="flex items-center justify-between mb-3">
-								<div class="text-2xl font-bold text-indigo-600">
-									₹{{ product.priceDisplay }}
-								</div>
-								<div class="text-xs text-slate-400">Premium</div>
-							</div>
-							<div class="flex gap-2 items-center">
-								<button
-									class="w-24 px-3 py-2.5 rounded-lg bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200 transition"
-									@click.stop="openQuickView(product)">
-									View
-								</button>
-								<button
-									:disabled="product.stock === 0"
-									@click.stop="addToCart(product)"
-									class="flex-1 min-w-0 px-3 py-2.5 rounded-lg text-sm font-medium transition whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed bg-indigo-600 text-white hover:bg-indigo-700">
-									Add to Cart
-								</button>
-								<button
-									@click.stop="toggleWishlist(product)"
-									:aria-pressed="wishlistStore.isInWishlist(product.id)"
-									class="w-11 h-11 rounded-lg border border-slate-300 text-sm font-medium transition-colors hover:bg-slate-50 flex items-center justify-center"
-									:title="
-										wishlistStore.isInWishlist(product.id)
-											? 'Remove from wishlist'
-											: 'Add to wishlist'
-									">
-									<svg
-										v-if="wishlistStore.isInWishlist(product.id)"
-										class="w-5 h-5 text-red-600"
-										viewBox="0 0 24 24"
-										fill="currentColor"
-										aria-hidden="true">
-										<path
-											d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 6 3.99 4 6.5 4 8.24 4 9.91 4.81 11 6.09 12.09 4.81 13.76 4 15.5 4 18.01 4 20 6 20 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-									</svg>
-									<svg
-										v-else
-										class="w-5 h-5 text-gray-400"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										stroke-width="1.5"
-										aria-hidden="true">
-										<path
-											d="M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3z" />
-									</svg>
-								</button>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<!-- No Products Message -->
-				<div
-					v-if="!visibleProducts.length && !loadingProducts"
-					class="col-span-full text-center py-20">
-					<div class="max-w-md mx-auto">
-						<div class="text-6xl mb-4">🔍</div>
-						<h3 class="text-2xl font-bold text-slate-700 mb-2">
-							No Products Found
-						</h3>
-						<p class="text-slate-500 mb-6">
-							We couldn't find any products matching your criteria. Try
-							adjusting your filters.
-						</p>
-						<button
-							@click="resetFilters"
-							class="px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold hover:from-blue-700 hover:to-purple-700 transition-colors shadow-lg">
-							🔄 Reset Filters
-						</button>
-					</div>
-				</div>
-			</div>
-
-			<!-- Error Message -->
-			<div v-if="productsError" class="mt-8 text-center">
-				<div
-					class="inline-block bg-red-50 border border-red-200 rounded-2xl p-6 max-w-md">
-					<div class="text-4xl mb-2">⚠️</div>
-					<p class="text-sm text-red-600 mb-4">{{ productsError }}</p>
-					<button
-						@click="retryCurrent"
-						class="px-6 py-2 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 transition">
-						🔄 Retry
-					</button>
-				</div>
-			</div>
-		</section>
-
-		<!-- Quick View Modal -->
-		<transition name="modal-fade">
-			<div
-				v-if="quickView.open"
-				class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-				@click.self="closeQuickView">
-				<div
-					class="relative w-full max-w-3xl bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
-					<button
-						@click="closeQuickView"
-						class="absolute top-3 right-3 z-10 w-9 h-9 flex items-center justify-center rounded-lg bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
-						<span class="text-lg font-medium text-slate-600">✕</span>
-					</button>
-					<div class="grid md:grid-cols-2 gap-0">
-						<div
-							class="relative h-80 bg-slate-100">
-							<img
-								v-if="quickView.product.gallery.length"
-								:src="quickView.product.gallery[quickView.product.currentIndex]"
-								class="w-full h-full object-cover"
-								:alt="quickView.product.name" />
-
-							<div
-								v-if="quickView.product.gallery.length > 1"
-								class="absolute bottom-4 left-0 right-0 flex justify-center gap-3">
-								<button
-									v-for="(g, i) in quickView.product.gallery"
-									:key="i"
-									@click="selectImage(quickView.product, i)"
-									class="w-3 h-3 rounded-full transition-colors duration-200"
-									:class="
-										quickView.product.currentIndex === i
-											? 'bg-indigo-600 shadow'
-											: 'bg-white/70 hover:bg-white shadow'
-									" />
-							</div>
-
-							<div class="absolute top-6 left-6">
-								<div
-									class="px-3 py-1.5 rounded-full text-sm font-semibold border shadow-sm"
-									:class="
-										quickView.product.stock > 0
-											? 'bg-emerald-500 text-white border-emerald-500'
-											: 'bg-red-500 text-white border-red-500'
-									">
-									{{
-										quickView.product.stock > 0
-											? "In Stock"
-											: "Out of Stock"
-									}}
-								</div>
-							</div>
-						</div>
-
-						<div class="p-6 flex flex-col bg-white">
-							<h3 class="text-2xl font-semibold text-slate-900 mb-3 leading-tight">
-								{{ quickView.product.name }}
-							</h3>
-
-							<div class="flex gap-2 mb-4 flex-wrap">
-								<span class="badge-enhanced bg-blue-50 text-blue-700">
-									{{ quickView.product.category }}
-								</span>
-								<span
-									v-if="quickView.product.seller"
-									class="badge-enhanced bg-slate-100 text-slate-700">
-									{{ quickView.product.seller }}
-								</span>
-							</div>
-
-							<div class="bg-slate-50 rounded-lg p-3 mb-4 border border-slate-200">
-								<p class="text-sm text-slate-700 leading-6">
-									{{
-										quickView.product.description ||
-										"No description available for this product."
-									}}
-								</p>
-							</div>
-
-							<div class="text-3xl font-semibold mb-6 text-indigo-600">
-								₹{{ quickView.product.priceDisplay }}
-							</div>
-
-							<div class="mt-auto flex gap-2">
-								<button
-									class="flex-1 py-3 rounded-lg font-medium text-base transition disabled:opacity-50 bg-indigo-600 text-white hover:bg-indigo-700"
-									:disabled="quickView.product.stock === 0"
-									@click="addToCart(quickView.product)">
-									Add to Cart
-								</button>
-								<button
-									class="px-5 py-3 rounded-lg bg-slate-100 text-slate-700 font-medium hover:bg-slate-200 transition-colors"
-									@click="closeQuickView">
-									Close
-								</button>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</transition>
-	</div>
+    <q-dialog v-model="detailOpen">
+      <article v-if="detailProduct" class="product-dialog" aria-labelledby="product-dialog-title">
+        <button class="product-dialog__close" type="button" aria-label="Close product details" @click="detailOpen = false">×</button>
+        <div class="product-dialog__media">
+          <img v-if="detailProduct.image" :src="detailProduct.image" :alt="detailProduct.name" />
+          <div v-else class="product-card__fallback" aria-hidden="true">{{ detailProduct.name.charAt(0) }}</div>
+        </div>
+        <div class="product-dialog__content">
+          <p class="eyebrow">{{ detailProduct.categoryName }}</p>
+          <h2 id="product-dialog-title">{{ detailProduct.name }}</h2>
+          <p v-if="detailProduct.description">{{ detailProduct.description }}</p>
+          <strong class="product-dialog__price">{{ formatPrice(detailProduct.displayPrice) }}</strong>
+          <p class="product-dialog__stock">{{ detailProduct.stock > 0 ? `${detailProduct.stock} in stock` : 'Currently out of stock' }}</p>
+          <div v-if="detailProduct.stock > 0" class="product-dialog__buy">
+            <div class="quantity-control" aria-label="Product quantity">
+              <button type="button" aria-label="Decrease quantity" :disabled="detailQuantity <= 1" @click="changeDetailQuantity(-1)">−</button>
+              <output aria-live="polite">{{ detailQuantity }}</output>
+              <button type="button" aria-label="Increase quantity" :disabled="detailQuantity >= detailProduct.stock" @click="changeDetailQuantity(1)">+</button>
+            </div>
+            <button class="button button--primary" type="button" @click="addToCart(detailProduct, detailQuantity)">Add to cart</button>
+          </div>
+          <button v-else class="button button--primary" type="button" disabled>Unavailable</button>
+        </div>
+      </article>
+    </q-dialog>
+  </main>
 </template>
 
 <script setup>
-	import {
-		ref,
-		reactive,
-		computed,
-		onMounted,
-		onBeforeUnmount,
-		nextTick,
-	} from "vue";
-	import axios from "../../api/axios";
-	import { useCartStore } from "../../stores/cart";
-	import { useAuthStore } from "../../stores/auth";
-	import { useWishlistStore } from "../../stores/wishlist";
-	import { useRouter } from "vue-router";
-	import { useQuasar } from "quasar";
+import { computed, onMounted, ref, watch } from 'vue'
+import { useQuasar } from 'quasar'
+import { useRoute, useRouter } from 'vue-router'
+import axios from '@/api/axios'
+import { useAuthStore } from '@/stores/auth'
+import { useCartStore } from '@/stores/cart'
+import { useWishlistStore } from '@/stores/wishlist'
+import { resolveUrl } from '@/utils/imageUrl'
 
-	const cartStore = useCartStore();
-	const authStore = useAuthStore();
-	const $q = useQuasar();
-	const wishlistStore = useWishlistStore();
-	const router = useRouter();
+const $q = useQuasar()
+const route = useRoute()
+const router = useRouter()
+const authStore = useAuthStore()
+const cartStore = useCartStore()
+const wishlistStore = useWishlistStore()
 
-	/* ------------ State ------------ */
-	const categories = ref([]);
-	const categoriesError = ref("");
-	const loadingCategories = ref(false);
-	const activeCategoryId = ref(null);
+const categories = ref([])
+const products = ref([])
+const selectedCategory = ref(null)
+const loadingCategories = ref(true)
+const loadingProducts = ref(true)
+const categoriesError = ref('')
+const productsError = ref('')
+const detailOpen = ref(false)
+const detailProduct = ref(null)
+const detailQuantity = ref(1)
+const searchTerm = ref('')
+const routeFiltersReady = ref(false)
 
-	const allProductsCache = ref([]); // Only used for "All" page caching (optional)
-	const displayProducts = ref([]);
-	const loadingProducts = ref(false);
-	const productsError = ref("");
-	const searchQuery = ref("");
-	const sortKey = ref("featured");
+const heroProduct = computed(() => products.value.find((product) => product.stock > 0) || products.value[0] || null)
+const canUseWishlist = computed(() => authStore.isLoggedIn && ['customer', 'buyer'].includes(authStore.role))
 
-	const pagination = reactive({
-		currentPage: 1,
-		lastPage: 1,
-		perPage: 10,
-		total: 0,
-		endpointType: "all", // 'all' | 'category'
-	});
+function apiArray(response) {
+  return Array.isArray(response?.data?.data) ? response.data.data : []
+}
 
-	const lastFetch = reactive({
-		type: "all",
-		categoryId: null,
-	});
+function paginatedArray(response) {
+  return Array.isArray(response?.data?.data?.data) ? response.data.data.data : []
+}
 
-	const quickView = reactive({
-		open: false,
-		product: null,
-	});
+function productImage(product) {
+  const image = Array.isArray(product.images) ? product.images[0] : product.image
+  const path = typeof image === 'string' ? image : image?.url || image?.image_path
+  return resolveUrl(path)
+}
 
-	const totalProductsAll = ref(null);
+function normaliseProduct(product) {
+  const price = Number(product.price || 0)
+  const salePrice = product.sale_price == null ? null : Number(product.sale_price)
+  const category = categories.value.find((item) => Number(item.id) === Number(product.category_id))
+  return {
+    id: product.id,
+    name: product.name || 'Product',
+    description: product.description || '',
+    price,
+    salePrice,
+    displayPrice: salePrice && salePrice < price ? salePrice : price,
+    stock: Number(product.stock || 0),
+    categoryName: category?.name || 'Uncategorised',
+    image: productImage(product),
+  }
+}
 
-	/* ------------ Helpers ------------ */
-	function safeLog(...args) {
-		/* console.debug('[HomePage]', ...args); */
-	}
+function formatPrice(value) {
+  return new Intl.NumberFormat('en-PK', { style: 'currency', currency: 'PKR', maximumFractionDigits: 0 }).format(value || 0)
+}
 
-	function priceToNumber(v) {
-		if (v === null || v === undefined) return 0;
-		const n = Number(v);
-		return isNaN(n) ? 0 : n;
-	}
+async function loadCategories() {
+  loadingCategories.value = true
+  categoriesError.value = ''
+  try {
+    const response = await axios.get('/categories-products', { skipAuthRedirect: true })
+    categories.value = apiArray(response).map((category) => ({
+      id: category.id,
+      name: category.name,
+      products_count: category.products_count,
+    }))
+  } catch {
+    categoriesError.value = 'Categories could not be loaded.'
+  } finally {
+    loadingCategories.value = false
+  }
+}
 
-	function resolveImageObject(img) {
-		if (!img) return null;
-		if (typeof img === "string") return img;
-		if (img.url) return img.url;
-		if (img.image_path) return img.image_path;
-		return null;
-	}
+async function loadProducts() {
+  loadingProducts.value = true
+  productsError.value = ''
+  try {
+    const response = await axios.get('/products', {
+      params: {
+        page: 1,
+        search: searchTerm.value || undefined,
+        category_id: selectedCategory.value?.id || undefined,
+      },
+      skipAuthRedirect: true,
+    })
+    products.value = paginatedArray(response).map(normaliseProduct)
+  } catch {
+    productsError.value = selectedCategory.value ? 'Products in this category could not be loaded.' : 'Products could not be loaded.'
+  } finally {
+    loadingProducts.value = false
+  }
+}
 
-	function normalizeProduct(p, idx = 0) {
-		const gallery = Array.isArray(p.images)
-			? p.images.map(resolveImageObject).filter(Boolean)
-			: [];
-		const priceNum = priceToNumber(p.price);
-		return {
-			id: p.id ?? idx,
-			category_id: p.category_id ?? null,
-			name: p.name ?? "Product",
-			description: p.description ?? "",
-			price: priceNum,
-			priceDisplay: priceNum.toFixed(2),
-			stock: p.stock ?? 0,
-			is_approved: p.is_approved,
-			is_blocked: p.is_blocked,
-			imagesCount: gallery.length,
-			image: gallery[0] || "https://via.placeholder.com/400x400?text=No+Image",
-			gallery,
-			currentIndex: 0,
-			category: deriveCategoryName(p.category_id),
-			seller: p.seller?.company_name || null,
-			raw: p,
-		};
-	}
+async function selectCategory(category) {
+  await router.push({ path: '/', query: category ? { category: category.id } : {} })
+}
 
-	function deriveCategoryName(categoryId) {
-		const found = categories.value.find((c) => c.id === categoryId);
-		return found ? found.name : "Category";
-	}
+async function applyRouteFilters() {
+  const categoryId = Number(route.query.category || 0)
+  searchTerm.value = typeof route.query.search === 'string' ? route.query.search.trim() : ''
+  selectedCategory.value = categoryId
+    ? categories.value.find((category) => Number(category.id) === categoryId) || null
+    : null
+  await loadProducts()
+  scrollTo('products')
+}
 
-	function extractPaginated(res) {
-		// Expect structure: { success:true, data: { current_page, data:[...] } }
-		const root = res?.data;
-		if (root?.data?.data && Array.isArray(root.data.data)) {
-			return {
-				items: root.data.data,
-				meta: {
-					current_page: root.data.current_page,
-					last_page: root.data.last_page,
-					per_page: root.data.per_page,
-					total: root.data.total,
-				},
-			};
-		}
-		return {
-			items: [],
-			meta: { current_page: 1, last_page: 1, per_page: 10, total: 0 },
-		};
-	}
+function scrollTo(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
 
-	function extractArray(res) {
-		const root = res?.data;
-		if (Array.isArray(root?.data)) return root.data;
-		return [];
-	}
+function cartPayload(product, quantity = 1) {
+  return { id: product.id, title: product.name, price: product.displayPrice, image: product.image, brand: product.categoryName, quantity }
+}
 
-	/* ------------ Fetchers ------------ */
-	async function fetchCategoriesProducts() {
-		loadingCategories.value = true;
-		categoriesError.value = "";
-		try {
-			const res = await axios.get("/categories-products", {
-				skipAuthRedirect: true,
-			});
-			safeLog("categories-products", res);
-			const arr = extractArray(res);
-			categories.value = arr.map((c) => ({
-				id: c.id,
-				name: c.name,
-				products_count: c.products_count ?? null,
-				raw: c,
-			}));
-		} catch (e) {
-			categoriesError.value = "Failed to load categories.";
-		} finally {
-			loadingCategories.value = false;
-		}
-	}
+function openProduct(product) {
+  detailProduct.value = product
+  detailQuantity.value = 1
+  detailOpen.value = true
+}
 
-	async function fetchAllProducts(page = 1) {
-		loadingProducts.value = true;
-		productsError.value = "";
-		try {
-			const res = await axios.get("/products", {
-				params: { page },
-				skipAuthRedirect: true,
-			});
-			const { items, meta } = extractPaginated(res);
-			const norm = items.map(normalizeProduct);
-			displayProducts.value = norm;
-			allProductsCache.value = page === 1 ? norm : displayProducts.value;
-			pagination.currentPage = meta.current_page;
-			pagination.lastPage = meta.last_page;
-			pagination.perPage = meta.per_page;
-			pagination.total = meta.total;
-			pagination.endpointType = "all";
-			totalProductsAll.value = meta.total;
-			lastFetch.type = "all";
-			lastFetch.categoryId = null;
-			restartAutoPlay();
-		} catch (e) {
-			productsError.value = "Failed to load products.";
-		} finally {
-			loadingProducts.value = false;
-		}
-	}
+function changeDetailQuantity(delta) {
+  detailQuantity.value = Math.min(Math.max(detailQuantity.value + delta, 1), detailProduct.value?.stock || 1)
+}
 
-	async function fetchCategoryProducts(categoryId, page = 1) {
-		if (categoryId == null) {
-			return fetchAllProducts(page);
-		}
-		loadingProducts.value = true;
-		productsError.value = "";
-		try {
-			const res = await axios.get(
-				`/categories-products/${categoryId}/products`,
-				{
-					params: { page },
-					skipAuthRedirect: true,
-				}
-			);
-			const { items, meta } = extractPaginated(res);
-			const norm = items.map(normalizeProduct);
-			displayProducts.value = norm;
-			pagination.currentPage = meta.current_page;
-			pagination.lastPage = meta.last_page;
-			pagination.perPage = meta.per_page;
-			pagination.total = meta.total;
-			pagination.endpointType = "category";
-			lastFetch.type = "category";
-			lastFetch.categoryId = categoryId;
-			restartAutoPlay();
-		} catch (e) {
-			productsError.value = "Failed to load category products.";
-		} finally {
-			loadingProducts.value = false;
-		}
-	}
+async function addToCart(product, quantity = 1) {
+  try {
+    const safeQuantity = Math.min(Math.max(Number(quantity) || 1, 1), product.stock || 1)
+    if (authStore.checkAuth()) await cartStore.syncAdd(cartPayload(product, safeQuantity))
+    else cartStore.addToCart(cartPayload(product, safeQuantity))
+    $q.notify({ type: 'positive', message: 'Product added to cart' })
+  } catch {
+    $q.notify({ type: 'negative', message: 'Could not add this product to the cart' })
+  }
+}
 
-	async function fetchSingleProduct(id) {
-		try {
-			const res = await axios.get(`/products/${id}`, {
-				skipAuthRedirect: true,
-			});
-			const root = res?.data?.data;
-			if (root) {
-				return normalizeProduct(root);
-			}
-		} catch {
-			/* silent */
-		}
-		return null;
-	}
+async function toggleWishlist(product) {
+  try {
+    if (wishlistStore.isInWishlist(product.id)) await wishlistStore.remove(product.id)
+    else await wishlistStore.add(product.id)
+  } catch {
+    $q.notify({ type: 'negative', message: 'Could not update the wishlist' })
+  }
+}
 
-	/* ------------ User Actions ------------ */
-	function selectCategory(cat) {
-		if (activeCategoryId.value === cat.id) return;
-		activeCategoryId.value = cat.id;
-		pagination.currentPage = 1;
-		fetchCategoryProducts(cat.id, 1);
-	}
+onMounted(async () => {
+  await loadCategories()
+  await applyRouteFilters()
+  routeFiltersReady.value = true
+})
 
-	function selectAll() {
-		if (activeCategoryId.value === null) return;
-		activeCategoryId.value = null;
-		pagination.currentPage = 1;
-		fetchAllProducts(1);
-	}
-
-	function goNext() {
-		if (pagination.currentPage >= pagination.lastPage) return;
-		const next = pagination.currentPage + 1;
-		pagination.currentPage = next;
-		if (pagination.endpointType === "all") fetchAllProducts(next);
-		else fetchCategoryProducts(activeCategoryId.value, next);
-	}
-
-	function goPrev() {
-		if (pagination.currentPage <= 1) return;
-		const prev = pagination.currentPage - 1;
-		pagination.currentPage = prev;
-		if (pagination.endpointType === "all") fetchAllProducts(prev);
-		else fetchCategoryProducts(activeCategoryId.value, prev);
-	}
-
-	function retryCurrent() {
-		if (lastFetch.type === "category") {
-			fetchCategoryProducts(lastFetch.categoryId, pagination.currentPage);
-		} else {
-			fetchAllProducts(pagination.currentPage);
-		}
-	}
-
-	function resetFilters() {
-		searchQuery.value = "";
-		sortKey.value = "featured";
-	}
-
-	function addToCart(product) {
-		const payload = {
-			id: product.id,
-			title: product.name,
-			price: product.price,
-			image: product.image,
-			brand: product.category,
-			quantity: 1,
-		};
-		if (authStore.checkAuth()) {
-			cartStore
-				.syncAdd(payload)
-				.then(() => {
-					$q.notify({ type: "positive", message: "Product added to cart" });
-				})
-				.catch(() => {
-					$q.notify({ type: "negative", message: "Add to cart failed" });
-				});
-		} else {
-			cartStore.addToCart(payload);
-			$q.notify({ type: "positive", message: "Product added to cart" });
-		}
-	}
-
-	// Toggle wishlist for a product (exposed to template)
-	async function toggleWishlist(product) {
-		try {
-			const inW = wishlistStore.isInWishlist(product.id);
-			if (inW) {
-				await wishlistStore.remove(product.id);
-				$q.notify({ type: "negative", message: "Removed from wishlist" });
-			} else {
-				await wishlistStore.add(product.id);
-				$q.notify({ type: "positive", message: "Added to wishlist" });
-			}
-		} catch (e) {
-			$q.notify({ type: "negative", message: "Wishlist action failed" });
-		}
-	}
-
-	/* ------------ Derived ------------ */
-	const activeCategoryLabel = computed(() => {
-		if (activeCategoryId.value === null) return "All Products";
-		const cat = categories.value.find((c) => c.id === activeCategoryId.value);
-		return cat ? cat.name : "Products";
-	});
-
-	const visibleProducts = computed(() => {
-		let list = displayProducts.value.slice();
-
-		if (searchQuery.value) {
-			const q = searchQuery.value.toLowerCase();
-			list = list.filter(
-				(p) =>
-					p.name.toLowerCase().includes(q) ||
-					p.description.toLowerCase().includes(q) ||
-					(p.seller && p.seller.toLowerCase().includes(q))
-			);
-		}
-
-		switch (sortKey.value) {
-			case "price-asc":
-				list.sort((a, b) => a.price - b.price);
-				break;
-			case "price-desc":
-				list.sort((a, b) => b.price - a.price);
-				break;
-			case "stock-desc":
-				list.sort((a, b) => b.stock - a.stock);
-				break;
-			case "name-asc":
-				list.sort((a, b) => a.name.localeCompare(b.name));
-				break;
-			default:
-				// featured: maybe sort by stock desc then recent (id desc)
-				list.sort((a, b) => {
-					if (b.stock === a.stock) return b.id - a.id;
-					return b.stock - a.stock;
-				});
-		}
-		return list;
-	});
-
-	/* ------------ Carousel / Touch ------------ */
-	const touchStartX = {};
-	function onTouchStart(e, product) {
-		touchStartX[product.id] = e.changedTouches
-			? e.changedTouches[0].clientX
-			: null;
-	}
-	function onTouchEnd(e, product) {
-		const start = touchStartX[product.id];
-		if (start == null) return;
-		const end = e.changedTouches ? e.changedTouches[0].clientX : null;
-		if (end == null) return;
-		const diff = start - end;
-		const threshold = 35;
-		if (diff > threshold) nextImage(product);
-		else if (diff < -threshold) prevImage(product);
-		delete touchStartX[product.id];
-	}
-
-	function nextImage(product) {
-		stopAutoPlayForInteraction(product);
-		if (!product.gallery.length) return;
-		product.currentIndex = (product.currentIndex + 1) % product.gallery.length;
-	}
-	function prevImage(product) {
-		stopAutoPlayForInteraction(product);
-		if (!product.gallery.length) return;
-		product.currentIndex =
-			(product.currentIndex - 1 + product.gallery.length) %
-			product.gallery.length;
-	}
-	function selectImage(product, idx) {
-		stopAutoPlayForInteraction(product);
-		if (!product.gallery.length) return;
-		product.currentIndex = idx;
-	}
-
-	/* Autoplay */
-	const timers = {};
-	const AUTOPLAY_MS = 2600;
-	const PAUSE_ON_INTERACTION = true;
-
-	function startAutoPlay(product) {
-		if (!product.gallery || product.gallery.length < 2) return;
-		if (timers[product.id]) return;
-		timers[product.id] = setInterval(() => {
-			product.currentIndex =
-				(product.currentIndex + 1) % product.gallery.length;
-		}, AUTOPLAY_MS);
-	}
-	function stopAutoPlay(product) {
-		const t = timers[product.id];
-		if (t) {
-			clearInterval(t);
-			delete timers[product.id];
-		}
-	}
-	function stopAutoPlayForInteraction(product) {
-		if (PAUSE_ON_INTERACTION) stopAutoPlay(product);
-	}
-
-	function restartAutoPlay() {
-		// Clear any previous timers (e.g., when page/category changes)
-		Object.keys(timers).forEach((id) => {
-			clearInterval(timers[id]);
-			delete timers[id];
-		});
-		// Start autoplay for all products that have multiple images
-		nextTick(() => {
-			displayProducts.value.forEach((p) => startAutoPlay(p));
-		});
-	}
-
-	onBeforeUnmount(() => {
-		Object.values(timers).forEach((t) => clearInterval(t));
-	});
-
-	/* ------------ Quick View ------------ */
-	async function openQuickView(product) {
-		// get fresh full product
-		const full = await fetchSingleProduct(product.id);
-		quickView.product = full || product;
-		quickView.open = true;
-	}
-	function closeQuickView() {
-		quickView.open = false;
-		quickView.product = null;
-	}
-
-	/* ------------ Init ------------ */
-	onMounted(async () => {
-		await Promise.all([fetchCategoriesProducts(), fetchAllProducts(1)]);
-	});
+watch(
+  () => route.fullPath,
+  async () => {
+    if (routeFiltersReady.value) await applyRouteFilters()
+  },
+)
 </script>
 
 <style scoped>
-	.category-shell {
-		box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
-	}
-
-	.control-shell {
-		box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
-	}
-
-	.category-chip-wrap {
-		display: flex;
-		gap: 0.6rem;
-		flex-wrap: wrap;
-	}
-
-	/* Enhanced Category Chips */
-	.cat-chip-enhanced {
-		@apply relative px-5 py-3 flex items-center gap-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold shadow-sm hover:shadow-md transition-all duration-200 hover:border-blue-400 hover:text-blue-700 overflow-hidden;
-	}
-	.cat-chip-enhanced--active {
-		@apply bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-lg;
-	}
-	.cat-chip-enhanced .count-enhanced {
-		@apply inline-block px-2 py-0.5 rounded-md text-xs font-bold;
-	}
-	.cat-chip-enhanced:not(.cat-chip-enhanced--active) .count-enhanced {
-		@apply bg-slate-100 text-slate-600;
-	}
-	.cat-chip-enhanced--active .count-enhanced {
-		@apply bg-white/20 text-white;
-	}
-
-	/* Enhanced Badges */
-	.badge-enhanced {
-		@apply inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold shadow-lg;
-	}
-
-	/* Enhanced Pager Buttons */
-	.pager-btn-enhanced {
-		@apply px-5 py-2.5 rounded-lg font-semibold bg-white border border-slate-300 shadow-sm hover:shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:border-blue-300 hover:text-blue-700;
-	}
-
-	@media (max-width: 768px) {
-		.category-chip-wrap {
-			overflow-x: auto;
-			flex-wrap: nowrap;
-			padding-bottom: 6px;
-		}
-
-		.category-chip-wrap .cat-chip-enhanced {
-			white-space: nowrap;
-			flex-shrink: 0;
-		}
-	}
-
-	/* Enhanced Modal Transitions */
-	.modal-fade-enter-active,
-	.modal-fade-leave-active {
-		transition: opacity 0.25s ease;
-	}
-	.modal-fade-enter-from {
-		opacity: 0;
-	}
-	.modal-fade-leave-to {
-		opacity: 0;
-	}
-
-	/* Enhanced Line Clamps */
-	.line-clamp-1 {
-		display: -webkit-box;
-		-webkit-line-clamp: 1;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
-	}
-	.line-clamp-2 {
-		display: -webkit-box;
-		-webkit-line-clamp: 2;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
-	}
-
-	/* Custom Scrollbar */
-	::-webkit-scrollbar {
-		width: 8px;
-	}
-	::-webkit-scrollbar-track {
-		background: #f1f5f9;
-		border-radius: 10px;
-	}
-	::-webkit-scrollbar-thumb {
-		background: linear-gradient(45deg, #3b82f6, #8b5cf6);
-		border-radius: 10px;
-	}
-	::-webkit-scrollbar-thumb:hover {
-		background: linear-gradient(45deg, #2563eb, #7c3aed);
-	}
-
-	/* Enhanced Animations */
-	@keyframes float {
-		0%,
-		100% {
-			transform: translateY(0px) rotate(0deg);
-		}
-		50% {
-			transform: translateY(-10px) rotate(2deg);
-		}
-	}
-
-	@keyframes shimmer {
-		0% {
-			background-position: -200% 0;
-		}
-		100% {
-			background-position: 200% 0;
-		}
-	}
-
-	.animate-float {
-		animation: float 6s ease-in-out infinite;
-	}
-
-	.animate-shimmer {
-		background: linear-gradient(
-			90deg,
-			transparent,
-			rgba(255, 255, 255, 0.4),
-			transparent
-		);
-		background-size: 200% 100%;
-		animation: shimmer 2s infinite;
-	}
-
-	/* Glassmorphism Effects */
-	.glass {
-		background: rgba(255, 255, 255, 0.1);
-		backdrop-filter: blur(10px);
-		border: 1px solid rgba(255, 255, 255, 0.2);
-	}
-
-	.glass-dark {
-		background: rgba(0, 0, 0, 0.1);
-		backdrop-filter: blur(10px);
-		border: 1px solid rgba(255, 255, 255, 0.1);
-	}
-
-	/* Custom Gradient Text */
-	.gradient-text {
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
-	}
-
-	/* Enhanced Hover Effects */
-	.hover-lift {
-		transition: box-shadow 0.2s ease;
-	}
-	.hover-lift:hover {
-		box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
-	}
-
-	/* Professional Focus States */
-	input:focus,
-	select:focus,
-	button:focus {
-		outline: none;
-		box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-	}
-
-	/* Enhanced Card Animations */
-	.product-card {
-		transition: box-shadow 0.2s ease;
-	}
-	.product-card:hover {
-		box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-	}
+.home-page { overflow: hidden; background: #fcfaf7; color: #27231f; }
+.page-width { width: min(100% - 2rem, 1180px); margin-inline: auto; }
+.hero { padding: clamp(3.5rem, 8vw, 7rem) 0 4.5rem; background: linear-gradient(120deg, #e9dfd0, #f8f5ef 53%, #ded1c0); }
+.hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; align-items: center; gap: clamp(2rem, 6vw, 5.5rem); }.hero-copy { min-width: 0; }
+.eyebrow { margin: 0 0 .65rem; color: #84664b; font-size: .73rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+h1, h2, h3, p { margin-top: 0; }
+h1 { max-width: 11ch; margin-bottom: 1.25rem; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(2.6rem, 5.6vw, 5rem); font-weight: 600; letter-spacing: -.055em; line-height: .98; }
+h2 { margin-bottom: .25rem; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(2rem, 3.8vw, 3rem); font-weight: 600; letter-spacing: -.045em; line-height: 1.05; }
+.hero-description { max-width: 34rem; overflow-wrap: anywhere; color: #5f574e; font-size: 1.05rem; line-height: 1.65; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 1.8rem; }
+.button { display: inline-flex; min-height: 2.9rem; align-items: center; justify-content: center; border: 1px solid transparent; border-radius: 999px; padding: .7rem 1.2rem; font: inherit; font-size: .9rem; font-weight: 700; cursor: pointer; transition: transform .2s ease, background-color .2s ease, border-color .2s ease; }
+.button:hover { transform: translateY(-2px); }.button:focus-visible, .text-button:focus-visible, .category-card:focus-visible, .icon-button:focus-visible { outline: 3px solid #b8885b; outline-offset: 3px; }
+.button--primary { background: #2c4b44; color: #fff; }.button--primary:hover { background: #223c36; }.button--secondary { border-color: #8b7968; background: rgba(255,255,255,.35); color: #302a24; }.button--secondary:hover { background: #fff; }.button--compact { min-height: 2.4rem; padding: .5rem .85rem; background: #2c4b44; color: #fff; }.button--compact:disabled { cursor: not-allowed; opacity: .45; transform: none; }.button--light { background: #f7f1e8; color: #2c4b44; }
+.hero-showcase { position: relative; min-height: 385px; overflow: hidden; border: 1px solid rgba(83,66,47,.13); border-radius: 2rem; background: #cbbba6; box-shadow: 0 24px 50px rgba(63,48,33,.18); }.hero-image { width: 100%; height: 100%; min-height: 385px; object-fit: cover; }.hero-art { position: absolute; inset: 0; overflow: hidden; background: linear-gradient(145deg, #b6a287, #d9cbb9); }.hero-art__sun { position: absolute; top: 12%; right: 15%; width: 8rem; aspect-ratio: 1; border-radius: 50%; background: #e7d9bd; }.hero-art__arch { position: absolute; right: 18%; bottom: 16%; width: 42%; height: 55%; border-radius: 999px 999px 0 0; background: #725e4b; }.hero-art__base { position: absolute; right: 8%; bottom: 0; width: 69%; height: 25%; border-radius: 5rem 0 0; background: #3e514b; }.hero-product { position: absolute; right: 1.1rem; bottom: 1.1rem; left: 1.1rem; display: grid; gap: .15rem; border: 1px solid rgba(255,255,255,.4); border-radius: 1rem; padding: .9rem 1rem; background: rgba(34,31,27,.77); color: #fff; backdrop-filter: blur(8px); }.hero-product__label { color: #e4ceb2; font-size: .7rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }.hero-product--loading { display: block; }
+.section { padding-top: clamp(3.8rem, 7vw, 6rem); padding-bottom: 1rem; }.section--products { padding-bottom: clamp(4.5rem, 8vw, 7rem); }.section-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }.section-heading--products { align-items: center; }.text-button { border: 0; padding: .35rem 0; background: transparent; color: #345a50; font: inherit; font-size: .9rem; font-weight: 800; cursor: pointer; text-decoration: underline; text-underline-offset: .25rem; }.result-count { margin: 0; color: #776c61; font-size: .9rem; }
+.category-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }.category-card { position: relative; min-height: 162px; border: 1px solid #ded6cc; border-radius: 1rem; padding: 1.2rem; overflow: hidden; background: #fffdf9; color: #2d2925; text-align: left; cursor: pointer; transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }.category-card:hover, .category-card--active { border-color: #9a7c5d; box-shadow: 0 12px 22px rgba(67,49,31,.1); transform: translateY(-3px); }.category-card::after { position: absolute; right: -1rem; bottom: -2.8rem; width: 7rem; height: 7rem; border-radius: 50%; background: #e9dfd1; content: ''; }.category-card__index, .category-card__count { display: block; position: relative; z-index: 1; }.category-card__index { color: #947457; font-size: .72rem; font-weight: 800; letter-spacing: .1em; }.category-card__name { position: relative; z-index: 1; display: block; max-width: 11ch; margin-top: 2.25rem; font-family: Georgia, 'Times New Roman', serif; font-size: 1.35rem; font-weight: 600; line-height: 1.08; }.category-card__count { margin-top: .35rem; color: #746b62; font-size: .8rem; }.category-card__arrow { position: absolute; right: 1rem; bottom: .85rem; z-index: 1; color: #2c4b44; font-size: 1.3rem; }.category-card--skeleton, .product-card--skeleton { min-height: 160px; border: 0; background: linear-gradient(110deg, #eee8df 8%, #f8f5ef 18%, #eee8df 33%); background-size: 200% 100%; animation: shimmer 1.35s linear infinite; }.state-card { border: 1px dashed #cbbdaa; border-radius: 1rem; padding: 1.25rem; background: #fffdf9; color: #62584e; }.state-card--error { border-color: #dbb7ac; color: #963f30; }
+.section--products { background: #f4f0e9; }.product-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2rem; }.product-card { display: flex; min-width: 0; flex-direction: column; overflow: hidden; border: 1px solid #dfd8cf; border-radius: 1.1rem; background: #fffdfb; transition: transform .2s ease, box-shadow .2s ease; }.product-card:hover { box-shadow: 0 15px 30px rgba(55,43,30,.12); transform: translateY(-4px); }.product-card__media { position: relative; height: 205px; overflow: hidden; background: #e2d6c8; }.product-card__media img { width: 100%; height: 100%; object-fit: cover; }.product-card__fallback { display: grid; width: 100%; height: 100%; place-items: center; background: linear-gradient(145deg, #d5c2ac, #a18c76); color: #fff8ed; font-family: Georgia, serif; font-size: 4rem; }.stock-pill { position: absolute; top: .75rem; left: .75rem; border-radius: 999px; padding: .35rem .6rem; font-size: .69rem; font-weight: 800; }.stock-pill--in { background: #e2efe9; color: #285a47; }.stock-pill--out { background: #f5e3df; color: #9b4035; }.product-card__body { display: flex; flex: 1; min-width: 0; flex-direction: column; padding: 1rem; }.product-card__category { margin-bottom: .35rem; color: #876a50; font-size: .72rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }.product-card h3 { margin-bottom: .45rem; font-family: Georgia, serif; font-size: 1.25rem; font-weight: 600; line-height: 1.15; }.product-card__description { display: -webkit-box; overflow: hidden; margin-bottom: 1rem; color: #6a625a; font-size: .86rem; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }.product-card__footer { display: flex; align-items: end; justify-content: space-between; gap: .6rem; margin-top: auto; }.product-card__footer strong { display: block; color: #2c4b44; font-size: 1rem; }.product-card__was { display: block; color: #8d8379; font-size: .76rem; text-decoration: line-through; }.product-card__actions { display: flex; align-items: center; gap: .4rem; }.icon-button { width: 2.4rem; height: 2.4rem; border: 1px solid #d8cfc4; border-radius: 50%; background: #fff; color: #6c5140; font-size: 1.25rem; cursor: pointer; }
+.value-section { padding: clamp(3rem, 7vw, 5.5rem) 0; background: #2c4b44; color: #fbf7f0; }.value-grid { display: flex; align-items: center; justify-content: space-between; gap: 2rem; }.value-grid h2 { max-width: 15ch; }.value-grid p:not(.eyebrow) { max-width: 37rem; margin-bottom: 0; color: #d7e1d9; line-height: 1.6; }.value-section .eyebrow { color: #e4c4a4; }
+.product-view { padding-inline: .25rem; text-decoration: none; }.product-dialog { position: relative; display: grid; width: min(92vw, 760px); max-height: 88vh; grid-template-columns: .9fr 1.1fr; overflow: auto; border-radius: 1.25rem; background: #fffdf9; color: #27231f; }.product-dialog__media { min-height: 360px; background: #d5c2ac; }.product-dialog__media img { width: 100%; height: 100%; object-fit: cover; }.product-dialog__content { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; justify-content: center; padding: 2rem; }.product-dialog__content h2 { overflow-wrap: anywhere; }.product-dialog__content > p:not(.eyebrow) { color: #6a625a; line-height: 1.6; }.product-dialog__price { margin-top: .5rem; color: #2c4b44; font-size: 1.35rem; }.product-dialog__stock { margin: .25rem 0 1.25rem; font-size: .85rem; }.product-dialog__close { position: absolute; top: .75rem; right: .75rem; z-index: 2; display: grid; width: 2.5rem; height: 2.5rem; place-items: center; border: 1px solid #d8cfc4; border-radius: 50%; background: rgba(255,253,249,.92); color: #2d2925; font-size: 1.4rem; cursor: pointer; }.product-dialog__buy { display: flex; width: 100%; align-items: center; gap: .75rem; }.quantity-control { display: grid; grid-template-columns: 2.45rem 2.25rem 2.45rem; overflow: hidden; border: 1px solid #d8cfc4; border-radius: .7rem; background: #fff; }.quantity-control button { display: grid; min-height: 2.75rem; place-items: center; border: 0; background: transparent; color: #315f55; font-size: 1.15rem; cursor: pointer; }.quantity-control button:hover:not(:disabled) { background: #edf2ef; }.quantity-control button:disabled { cursor: not-allowed; opacity: .35; }.quantity-control output { display: grid; place-items: center; border-right: 1px solid #e5dfd6; border-left: 1px solid #e5dfd6; font-size: .9rem; font-weight: 750; }
+@keyframes shimmer { to { background-position-x: -200%; } }
+@media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; }.hero-showcase { min-height: 300px; }.hero-image { min-height: 300px; }.category-grid, .product-grid { grid-template-columns: repeat(2, 1fr); }.product-card__media { height: 230px; } }
+@media (max-width: 560px) { .page-width { width: min(100% - 1.25rem, 1180px); }.hero { padding-top: 3.25rem; }.hero-showcase { min-height: 255px; border-radius: 1.25rem; }.hero-image { min-height: 255px; }.section-heading, .value-grid { align-items: flex-start; flex-direction: column; }.category-grid, .product-grid { grid-template-columns: 1fr; }.category-card { min-height: 138px; }.category-card__name { margin-top: 1.5rem; }.product-card__media { height: 245px; }.value-grid { gap: 1.25rem; }.product-dialog { grid-template-columns: 1fr; }.product-dialog__media { min-height: 190px; max-height: 220px; }.product-dialog__content { padding: 1.25rem; }.product-dialog__buy { align-items: stretch; flex-direction: column; }.product-dialog__buy .button { width: 100%; }.quantity-control { width: 100%; grid-template-columns: 1fr 1fr 1fr; } }
 </style>

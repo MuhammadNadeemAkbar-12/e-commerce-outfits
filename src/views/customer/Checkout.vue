@@ -137,7 +137,6 @@
 				type: "negative",
 				message: "Please enter a shipping address before placing the order.",
 			});
-			console.warn("Checkout aborted: missing address");
 			return;
 		}
 
@@ -150,10 +149,6 @@
 		if (form.value.phone) addrParts.push(`Phone: ${form.value.phone}`);
 
 		form.value.shipping_address = addrParts.join(", ");
-		console.info("Placing order with payload:", {
-			shipping_address: addrParts,
-			payment_method: form.value.payment_method,
-		});
 		loading.value = true;
 		try {
 			// API expects shipping_address as an array (validation returns 422 if not)

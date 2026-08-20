@@ -2,7 +2,7 @@
   <div class="p-6 max-w-4xl mx-auto">
     <!-- Header -->
     <div class="flex items-center gap-3 mb-6">
-      <router-link to="/seller/invoices">
+      <router-link :to="`${panelBase}/invoices`">
         <q-btn flat round icon="arrow_back" dense />
       </router-link>
       <div>
@@ -15,13 +15,11 @@
       <!-- Customer + Date Row -->
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-1">Customer Name</label>
-          <input
-            v-model="form.customer_name"
-            type="text"
-            placeholder="Customer name or leave blank for walk-in"
-            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+          <label class="block text-sm font-semibold text-slate-700 mb-1">Customer</label>
+          <select v-model="form.biz_customer_id" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">Walk-in customer</option>
+            <option v-for="customer in customers" :key="customer.id" :value="customer.id">{{ customer.name }}{{ customer.phone ? ` — ${customer.phone}` : '' }}</option>
+          </select>
         </div>
         <div>
           <label class="block text-sm font-semibold text-slate-700 mb-1">Invoice Date</label>
@@ -198,7 +196,7 @@
 
       <!-- Submit -->
       <div class="flex items-center justify-end gap-3">
-        <router-link to="/seller/invoices">
+        <router-link :to="`${panelBase}/invoices`">
           <q-btn flat label="Cancel" color="grey-7" />
         </router-link>
         <q-btn
@@ -222,15 +220,17 @@ import invoiceApi from '@/services/invoiceApi'
 import axios from '@/api/axios'
 
 const router = useRouter()
+const panelBase = router.currentRoute.value.path.startsWith('/sales') ? '/sales' : '/seller'
 
 const products = ref([])
+const customers = ref([])
 const submitting = ref(false)
 const submitError = ref(null)
 
 const today = new Date().toISOString().split('T')[0]
 
 const form = reactive({
-  customer_name: '',
+  biz_customer_id: '',
   invoice_date: today,
   payment_status: 'pending',
   status: 'finalized',
@@ -250,12 +250,20 @@ const grandTotal = computed(() =>
 
 const fetchProducts = async () => {
   try {
-    const res = await axios.get('/seller/products')
+    const res = await axios.get('/products', { params: { per_page: 100 } })
     const d = res.data?.data ?? res.data
     products.value = Array.isArray(d) ? d : (d?.data ?? [])
   } catch (e) {
     // products list optional
   }
+}
+
+const fetchCustomers = async () => {
+  try {
+    const res = await axios.get('/biz-customers', { params: { active_only: true, per_page: 100 } })
+    const d = res.data?.data ?? res.data
+    customers.value = d?.data ?? d ?? []
+  } catch (e) { customers.value = [] }
 }
 
 const addItem = () => {
@@ -292,6 +300,7 @@ const submitInvoice = async () => {
   submitting.value = true
   try {
     const payload = {
+      biz_customer_id: form.biz_customer_id || null,
       invoice_date: form.invoice_date,
       payment_status: form.payment_status,
       status: form.status,
@@ -306,7 +315,7 @@ const submitInvoice = async () => {
     }
 
     await invoiceApi.createInvoice(payload)
-    router.push('/seller/invoices')
+    router.push(`${panelBase}/invoices`)
   } catch (e) {
     const err = e?.response?.data
     if (err?.errors) {
@@ -319,5 +328,5 @@ const submitInvoice = async () => {
   }
 }
 
-onMounted(fetchProducts)
+onMounted(() => { fetchProducts(); fetchCustomers() })
 </script>

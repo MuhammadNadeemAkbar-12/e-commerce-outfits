@@ -1,261 +1,71 @@
 <template>
-  <div :class="{ 'dark': $q.dark.isActive }" class="transition-colors duration-300">
-    <q-layout view="lHh Lpr lff" class="admin-layout shadow-2 rounded-borders">
-      <q-header elevated class="bg-gradient-to-r from-blue-600 to-cyan-600 shadow-lg">
-        <q-toolbar>
-          <!-- Back button for mobile view -->
-          <q-btn 
-            v-if="isMobile" 
-            flat 
-            @click="handleBack" 
-            round 
-            dense 
-            icon="arrow_back" 
-            class="text-white hover:bg-blue-700 transition-colors duration-200" 
-          />
-          <q-toolbar-title class="text-white text-xl font-bold tracking-wide">Stock, Inventory &amp; Sales Management</q-toolbar-title>
-          <q-btn flat @click="drawer = !drawer" round dense icon="menu" class="text-white hover:bg-blue-700 transition-colors duration-200 md:hidden" />
-          <q-btn flat @click="toggleTheme" round dense icon="brightness_6" class="text-white hover:bg-blue-700 transition-colors duration-200" />
-          <q-btn flat @click="handleLogout" round dense icon="logout" class="text-white hover:bg-blue-700 transition-colors duration-200" />
+  <div :class="{ dark: $q.dark.isActive }" class="admin-shell">
+    <q-layout view="lHh Lpr lff" class="admin-layout">
+      <q-header class="admin-header">
+        <q-toolbar class="admin-toolbar">
+          <q-btn
+            flat round dense icon="menu"
+            class="admin-header-btn lt-md"
+            aria-label="Toggle navigation"
+            @click="drawer = !drawer" />
+
+          <q-toolbar-title class="admin-title">
+            <span class="admin-title-mark">S</span>
+            <span class="admin-title-copy">
+              <strong>StyleHub</strong>
+              <small>Operations</small>
+            </span>
+          </q-toolbar-title>
+
+          <LowStockAlertsMenu class="admin-header-btn" role="admin" />
+          <q-btn flat round dense icon="brightness_6" class="admin-header-btn" aria-label="Toggle color theme" @click="toggleTheme">
+            <q-tooltip>Toggle theme</q-tooltip>
+          </q-btn>
+          <q-btn flat round dense icon="logout" class="admin-header-btn" aria-label="Log out" @click="handleLogout">
+            <q-tooltip>Log out</q-tooltip>
+          </q-btn>
         </q-toolbar>
       </q-header>
-
-      <!-- Mobile Overlay and Back Button -->
-      <div 
-        v-if="drawer && isMobile" 
-        class="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
-        @click="drawer = false"
-      >
-        <q-btn 
-          @click="handleBack" 
-          class="absolute top-4 left-4 bg-white text-black"
-          label="Back"
-        />
-      </div>
 
       <q-drawer
         v-model="drawer"
         show-if-above
-        :width="250"
-        :breakpoint="768"
+        :width="260"
+        :breakpoint="900"
         bordered
-        :class="[
-          'bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900',
-          'shadow-xl transition-all duration-300 ease-in-out'
-        ]"
-      >
+        class="admin-drawer">
         <q-scroll-area class="fit">
-          <q-list padding>
-            <!-- Analytics Section (Moved to top) -->
-            <q-item-label header class="text-weight-bold text-info">Analytics &amp; Reports</q-item-label>
-            
-            <q-item clickable v-ripple to="/admin/dashboard" class="hover:bg-cyan-100 dark:hover:bg-cyan-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
-              <q-item-section avatar>
-                <q-icon name="dashboard" color="info" class="text-cyan-600 dark:text-cyan-400" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Dashboard</q-item-label>
-                <q-item-label caption class="text-gray-600 dark:text-gray-400">Platform overview</q-item-label>
-              </q-item-section>
-            </q-item>
+          <div class="admin-drawer-intro">
+            <span>Workspace</span>
+            <strong>Administration</strong>
+            <small>Business control centre</small>
+          </div>
 
-            <q-item clickable v-ripple to="/admin/reports" class="hover:bg-cyan-100 dark:hover:bg-cyan-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
-              <q-item-section avatar>
-                <q-icon name="bar_chart" color="info" class="text-cyan-600 dark:text-cyan-400" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Reports</q-item-label>
-                <q-item-label caption class="text-gray-600 dark:text-gray-400">Sales &amp; inventory reports</q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <q-item clickable v-ripple to="/admin/platform-stats" class="hover:bg-cyan-100 dark:hover:bg-cyan-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
-              <q-item-section avatar>
-                <q-icon name="analytics" color="info" class="text-cyan-600 dark:text-cyan-400" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Platform Stats</q-item-label>
-                <q-item-label caption class="text-gray-600 dark:text-gray-400">Advanced analytics</q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <q-separator spaced />
-
-            <!-- Buyers Section -->
-            <q-item-label header class="text-weight-bold text-primary dark:text-blue-300">Buyers</q-item-label>
-            
-            <q-item clickable v-ripple to="/admin/users" class="hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
-              <q-item-section avatar>
-                <q-icon name="people" color="primary" class="text-blue-600 dark:text-blue-400" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Manage Users</q-item-label>
-                <q-item-label caption class="text-gray-600 dark:text-gray-400">Customer accounts</q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <q-item clickable v-ripple to="/admin/customer-orders" class="hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
-              <q-item-section avatar>
-                <q-icon name="shopping_cart" color="primary" class="text-blue-600 dark:text-blue-400" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Customer Orders</q-item-label>
-                <q-item-label caption class="text-gray-600 dark:text-gray-400">All buyer orders</q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <q-separator spaced />
-
-            <!-- Sellers Section -->
-            <q-item-label header class="text-weight-bold text-secondary dark:text-green-300">Sellers</q-item-label>
-            
-            <q-item clickable v-ripple to="/admin/sellers" class="hover:bg-green-100 dark:hover:bg-green-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
-              <q-item-section avatar>
-                <q-icon name="store" color="secondary" class="text-green-600 dark:text-green-400" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Manage Sellers</q-item-label>
-                <q-item-label caption class="text-gray-600 dark:text-gray-400">Seller accounts</q-item-label>
-              </q-item-section>
-            </q-item>
-            <q-item clickable v-ripple to="/admin/seller-products" class="hover:bg-green-100 dark:hover:bg-green-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
-              <q-item-section avatar>
-              <q-icon name="inventory_2" color="secondary" class="text-green-600 dark:text-green-400" />
-              </q-item-section>
-              <q-item-section>
-              <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Seller Products</q-item-label>
-              <q-item-label caption class="text-gray-600 dark:text-gray-400">Product listings</q-item-label>
-              </q-item-section>
-            </q-item>
-
-
-            <q-separator spaced />
-
-            <!-- Products Section -->
-            <q-item-label header class="text-weight-bold text-accent">Products</q-item-label>
-            
-            <q-item clickable v-ripple to="/admin/products" class="hover:bg-purple-100 dark:hover:bg-purple-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
-              <q-item-section avatar>
-                <q-icon name="inventory" color="accent" class="text-purple-600 dark:text-purple-400" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">All Products</q-item-label>
-                <q-item-label caption class="text-gray-600 dark:text-gray-400">Product catalog</q-item-label>
-              </q-item-section>
-            </q-item>
-
-
-            <q-item clickable v-ripple to="/admin/categories" class="hover:bg-purple-100 dark:hover:bg-purple-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
-              <q-item-section avatar>
-                <q-icon name="category" color="accent" class="text-purple-600 dark:text-purple-400" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Categories</q-item-label>
-                <q-item-label caption class="text-gray-600 dark:text-gray-400">Product categories</q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <q-separator spaced />
-
-            <!-- Orders Section -->
-            <q-item-label header class="text-weight-bold text-positive">Orders</q-item-label>
-            
-            <q-item clickable v-ripple to="/admin/orders" class="hover:bg-orange-100 dark:hover:bg-orange-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
-              <q-item-section avatar>
-                <q-icon name="list_alt" color="positive" class="text-orange-600 dark:text-orange-400" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">All Orders</q-item-label>
-                <q-item-label caption class="text-gray-600 dark:text-gray-400">Order management</q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <q-item clickable v-ripple to="/admin/returns-refunds" class="hover:bg-orange-100 dark:hover:bg-orange-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
-              <q-item-section avatar>
-                <q-icon name="assignment_return" color="positive" class="text-orange-600 dark:text-orange-400" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Returns & Refunds</q-item-label>
-                <q-item-label caption class="text-gray-600 dark:text-gray-400">Return requests</q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <!-- Settings & System -->
-            <q-separator spaced />
-            <q-item-label header class="text-weight-bold">Business Operations</q-item-label>
-
-            <q-item clickable v-ripple to="/admin/invoices" class="hover:bg-teal-100 dark:hover:bg-teal-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
-              <q-item-section avatar>
-                <q-icon name="receipt_long" color="teal" class="text-teal-600 dark:text-teal-400" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Sales Invoices</q-item-label>
-                <q-item-label caption class="text-gray-600 dark:text-gray-400">All invoice records</q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <q-item clickable v-ripple to="/admin/stock-movements" class="hover:bg-teal-100 dark:hover:bg-teal-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
-              <q-item-section avatar>
-                <q-icon name="swap_vert" color="teal" class="text-teal-600 dark:text-teal-400" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Stock Movements</q-item-label>
-                <q-item-label caption class="text-gray-600 dark:text-gray-400">Stock in/out log</q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <q-item clickable v-ripple to="/admin/biz-customers" class="hover:bg-teal-100 dark:hover:bg-teal-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
-              <q-item-section avatar>
-                <q-icon name="business" color="teal" class="text-teal-600 dark:text-teal-400" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Biz Customers</q-item-label>
-                <q-item-label caption class="text-gray-600 dark:text-gray-400">B2B customer accounts</q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <q-item clickable v-ripple to="/admin/suppliers" class="hover:bg-teal-100 dark:hover:bg-teal-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
-              <q-item-section avatar>
-                <q-icon name="local_shipping" color="teal" class="text-teal-600 dark:text-teal-400" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Suppliers</q-item-label>
-                <q-item-label caption class="text-gray-600 dark:text-gray-400">Supplier master data</q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <q-item clickable v-ripple to="/admin/audit-logs" class="hover:bg-teal-100 dark:hover:bg-teal-900/30 hover:shadow-md transition-all duration-200 rounded-lg">
-              <q-item-section avatar>
-                <q-icon name="manage_history" color="teal" class="text-teal-600 dark:text-teal-400" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Audit Logs</q-item-label>
-                <q-item-label caption class="text-gray-600 dark:text-gray-400">Activity trail</q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <!-- Settings & System -->
-            <q-separator spaced />
-            <q-item-label header class="text-weight-bold">System</q-item-label>
-
-            <q-item clickable v-ripple to="/admin/settings" class="hover:bg-gray-100 dark:hover:bg-gray-800/30 hover:shadow-md transition-all duration-200 rounded-lg">
-              <q-item-section avatar>
-                <q-icon name="settings" class="text-gray-600 dark:text-gray-400" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="font-medium text-gray-800 dark:text-gray-200">Settings</q-item-label>
-                <q-item-label caption class="text-gray-600 dark:text-gray-400">Platform configuration</q-item-label>
-              </q-item-section>
-            </q-item>
+          <q-list padding class="admin-nav">
+            <template v-for="group in navigation" :key="group.label">
+              <q-item-label header>{{ group.label }}</q-item-label>
+              <q-item
+                v-for="item in group.items"
+                :key="item.to"
+                clickable
+                v-ripple
+                :to="item.to"
+                active-class="admin-nav-active">
+                <q-item-section avatar><q-icon :name="item.icon" /></q-item-section>
+                <q-item-section>
+                  <q-item-label>{{ item.label }}</q-item-label>
+                  <q-item-label caption>{{ item.caption }}</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-separator spaced />
+            </template>
           </q-list>
         </q-scroll-area>
       </q-drawer>
 
       <q-page-container>
-        <q-page :class="isMobile ? 'pt-16' : 'pt-20'" padding>
-          <transition name="fade">
-            <router-view />
-          </transition>
+        <q-page class="admin-page">
+          <router-view />
         </q-page>
       </q-page-container>
     </q-layout>
@@ -263,79 +73,130 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import { useRouter } from 'vue-router'
+import { onMounted, ref } from 'vue'
 import { useQuasar } from 'quasar'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import LowStockAlertsMenu from '@/components/common/LowStockAlertsMenu.vue'
 
-const drawer = ref(false)
-const screenWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1024)
-const authStore = useAuthStore()
-const router = useRouter()
 const $q = useQuasar()
+const router = useRouter()
+const authStore = useAuthStore()
+const drawer = ref(false)
 
-const isMobile = computed(() => {
-  return screenWidth.value < 768
-})
+const navigation = [
+  {
+    label: 'Overview',
+    items: [
+      { label: 'Dashboard', caption: 'Business overview', icon: 'space_dashboard', to: '/admin/dashboard' },
+      { label: 'Reports', caption: 'Sales and inventory', icon: 'query_stats', to: '/admin/reports' },
+      { label: 'Platform Stats', caption: 'Operational metrics', icon: 'insights', to: '/admin/platform-stats' },
+    ],
+  },
+  {
+    label: 'People',
+    items: [
+      { label: 'Users', caption: 'Customer accounts', icon: 'group', to: '/admin/users' },
+      { label: 'Sellers', caption: 'Seller accounts', icon: 'storefront', to: '/admin/sellers' },
+      { label: 'Business Customers', caption: 'B2B accounts', icon: 'apartment', to: '/admin/biz-customers' },
+      { label: 'Suppliers', caption: 'Supplier records', icon: 'local_shipping', to: '/admin/suppliers' },
+    ],
+  },
+  {
+    label: 'Commerce',
+    items: [
+      { label: 'Products', caption: 'Product catalogue', icon: 'inventory_2', to: '/admin/products' },
+      { label: 'Product Approval', caption: 'Review listings', icon: 'fact_check', to: '/admin/product-approval' },
+      { label: 'Categories', caption: 'Catalogue structure', icon: 'category', to: '/admin/categories' },
+      { label: 'Customer Orders', caption: 'Online purchases', icon: 'shopping_bag', to: '/admin/customer-orders' },
+      { label: 'Seller Orders', caption: 'Seller fulfilment', icon: 'receipt_long', to: '/admin/seller-orders' },
+      { label: 'Invoices', caption: 'Sales records', icon: 'request_quote', to: '/admin/invoices' },
+      { label: 'Returns', caption: 'Returns and refunds', icon: 'assignment_return', to: '/admin/sale-returns' },
+    ],
+  },
+  {
+    label: 'Inventory',
+    items: [
+      { label: 'Purchases', caption: 'Purchasing and stock-in', icon: 'shopping_cart_checkout', to: '/admin/purchases' },
+      { label: 'Stock Movements', caption: 'Inventory activity', icon: 'swap_vert', to: '/admin/stock-movements' },
+    ],
+  },
+  {
+    label: 'System',
+    items: [
+      { label: 'Activity Logs', caption: 'Administrative audit trail', icon: 'manage_history', to: '/admin/audit-logs' },
+      { label: 'Backup & Restore', caption: 'Protected archives', icon: 'cloud_sync', to: '/admin/backups' },
+      { label: 'Settings', caption: 'Platform configuration', icon: 'settings', to: '/admin/settings' },
+    ],
+  },
+]
 
-const onResize = () => {
-  screenWidth.value = window.innerWidth
+function toggleTheme() {
+  $q.dark.toggle()
+  localStorage.setItem('theme', $q.dark.isActive ? 'dark' : 'light')
 }
 
-const toggleTheme = () => {
-  $q.dark.toggle();
-  localStorage.setItem('theme', $q.dark.isActive ? 'dark' : 'light'); // Save theme state
-  $q.notify({
-    type: 'info',
-    message: $q.dark.isActive ? 'Dark mode enabled' : 'Light mode enabled',
-    position: 'top-right',
-    timeout: 1000
-  });
-}
-
-// Load theme state from localStorage on mount
-onMounted(() => {
-  window.addEventListener('resize', onResize)
-  const savedTheme = localStorage.getItem('theme');
-  if (savedTheme === 'dark') {
-    $q.dark.set(true);
-  } else {
-    $q.dark.set(false);
-  }
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', onResize)
-})
-const handleBack = () => {
-  router.back(); // Navigate to the previous page
-}
-
-const handleLogout = async () => {
+async function handleLogout() {
   try {
     await authStore.logout()
-    $q.notify({
-      type: 'positive',
-      message: 'Logged out successfully',
-      position: 'top'
-    })
-    router.push('/')
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Error logging out',
-      position: 'top'
-    })
+    $q.notify({ type: 'positive', message: 'Logged out successfully', position: 'top' })
+    await router.push('/')
+  } catch {
+    $q.notify({ type: 'negative', message: 'Unable to log out', position: 'top' })
   }
 }
+
+onMounted(() => {
+  $q.dark.set(localStorage.getItem('theme') === 'dark')
+})
 </script>
 
 <style scoped>
-.admin-layout {
-  min-height: 100vh;
+.admin-shell,
+.admin-layout,
+.admin-layout :deep(.q-page-container),
+.admin-layout :deep(.q-page),
+.admin-layout :deep(.q-toolbar) {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
-.q-item__section--avatar {
-  min-width: 40px;
+.admin-layout { min-height: 100vh; overflow-x: clip; background: var(--sh-canvas); }
+.admin-header { border-bottom: 1px solid var(--sh-border); background: rgba(255,255,255,.94); color: var(--sh-ink); box-shadow: 0 4px 20px rgba(24,33,29,.055); backdrop-filter: blur(14px); }
+.admin-toolbar { min-height: 64px; padding: 0 18px; }
+.admin-title { display: flex; min-width: 0; align-items: center; gap: 11px; color: var(--sh-ink); font-size: 15px; }
+.admin-title-mark { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border-radius: 9px; background: var(--sh-primary); color: #fff; font-family: Georgia, serif; font-size: 18px; font-weight: 700; }
+.admin-title-copy { display: flex; min-width: 0; flex-direction: column; line-height: 1.08; }
+.admin-title-copy strong { letter-spacing: -.01em; }
+.admin-title-copy small { margin-top: 3px; color: var(--sh-muted); font-size: 10px; font-weight: 650; letter-spacing: .12em; text-transform: uppercase; }
+.admin-header-btn { color: #4c5b54; }
+.admin-header-btn:hover { background: #edf2ef; color: var(--sh-primary); }
+
+.admin-drawer { border-right: 0 !important; background: #17241f !important; color: #e9efeb; box-shadow: 8px 0 28px rgba(15,24,20,.12); }
+.admin-drawer-intro { display: flex; flex-direction: column; margin: 18px 14px 8px; border-bottom: 1px solid rgba(255,255,255,.1); padding: 4px 8px 18px; }
+.admin-drawer-intro span { color: #bda991; font-size: 10px; font-weight: 750; letter-spacing: .14em; text-transform: uppercase; }
+.admin-drawer-intro strong { margin-top: 4px; color: #fff; font-size: 17px; letter-spacing: -.015em; }
+.admin-drawer-intro small { margin-top: 3px; color: #95a49c; font-size: 11px; }
+.admin-nav :deep(.q-item__label--header) { padding: 18px 12px 6px; color: #92a199 !important; font-size: 10px; font-weight: 750; letter-spacing: .13em; text-transform: uppercase; }
+.admin-nav :deep(.q-separator) { background: rgba(255,255,255,.08); }
+.admin-nav :deep(.q-item) { min-height: 48px; margin: 3px 6px; border-radius: 9px; color: #d6dfda; }
+.admin-nav :deep(.q-item:hover) { background: rgba(255,255,255,.065) !important; }
+.admin-nav :deep(.admin-nav-active) { background: rgba(178,204,190,.14) !important; color: #fff; }
+.admin-nav :deep(.admin-nav-active)::before { position: absolute; top: 12px; bottom: 12px; left: 0; width: 3px; border-radius: 4px; background: #bda991; content: ''; }
+.admin-nav :deep(.q-item__section--avatar) { min-width: 40px; }
+.admin-nav :deep(.q-item__label) { color: inherit !important; font-size: 13px; font-weight: 620; }
+.admin-nav :deep(.q-item__label--caption) { margin-top: 2px; color: #8fa098 !important; font-size: 10px; font-weight: 450; }
+.admin-nav :deep(.q-icon) { color: #b8c7bf !important; font-size: 20px; }
+.admin-nav :deep(.admin-nav-active .q-icon) { color: #d5bea3 !important; }
+.admin-page { min-height: 100vh; padding: clamp(20px,3vw,34px); background: var(--sh-canvas); }
+
+.dark .admin-header { background: rgba(25,34,30,.95); }
+
+@media (max-width: 899px) {
+  .admin-toolbar { padding-inline: 8px; }
+  .admin-title-copy small { display: none; }
+  .admin-title-mark { width: 31px; height: 31px; }
+  .admin-page { padding: 16px !important; }
 }
 </style>

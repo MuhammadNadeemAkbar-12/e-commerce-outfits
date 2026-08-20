@@ -1,394 +1,42 @@
 <template>
-  <footer class="footer-root">
-    <div class="footer-wrap max-w-7xl mx-auto px-6 py-12">
-      <div class="top-grid">
-        <section>
-          <div class="brand-row">
-            <q-icon name="storefront" class="brand-icon" />
-            <div>
-              <h2 class="brand-title">StyleHub</h2>
-              <p class="brand-sub">Stock, Inventory and Sales Platform</p>
-            </div>
-          </div>
-          <p class="brand-text">
-            Manage products, stock, invoices and reports from one reliable dashboard.
-          </p>
-          <div class="social-row">
-            <a v-for="social in socialMedia" :key="social.platform" class="social-pill" href="#" @click.prevent>
-              <q-icon :name="social.icon" size="16px" />
-              <span>{{ social.platform }}</span>
-            </a>
-          </div>
-        </section>
-
-        <section class="newsletter-card">
-          <h3 class="section-title">Stay Updated</h3>
-          <p class="section-sub">Get release notes and feature updates.</p>
-          <div class="newsletter-row">
-            <q-input
-              v-model="email"
-              type="email"
-              placeholder="Enter your email"
-              outlined
-              dense
-              class="newsletter-input"
-              :error="!!emailError"
-              :error-message="emailError"
-            />
-            <q-btn
-              @click="handleSubscribe"
-              :loading="isSubmitting"
-              :disable="!isValidEmail"
-              icon="send"
-              unelevated
-              class="subscribe-btn"
-            />
-          </div>
-          <p v-if="successMessage" class="success-text">{{ successMessage }}</p>
-        </section>
+  <footer class="site-footer">
+    <div class="footer-wrap">
+      <div class="footer-brand">
+        <router-link to="/" class="brand-link">StyleHub</router-link>
+        <p>Browse the current product collection and manage your purchases in one place.</p>
       </div>
-
-      <div class="links-grid">
-        <div>
-          <h4 class="link-title">Shop</h4>
-          <router-link v-for="item in categories" :key="item.label" :to="item.href" class="footer-link">
-            {{ item.label }}
-          </router-link>
-        </div>
-
-        <div>
-          <h4 class="link-title">Support</h4>
-          <router-link v-for="item in support" :key="item.label" :to="item.href" class="footer-link">
-            {{ item.label }}
-          </router-link>
-        </div>
-
-        <div>
-          <h4 class="link-title">Quick Links</h4>
-          <router-link v-for="item in quickLinks" :key="item.label" :to="item.href" class="footer-link">
-            {{ item.label }}
-          </router-link>
-        </div>
-
-        <div>
-          <h4 class="link-title">Contact</h4>
-          <div class="contact-line"><q-icon name="location_on" size="16px" /> Karachi, Pakistan</div>
-          <div class="contact-line"><q-icon name="phone" size="16px" /> +92 (021) 555-STYLE</div>
-          <div class="contact-line"><q-icon name="mail" size="16px" /> hello@stylehub.com</div>
-        </div>
-      </div>
-
-      <div class="footer-bottom">
-        <p>Copyright {{ currentYear }} StyleHub. All rights reserved.</p>
-        <div class="legal-row">
-          <router-link to="/contact" class="legal-link">Privacy</router-link>
-          <router-link to="/contact" class="legal-link">Terms</router-link>
-          <router-link to="/contact" class="legal-link">Cookies</router-link>
-        </div>
+      <div class="footer-columns">
+        <nav class="footer-links" aria-label="Shop navigation">
+          <span>Explore</span>
+          <router-link to="/">Home</router-link>
+          <a href="#products" @click.prevent="goToProducts">Products</a>
+          <router-link to="/contact">Contact</router-link>
+        </nav>
+        <nav class="footer-links" aria-label="Account navigation">
+          <span>Account</span>
+          <router-link to="/loginuser">Login</router-link>
+          <router-link to="/registeruser">Register</router-link>
+          <router-link to="/customer/orders">Orders</router-link>
+        </nav>
       </div>
     </div>
-
-    <q-btn
-      v-if="showScrollTop"
-      @click="scrollToTop"
-      round
-      icon="keyboard_arrow_up"
-      color="primary"
-      class="scroll-top-btn"
-      size="md"
-    />
+    <div class="footer-bottom">© {{ year }} StyleHub</div>
   </footer>
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
-const email = ref('')
-const isSubmitting = ref(false)
-const emailError = ref('')
-const successMessage = ref('')
-const showScrollTop = ref(false)
-const currentYear = new Date().getFullYear()
+const router = useRouter()
+const year = new Date().getFullYear()
 
-const quickLinks = [
-  { label: 'Home', href: '/' },
-  { label: 'Contact', href: '/contact' },
-  { label: 'Login', href: '/loginuser' },
-  { label: 'Register', href: '/registeruser' },
-]
-
-const categories = [
-  { label: "Men's Fashion", href: '/' },
-  { label: "Women's Collection", href: '/' },
-  { label: 'Kids and Teens', href: '/' },
-  { label: 'Sale Items', href: '/' },
-]
-
-const support = [
-  { label: 'Help Center', href: '/contact' },
-  { label: 'Shipping Info', href: '/contact' },
-  { label: 'Returns', href: '/contact' },
-  { label: 'Size Guide', href: '/contact' },
-]
-
-const socialMedia = [
-  { platform: 'Instagram', icon: 'photo_camera' },
-  { platform: 'Twitter', icon: 'alternate_email' },
-  { platform: 'Facebook', icon: 'facebook' },
-]
-
-const isValidEmail = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value))
-
-const handleSubscribe = async () => {
-  emailError.value = ''
-  successMessage.value = ''
-
-  if (!isValidEmail.value) {
-    emailError.value = 'Please enter a valid email address'
-    return
-  }
-
-  isSubmitting.value = true
-  setTimeout(() => {
-    isSubmitting.value = false
-    successMessage.value = 'Subscribed successfully.'
-    email.value = ''
-    setTimeout(() => {
-      successMessage.value = ''
-    }, 2500)
-  }, 700)
+async function goToProducts() {
+  if (router.currentRoute.value.path !== '/') await router.push('/')
+  requestAnimationFrame(() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' }))
 }
-
-const handleScroll = () => {
-  showScrollTop.value = window.scrollY > 240
-}
-
-const scrollToTop = () => {
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-onMounted(() => {
-  window.addEventListener('scroll', handleScroll)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('scroll', handleScroll)
-})
 </script>
 
 <style scoped>
-.footer-root {
-  background: linear-gradient(180deg, #0b1324 0%, #111b31 100%);
-  color: #dbe4f1;
-  position: relative;
-}
-
-.footer-wrap {
-  border-top: 1px solid rgba(148, 163, 184, 0.2);
-}
-
-.top-grid {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 1.25rem;
-  padding-bottom: 1.25rem;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
-}
-
-.brand-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.brand-icon {
-  color: #60a5fa;
-  font-size: 28px;
-}
-
-.brand-title {
-  font-size: 1.45rem;
-  font-weight: 800;
-  color: #f8fafc;
-}
-
-.brand-sub {
-  color: #9fb0c9;
-  font-size: 0.82rem;
-}
-
-.brand-text {
-  margin-top: 0.75rem;
-  max-width: 32rem;
-  color: #b7c5da;
-  line-height: 1.6;
-}
-
-.social-row {
-  margin-top: 1rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-}
-
-.social-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  border-radius: 9999px;
-  padding: 0.3rem 0.65rem;
-  color: #dbe4f1;
-  text-decoration: none;
-}
-
-.newsletter-card {
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  border-radius: 14px;
-  background: rgba(15, 23, 42, 0.45);
-  padding: 0.95rem;
-}
-
-.section-title {
-  color: #f8fafc;
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-
-.section-sub {
-  margin-top: 0.2rem;
-  color: #b7c5da;
-  font-size: 0.85rem;
-}
-
-.newsletter-row {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.8rem;
-}
-
-.newsletter-input {
-  flex: 1;
-}
-
-.newsletter-input :deep(.q-field__control) {
-  background: rgba(15, 23, 42, 0.9);
-  border-color: rgba(148, 163, 184, 0.35) !important;
-  color: #e2e8f0;
-}
-
-.newsletter-input :deep(.q-field__native),
-.newsletter-input :deep(input) {
-  color: #e2e8f0 !important;
-}
-
-.newsletter-input :deep(.q-field__native::placeholder),
-.newsletter-input :deep(input::placeholder) {
-  color: #94a3b8 !important;
-  opacity: 1;
-}
-
-.subscribe-btn {
-  min-width: 44px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  color: #fff;
-}
-
-.success-text {
-  margin-top: 0.45rem;
-  color: #6ee7b7;
-  font-size: 0.82rem;
-}
-
-.links-grid {
-  margin-top: 1.2rem;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.link-title {
-  color: #f8fafc;
-  font-size: 0.92rem;
-  font-weight: 700;
-  margin-bottom: 0.55rem;
-}
-
-.footer-link {
-  display: block;
-  color: #bfd0e8;
-  text-decoration: none;
-  padding: 0.22rem 0;
-}
-
-.footer-link:hover {
-  color: #fff;
-}
-
-.contact-line {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  color: #bfd0e8;
-  padding: 0.22rem 0;
-}
-
-.footer-bottom {
-  margin-top: 1.2rem;
-  border-top: 1px solid rgba(148, 163, 184, 0.18);
-  padding-top: 0.8rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.8rem;
-  color: #94a3b8;
-  font-size: 0.82rem;
-}
-
-.legal-row {
-  display: flex;
-  gap: 0.8rem;
-}
-
-.legal-link {
-  color: #bfd0e8;
-  text-decoration: none;
-}
-
-.legal-link:hover {
-  color: #fff;
-}
-
-.scroll-top-btn {
-  position: fixed !important;
-  right: 18px !important;
-  bottom: 18px !important;
-  z-index: 2000 !important;
-}
-
-@media (max-width: 980px) {
-  .top-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .links-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 600px) {
-  .links-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .newsletter-row {
-    flex-direction: column;
-  }
-
-  .footer-bottom {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
+.site-footer { background: #18231f; color: #d9e0dc; }.footer-wrap { display: flex; width: min(100% - 2rem, 1180px); align-items: flex-start; justify-content: space-between; gap: 4rem; margin: 0 auto; padding: 3.5rem 0 3rem; }.footer-brand { max-width: 29rem; }.brand-link { color: #fffaf2; font-family: Georgia, serif; font-size: 1.55rem; font-weight: 700; letter-spacing: -.02em; text-decoration: none; }.footer-brand p { margin: .65rem 0 0; color: #9eaaa3; font-size: .9rem; line-height: 1.65; }.footer-columns { display: flex; gap: clamp(2.5rem, 7vw, 5rem); }.footer-links { display: flex; min-width: 6rem; align-items: flex-start; flex-direction: column; gap: .65rem; }.footer-links span { margin-bottom: .25rem; color: #bda991; font-size: .67rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }.footer-links a { color: #d9e0dc; font-size: .86rem; font-weight: 600; text-decoration: none; }.footer-links a:hover, .footer-links a:focus-visible { color: #f0cfaa; }.footer-bottom { width: min(100% - 2rem, 1180px); margin: 0 auto; border-top: 1px solid #334039; padding: 1.05rem 0; color: #849088; font-size: .75rem; }
+@media (max-width: 640px) { .footer-wrap { width: min(100% - 1.25rem, 1180px); align-items: flex-start; flex-direction: column; gap: 2.2rem; padding: 2.6rem 0; }.footer-columns { width: 100%; gap: 2rem; }.footer-links { flex: 1; }.footer-bottom { width: min(100% - 1.25rem, 1180px); } }
 </style>

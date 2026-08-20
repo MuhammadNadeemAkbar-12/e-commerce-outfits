@@ -181,7 +181,7 @@ const txColumns = [
 async function fetchList() {
   loading.value = true
   try {
-    const res = await suppliersApi.getSuppliers({ search: search.value, per_page: 200 })
+    const res = await suppliersApi.getSuppliers({ search: search.value, per_page: 100 })
     const d = res.data?.data ?? res.data
     items.value = Array.isArray(d) ? d : (d?.data ?? [])
   } catch { items.value = [] }

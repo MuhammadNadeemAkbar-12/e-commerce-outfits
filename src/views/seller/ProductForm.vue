@@ -475,7 +475,9 @@
 	import axios from "@/api/axios"; // use shared instance
 
 	/* base url (backend) - used to build image URLs when server returns relative paths */
-	const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://13.60.188.147";
+	const BASE_URL = String(import.meta.env.VITE_API_BASE_URL || "/api")
+		.replace(/\/api\/?$/, "")
+		.replace(/\/$/, "");
 
 	/* core state */
 	const products = ref([]);
@@ -741,6 +743,7 @@
 			const metaTotal =
 				res?.data?.meta?.total ??
 				res?.data?.data?.meta?.total ??
+				res?.data?.data?.total ??
 				res?.data?.total ??
 				res?.data?.count ??
 				null;
@@ -933,18 +936,11 @@
 
 			// ✅ Remove images - id directly send karo
 			const removedItems = existingImages.value.filter((e) => e && e.removed);
-			console.log("Removed items:", removedItems); // debug
 
 			for (const it of removedItems) {
 				if (it.id != null) {
 					formData.append("remove_image_ids[]", String(it.id));
-					console.log("Sending remove_image_ids[]:", it.id); // debug
 				}
-			}
-
-			// Debug: FormData contents dekho
-			for (const [key, val] of formData.entries()) {
-				console.log(key, "→", val);
 			}
 
 			let res;

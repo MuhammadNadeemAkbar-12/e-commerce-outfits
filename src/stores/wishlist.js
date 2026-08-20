@@ -38,7 +38,7 @@ export const useWishlistStore = defineStore('wishlist', () => {
 
     // initialize: prefer server if authenticated, otherwise start empty in-memory
     try {
-        if (auth.checkAuth && auth.checkAuth()) {
+        if (auth.checkAuth && auth.checkAuth() && ['customer', 'buyer'].includes(auth.role)) {
             fetchRemote().catch(() => { items.value = []; isInitialized.value = true })
         } else {
             items.value = []

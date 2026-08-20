@@ -5,7 +5,7 @@
         <h1 class="text-2xl font-bold text-slate-900">Create Sale Return</h1>
         <p class="text-sm text-slate-500 mt-1">Load invoice and select items for return request</p>
       </div>
-      <q-btn flat icon="arrow_back" label="Back" @click="router.push('/seller/returns')" />
+      <q-btn flat icon="arrow_back" label="Back" @click="router.push(`${panelBase}/returns`)" />
     </div>
 
     <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm mb-4">
@@ -100,6 +100,7 @@ import invoiceApi from '@/services/invoiceApi'
 import returnsApi from '@/services/returnsApi'
 
 const router = useRouter()
+const panelBase = router.currentRoute.value.path.startsWith('/sales') ? '/sales' : '/seller'
 
 const invoiceId = ref('')
 const invoice = ref(null)
@@ -158,7 +159,7 @@ const submitReturn = async () => {
       notes: notes.value,
       items: selectedItems.value,
     })
-    router.push('/seller/returns')
+    router.push(`${panelBase}/returns`)
   } catch (e) {
     submitError.value = e?.response?.data?.message || 'Failed to create return'
   } finally {

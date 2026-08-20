@@ -817,7 +817,6 @@ const executeConfirmedAction = async () => {
 const viewSellerProducts = (seller) => {
   // Navigate to seller products view
   if (seller && seller.id) {
-    console.log('Navigating to Seller Products with ID:', seller.id); // Debug log
     router.push({ name: 'SellerProducts', params: { sellerId: seller.id } });
   } else {
     console.error('Seller ID is missing');

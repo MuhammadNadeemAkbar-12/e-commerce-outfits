@@ -11,7 +11,18 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 }
 
-const app = initializeApp(firebaseConfig)
+const isFirebaseConfigured = Boolean(
+  firebaseConfig.apiKey
+  && firebaseConfig.authDomain
+  && firebaseConfig.projectId
+  && firebaseConfig.appId
+)
 
-export const firebaseAuth = getAuth(app)
+// Firebase backs the optional Google sign-in path. Do not let an absent local
+// Firebase configuration prevent normal API-based login and the entire SPA
+// from rendering.
+const app = isFirebaseConfigured ? initializeApp(firebaseConfig) : null
+
+export { isFirebaseConfigured }
+export const firebaseAuth = app ? getAuth(app) : null
 export default app

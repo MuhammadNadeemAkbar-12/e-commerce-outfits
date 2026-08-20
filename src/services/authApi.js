@@ -9,9 +9,6 @@ class AuthService {
         password: credentials.password
       })
 
-      // Debug: log actual response so we can see structure in browser console
-      console.log('[authApi] login raw response:', JSON.stringify(response.data))
-
       // Handle multiple possible response structures from backend
       const data = response.data
       // Support: { data: { user, token, roles } }  OR  { user, token, roles/role }
@@ -26,20 +23,16 @@ class AuthService {
       const token = payload?.token || payload?.access_token || data?.token
 
       if (!token) {
-        console.error('[authApi] No token in response. payload:', payload)
         return { success: false, message: 'No token received from server' }
       }
 
       const role = roles[0] || null
-      console.log('[authApi] Parsed → role:', role, '| token:', token ? 'present' : 'missing')
-
       return {
         success: true,
         user: { ...userData, role },
         token
       }
     } catch (error) {
-      console.error('[authApi] login error:', error.response?.data || error.message)
       return {
         success: false,
         message: error.response?.data?.message || 'Login failed'

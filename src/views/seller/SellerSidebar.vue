@@ -44,7 +44,7 @@
 					<div class="brand row items-center q-px-sm q-py-xs">
 						<div class="brand-left row items-center gap-3">
 							<q-avatar
-								:size="collapsed ? 44 : 48"
+								:size="collapsed ? '44px' : '48px'"
 								class="brand-avatar"
 								:style="avatarStyle">
 								<q-icon name="storefront" />
@@ -57,6 +57,10 @@
 						</div>
 
 						<div class="ml-auto actions">
+							<LowStockAlertsMenu
+								v-if="userRole === 'manager'"
+								:compact="collapsed && !isMobile"
+								role="manager" />
 							<q-btn
 								dense
 								flat
@@ -178,6 +182,7 @@
 	import { useQuasar } from "quasar";
 	import { useUserStore } from "@/stores/user";
 	import { useAuthStore } from "@/stores/auth";
+	import LowStockAlertsMenu from "@/components/common/LowStockAlertsMenu.vue";
 
 	const $q = useQuasar();
 	const router = useRouter();
@@ -242,7 +247,7 @@
 		() => userStore?.name || safeGet("userName", "Seller")
 	);
 	const userRole = computed(
-		() => userStore?.role || safeGet("userRole", "Seller")
+		() => userStore?.role || authStore.role || safeGet("role", safeGet("userRole", "manager"))
 	);
 	const initials = computed(() => {
 		const n = userName.value || "S";
@@ -264,7 +269,7 @@
 	});
 
 	// menu
-	const menu = [
+	const managerMenu = [
 		{ to: "/seller/dashboard", icon: "dashboard", label: "Dashboard" },
 		{ to: "/seller/products", icon: "inventory_2", label: "Products" },
 		{
@@ -280,10 +285,16 @@
 		{ to: "/seller/returns", icon: "keyboard_return", label: "Returns" },
 		{ to: "/seller/customers", icon: "people", label: "Customers" },
 		{ to: "/seller/suppliers", icon: "local_shipping", label: "Suppliers" },
+		{ to: "/seller/purchases", icon: "add_shopping_cart", label: "Purchases" },
 		{ to: "/seller/reports", icon: "bar_chart", label: "Reports" },
-		{ to: "/seller/audit-logs", icon: "history", label: "Audit Logs" },
 		{ to: "/seller/profile", icon: "person", label: "Profile" },
 	];
+	const salesmanMenu = [
+		{ to: "/sales/invoices", icon: "receipt_long", label: "Invoices" },
+		{ to: "/sales/returns", icon: "keyboard_return", label: "Returns" },
+		{ to: "/sales/customers", icon: "people", label: "Customers" },
+	];
+	const menu = computed(() => userRole.value === "salesman" ? salesmanMenu : managerMenu);
 
 	function isActive(item) {
 		if (!item?.to) return false;
@@ -674,7 +685,34 @@
 			color: #1e293b !important;
 		}
 		.seller-drawer.mobile-light .back-btn {
-			background: linear-gradient(90deg, #4f46e5, #7c3aed) !important;
+			background: #315f55 !important;
 		}
 	}
+
+	/* Premium StyleHub palette overrides */
+	.sidebar-bg { background: #edf0eb !important; }
+	.drawer-card { border-radius: 0 !important; background: transparent !important; box-shadow: none !important; }
+	.seller-drawer { border-right-color: rgba(24,33,29,.1) !important; }
+	.seller-drawer--dark { background: #17241f !important; }
+	.seller-drawer--light { background: #fbfcfa !important; border-right-color: #dfe4de !important; box-shadow: 7px 0 28px rgba(24,33,29,.075); }
+	.brand-avatar { background: #315f55 !important; color: #fff !important; box-shadow: none !important; }
+	.brand-title { letter-spacing: -.02em; }
+	.seller-drawer--light .brand-title { color: #18211d; }
+	.seller-drawer--light .brand-sub { color: #6d7871; }
+	.seller-drawer--light .menu-item { color: #435048; }
+	.seller-drawer--light .menu-item:hover,
+	.seller-drawer--light .menu-item:focus-within { background: #edf2ef; color: #244a42; }
+	.seller-drawer--light .menu-item.q-item--active { background: #e3ece7; color: #315f55 !important; }
+	.seller-drawer--light .icon-wrap { background: #f0f2ee; }
+	.seller-drawer--light .menu-item:hover .icon-wrap,
+	.seller-drawer--light .menu-item:focus-within .icon-wrap,
+	.seller-drawer--light .menu-item.q-item--active .icon-wrap { background: #d9e6df; }
+	.seller-drawer--light .menu-icon,
+	.seller-drawer--light .menu-item:hover .menu-icon,
+	.seller-drawer--light .menu-item:focus-within .menu-icon,
+	.seller-drawer--light .menu-item.q-item--active .menu-icon { color: #315f55 !important; }
+	.seller-drawer--light .active-indicator { background: #987454; box-shadow: none; }
+	.back-btn { background: #315f55 !important; box-shadow: none !important; }
+	.back-btn:hover { background: #244a42 !important; box-shadow: none !important; }
+	.mobile-open-btn { background: #315f55 !important; color: #fff !important; box-shadow: 0 8px 22px rgba(36,74,66,.22) !important; }
 </style>

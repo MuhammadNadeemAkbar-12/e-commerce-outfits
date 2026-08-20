@@ -3,7 +3,7 @@
     <!-- Screen toolbar (hidden when printing) -->
     <div class="screen-toolbar no-print">
       <div class="toolbar-inner">
-        <router-link to="/seller/invoices">
+        <router-link :to="`${panelBase}/invoices`">
           <q-btn flat dense icon="arrow_back" label="Back to Invoices" color="primary" />
         </router-link>
         <div class="toolbar-actions">
@@ -51,10 +51,10 @@
       <section class="invoice-meta-grid">
         <div class="meta-group">
           <div class="meta-label">Bill To</div>
-          <div class="meta-value strong">{{ invoice.customer?.name || invoice.customer_name || 'Walk-in Customer' }}</div>
-          <div v-if="invoice.customer?.phone" class="meta-value">{{ invoice.customer.phone }}</div>
-          <div v-if="invoice.customer?.email" class="meta-value">{{ invoice.customer.email }}</div>
-          <div v-if="invoice.customer?.address" class="meta-value">{{ invoice.customer.address }}</div>
+          <div class="meta-value strong">{{ invoice.customer?.name || invoice.biz_customer?.name || 'Walk-in Customer' }}</div>
+          <div v-if="invoice.customer?.phone || invoice.biz_customer?.phone" class="meta-value">{{ invoice.customer?.phone || invoice.biz_customer?.phone }}</div>
+          <div v-if="invoice.customer?.email || invoice.biz_customer?.email" class="meta-value">{{ invoice.customer?.email || invoice.biz_customer?.email }}</div>
+          <div v-if="invoice.customer?.customer_profile?.address || invoice.biz_customer?.address" class="meta-value">{{ invoice.customer?.customer_profile?.address || invoice.biz_customer?.address }}</div>
         </div>
         <div class="meta-group text-right">
           <div class="meta-row">
@@ -150,6 +150,7 @@ import { useRoute } from 'vue-router'
 import invoiceApi from '@/services/invoiceApi'
 
 const route = useRoute()
+const panelBase = route.path.startsWith('/sales') ? '/sales' : '/seller'
 const invoice = ref(null)
 const loading = ref(true)
 const error = ref(null)

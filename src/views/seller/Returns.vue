@@ -5,7 +5,7 @@
         <h1 class="text-2xl font-bold text-slate-900">Sale Returns</h1>
         <p class="text-sm text-slate-500 mt-1">Process and track returned sales with stock adjustments</p>
       </div>
-      <q-btn unelevated color="primary" icon="assignment_return" label="New Return" to="/seller/returns/create" />
+      <q-btn v-if="canCreate" unelevated color="primary" icon="assignment_return" label="New Return" :to="`${panelBase}/returns/create`" />
     </div>
 
     <!-- Filters -->
@@ -37,10 +37,12 @@
             <tr>
               <th class="text-left px-4 py-3 font-semibold text-slate-600">Return #</th>
               <th class="text-left px-4 py-3 font-semibold text-slate-600">Invoice</th>
+              <th class="text-left px-4 py-3 font-semibold text-slate-600">Customer</th>
               <th class="text-left px-4 py-3 font-semibold text-slate-600">Reason</th>
               <th class="text-right px-4 py-3 font-semibold text-slate-600">Refund</th>
               <th class="text-center px-4 py-3 font-semibold text-slate-600">Status</th>
               <th class="text-left px-4 py-3 font-semibold text-slate-600">Date</th>
+              <th class="text-left px-4 py-3 font-semibold text-slate-600">Processed</th>
               <th class="text-center px-4 py-3 font-semibold text-slate-600">Actions</th>
             </tr>
           </thead>
@@ -48,16 +50,18 @@
             <tr v-for="r in returns" :key="r.id" class="hover:bg-slate-50">
               <td class="px-4 py-3 font-mono font-medium text-indigo-700">{{ r.return_number }}</td>
               <td class="px-4 py-3 text-slate-600">{{ r.invoice?.invoice_number || '#' + r.invoice_id }}</td>
+              <td class="px-4 py-3 text-slate-600">{{ r.invoice?.customer?.name || 'Walk-in' }}</td>
               <td class="px-4 py-3 text-slate-500 text-xs">{{ r.reason || '—' }}</td>
               <td class="px-4 py-3 text-right font-semibold text-slate-800">PKR {{ fmt(r.total_refund) }}</td>
               <td class="px-4 py-3 text-center">
                 <span :class="statusBadge(r.status)" class="px-2 py-1 rounded-full text-xs font-medium capitalize">{{ r.status }}</span>
               </td>
               <td class="px-4 py-3 text-xs text-slate-500">{{ fmtDate(r.created_at) }}</td>
+              <td class="px-4 py-3 text-xs text-slate-500">{{ r.approved_at ? `${fmtDate(r.approved_at)}${r.processed_by ? ` · ${r.processed_by.name}` : ''}` : '—' }}</td>
               <td class="px-4 py-3 text-center">
                 <div class="flex gap-2 justify-center">
                   <button @click="viewReturn(r)" class="text-indigo-600 hover:underline text-xs">View</button>
-                  <template v-if="r.status === 'pending'">
+                  <template v-if="canProcess && r.status === 'pending'">
                     <button @click="processReturn(r, 'approved')" class="text-green-600 hover:underline text-xs">Approve</button>
                     <button @click="processReturn(r, 'rejected')" class="text-red-500 hover:underline text-xs">Reject</button>
                   </template>
@@ -152,9 +156,17 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { computed, ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import returnsApi from '@/services/returnsApi'
 import invoiceApi from '@/services/invoiceApi'
+
+const router = useRouter()
+const authStore = useAuthStore()
+const panelBase = router.currentRoute.value.path.startsWith('/admin') ? '/admin' : (router.currentRoute.value.path.startsWith('/sales') ? '/sales' : '/seller')
+const canProcess = computed(() => ['admin', 'manager'].includes(authStore.role))
+const canCreate = computed(() => ['manager', 'salesman'].includes(authStore.role))
 
 const returns = ref([])
 const loading = ref(false)
@@ -193,7 +205,7 @@ const viewReturn = async (r) => {
 const processReturn = async (r, status) => {
   try {
     await returnsApi.updateStatus(r.id, status)
-    r.status = status
+    await fetchReturns()
   } catch (e) {
     alert(e?.response?.data?.message || 'Failed to update return')
   }

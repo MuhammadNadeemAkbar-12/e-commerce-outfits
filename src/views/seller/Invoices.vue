@@ -8,7 +8,7 @@
             <h1 class="hero-title">Sales Invoices</h1>
             <p class="hero-subtitle">Track, filter and close billing records.</p>
           </div>
-          <router-link to="/seller/invoices/create">
+          <router-link :to="`${panelBase}/invoices/create`">
             <q-btn unelevated color="primary" icon="add" label="New Invoice" class="hero-btn" />
           </router-link>
         </div>
@@ -165,6 +165,8 @@
                   >
                     Mark Paid
                   </button>
+                  <button v-if="inv.status === 'draft'" @click="finalizeInvoice(inv)" class="table-action table-action-ok">Finalize</button>
+                  <button v-if="inv.status !== 'cancelled'" @click="cancelInvoice(inv)" class="table-action text-red-600">Cancel</button>
                 </div>
               </td>
             </tr>
@@ -278,6 +280,7 @@ import { useRouter } from 'vue-router'
 import invoiceApi from '@/services/invoiceApi'
 
 const router = useRouter()
+const panelBase = router.currentRoute.value.path.startsWith('/sales') ? '/sales' : '/seller'
 
 const invoices = ref([])
 const loading = ref(false)
@@ -387,22 +390,34 @@ const markPaid = async (inv) => {
   }
 }
 
+const finalizeInvoice = async (inv) => {
+  if (!confirm(`Finalize ${inv.invoice_number}? This will deduct stock.`)) return
+  try { await invoiceApi.finalizeInvoice(inv.id); inv.status = 'finalized' }
+  catch (e) { alert(e?.response?.data?.message || 'Unable to finalize invoice') }
+}
+
+const cancelInvoice = async (inv) => {
+  if (!confirm(`Cancel ${inv.invoice_number}? Finalized invoices will restore stock.`)) return
+  try { await invoiceApi.cancelInvoice(inv.id); inv.status = 'cancelled' }
+  catch (e) { alert(e?.response?.data?.message || 'Unable to cancel invoice') }
+}
+
 const printInvoice = () => {
   if (!selectedInvoice.value) return
   const id = selectedInvoice.value.id
   showDetail.value = false
-  router.push(`/seller/invoices/${id}/print`)
+  router.push(`${panelBase}/invoices/${id}/print`)
 }
 
 const downloadInvoice = () => {
   if (!selectedInvoice.value) return
   const id = selectedInvoice.value.id
   showDetail.value = false
-  router.push(`/seller/invoices/${id}/print`)
+  router.push(`${panelBase}/invoices/${id}/print`)
 }
 
 const openPrint = (inv) => {
-  router.push(`/seller/invoices/${inv.id}/print`)
+  router.push(`${panelBase}/invoices/${inv.id}/print`)
 }
 
 const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'

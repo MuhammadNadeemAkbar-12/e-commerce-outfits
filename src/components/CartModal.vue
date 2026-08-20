@@ -128,20 +128,20 @@
 		if (!s) return "https://cdn.quasar.dev/img/boy-avatar.png";
 		if (/^https?:\/\//i.test(s)) return s;
 
-		// Explicit base URL for images
-		const baseUrl = "http://13.60.188.147/";
+		let apiBase = "/api";
+		try {
+			apiBase = import.meta?.env?.VITE_API_BASE_URL || window.__API_BASE_URL__ || apiBase;
+		} catch (_) {}
+		const baseUrl = String(apiBase).replace(/\/api\/?$/, "").replace(/\/$/, "");
 
-		if (s.startsWith("/")) return `${baseUrl}${s.replace(/^\/+/, "")}`;
+		if (s.startsWith("/")) return `${baseUrl}/${s.replace(/^\/+/, "")}`;
 		if (/^(storage|uploads|public)\//i.test(s) || s.includes("storage/")) {
-			return `${baseUrl}${s.replace(/^\/+/, "")}`;
+			return `${baseUrl}/${s.replace(/^\/+/, "")}`;
 		}
-		return `${baseUrl}storage/${s.replace(/^\/+/, "")}`;
+		return `${baseUrl}/storage/${s.replace(/^\/+/, "")}`;
 	}
 
-	// Debug logging
-	const debugLog = (message, data = null) => {
-		console.log(`[Cart Modal] ${message}`, data || "");
-	};
+	const debugLog = () => {};
 
 	const props = defineProps({
 		modelValue: {

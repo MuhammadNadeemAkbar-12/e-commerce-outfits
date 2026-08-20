@@ -13,6 +13,15 @@ const returnsApi = {
   },
   updateStatus(id, status, notes = null) {
     return axios.patch(`/sale-returns/${id}/status`, { status, notes })
+  },
+  getReturnableInvoices() {
+    return axios.get('/customer/returnable-invoices')
+  },
+  getCustomerReturns(params = {}) {
+    return axios.get('/customer/returns', { params })
+  },
+  createCustomerReturn(data) {
+    return axios.post('/customer/returns', data)
   }
 }
 

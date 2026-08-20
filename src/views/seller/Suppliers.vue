@@ -119,21 +119,23 @@
             <table class="w-full text-sm">
               <thead class="bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <th class="text-left px-3 py-2">Invoice #</th>
+                  <th class="text-left px-3 py-2">Purchase #</th>
                   <th class="text-left px-3 py-2">Date</th>
+                  <th class="text-left px-3 py-2">Products</th>
                   <th class="text-right px-3 py-2">Total</th>
                   <th class="text-center px-3 py-2">Status</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="tx in historyRows" :key="tx.id" class="border-b border-slate-100">
-                  <td class="px-3 py-2">{{ tx.invoice_number || '-' }}</td>
-                  <td class="px-3 py-2">{{ tx.invoice_date || '-' }}</td>
-                  <td class="px-3 py-2 text-right">PKR {{ fmt(tx.total_amount) }}</td>
-                  <td class="px-3 py-2 text-center">{{ tx.payment_status || '-' }}</td>
+                  <td class="px-3 py-2">{{ tx.purchase_number || '-' }}</td>
+                  <td class="px-3 py-2">{{ tx.purchase_date || '-' }}</td>
+                  <td class="px-3 py-2 text-xs">{{ (tx.items || []).map(i => `${i.product_name} × ${i.quantity}`).join(', ') || '-' }}</td>
+                  <td class="px-3 py-2 text-right">PKR {{ fmt(tx.grand_total) }}</td>
+                  <td class="px-3 py-2 text-center">{{ tx.status || '-' }}</td>
                 </tr>
                 <tr v-if="!historyRows.length">
-                  <td colspan="4" class="px-3 py-8 text-center text-slate-400">No transactions found</td>
+                  <td colspan="5" class="px-3 py-8 text-center text-slate-400">No transactions found</td>
                 </tr>
               </tbody>
             </table>
@@ -210,7 +212,7 @@ const openHistory = async (s) => {
   try {
     const res = await suppliersApi.getTransactions(s.id)
     const payload = res.data?.data ?? res.data
-    historyRows.value = payload?.transactions?.data || payload?.transactions || []
+    historyRows.value = payload?.purchases?.data || payload?.purchases || []
   } catch (e) {
     alert(e?.response?.data?.message || 'Failed to load transactions')
   } finally {

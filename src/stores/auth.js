@@ -122,35 +122,32 @@ export const useAuthStore = defineStore('auth', () => {
     if (!token.value) return { success: false, reason: 'no-token' }
     // Skip if already have a user (fresh login)
     if (user.value?.id) return { success: true, cached: true, user: user.value }
-    const endpoints = [
-      '/customer/me',
-      '/customer/profile',
-      '/seller/me',
-      '/seller/profile',
-      '/seller', // some parts of the app use plain /seller endpoint
-      '/admin/me',
-      '/admin/profile'
-    ]
-    for (const ep of endpoints) {
-      try {
-        const res = await axios.get(ep, { skipAuthRedirect: true })
-        const payload = res?.data?.data ?? res?.data
-        if (payload && typeof payload === 'object') {
-          user.value = payload
-          // Optionally persist user if not privacy limited
-          try {
-            if (!persistTokenOnly) {
-              localStorage.setItem('user', JSON.stringify(payload))
-              if (payload.role) localStorage.setItem('role', payload.role)
-            }
-          } catch (e) { /* ignore */ }
-          return { success: true, user: payload, endpoint: ep }
-        }
-      } catch (e) {
-        // Debug each failed endpoint once (can be muted later)
-        console.warn('[hydrateUserProfile] failed', ep, e?.response?.status || e?.message)
-        continue
+    const storedRole = localStorage.getItem('role')
+    const role = user.value?.role || storedRole
+    const endpoint = role === 'customer' ? '/customer/profile' : role === 'manager' ? '/seller/profile' : null
+    if (!endpoint) {
+      if (role) {
+        user.value = { role }
+        return { success: true, cached: true, user: user.value }
       }
+      return { success: false, reason: 'no-profile-endpoint' }
+    }
+
+    try {
+      const res = await axios.get(endpoint, { skipAuthRedirect: true })
+      const payload = res?.data?.data ?? res?.data
+      if (payload && typeof payload === 'object') {
+        user.value = { ...payload, role }
+        try {
+          if (!persistTokenOnly) {
+            localStorage.setItem('user', JSON.stringify(user.value))
+            localStorage.setItem('role', role)
+          }
+        } catch (e) { /* ignore */ }
+        return { success: true, user: user.value, endpoint }
+      }
+    } catch (e) {
+      return { success: false, reason: 'profile-request-failed' }
     }
     return { success: false }
   }
@@ -177,7 +174,7 @@ export const useAuthStore = defineStore('auth', () => {
     const routes = {
       admin: '/admin/dashboard',
       manager: '/seller/dashboard',
-      salesman: '/customer/orders',
+      salesman: '/sales/invoices',
       seller: '/seller/dashboard',
       buyer: '/'
     }

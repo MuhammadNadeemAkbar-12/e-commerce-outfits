@@ -13,10 +13,7 @@ export const useCartStore = defineStore('cart', () => {
   // initialize auth store early so actions can use it
   const authStore = useAuthStore()
 
-  // Debug logging utility
-  const debugLog = (message, data = null) => {
-    console.log(`[Cart Store] ${message}`, data || '')
-  }
+  const debugLog = () => {}
 
 
   // LocalStorage helpers for fallback (guests only)
@@ -50,7 +47,7 @@ export const useCartStore = defineStore('cart', () => {
   try {
     // If authenticated, prefer server canonical cart and fetch it to sync.
     // For guests, load from localStorage.
-    if (authStore.checkAuth && authStore.checkAuth()) {
+    if (authStore.checkAuth && authStore.checkAuth() && ['customer', 'buyer'].includes(authStore.role)) {
       debugLog('User authenticated at init, fetching remote cart to sync')
       fetchRemoteCart().catch(e => debugLog('fetchRemoteCart init failed', e))
     } else {
@@ -392,27 +389,6 @@ export const useCartStore = defineStore('cart', () => {
     return quantity
   }
 
-  // Debug method to check current state
-  const debugCartState = () => {
-    debugLog('=== CART STATE DEBUG ===')
-    debugLog('Items:', items.value)
-    debugLog('Total Items:', totalItems.value)
-    debugLog('Total Price:', totalPrice.value)
-    debugLog('Item Count:', itemCount.value)
-    debugLog('Is Initialized:', isInitialized.value)
-    debugLog('=== END DEBUG ===')
-  }
-
-  // Expose debug helpers to window for easier debugging in the browser console
-  try {
-    if (typeof window !== 'undefined') {
-      window.debugCartState = debugCartState
-      window.getCartRaw = () => ({ items: JSON.parse(JSON.stringify(items.value || [])), totalItems: totalItems.value, totalPrice: totalPrice.value, isInitialized: isInitialized.value })
-    }
-  } catch (e) {
-    // ignore exposure errors
-  }
-
   return {
     // State
     items,
@@ -435,7 +411,6 @@ export const useCartStore = defineStore('cart', () => {
     updateQuantity,
     clearCart,
     getItemQuantity,
-    manualSave,
-    debugCartState
+    manualSave
   }
 })

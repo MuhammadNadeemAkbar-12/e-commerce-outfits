@@ -404,7 +404,7 @@ const scrollToForm = () => {
 const redirectByRole = (role) => {
   if (role === 'admin') router.push('/admin/dashboard');
   else if (role === 'seller' || role === 'manager') router.push('/seller/dashboard');
-  else if (role === 'salesman') router.push('/customer/orders');
+  else if (role === 'salesman') router.push('/sales/invoices');
   else router.push('/');
 };
 

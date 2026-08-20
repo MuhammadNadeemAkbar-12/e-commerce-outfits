@@ -3,9 +3,9 @@
 		<!-- Main Navbar -->
 		<header
 			ref="headerRef"
-			class="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-50"
+			class="site-header bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-50"
 			:class="{ 'shadow-sm': scrolled }">
-			<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+			<div class="nav-shell max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 				<div class="flex items-center justify-between h-16">
 					<!-- Logo -->
 					<div
@@ -15,17 +15,15 @@
 						tabindex="0"
 						role="button"
 						aria-label="Go to Home">
-						<div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-							<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-									d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
-							</svg>
-						</div>
-						<span class="text-lg font-semibold text-gray-900">StyleHub</span>
+						<div class="brand-mark">S</div>
+						<span class="brand-name text-lg font-semibold text-gray-900">StyleHub</span>
 					</div>
 
 					<!-- Desktop Navigation (>= 969px) -->
 					<nav class="show-desktop items-center gap-1">
+						<button @click="goToProducts" class="nav-btn">
+							<span>Shop</span>
+						</button>
 						<button
 							@click="toggleSearch"
 							class="nav-btn">
@@ -37,6 +35,7 @@
 						</button>
 
 						<button
+							v-if="canUseWishlist"
 							@click="toggleWishlist"
 							class="nav-btn relative">
 							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,6 +47,7 @@
 						</button>
 
 						<button
+							v-if="canShop"
 							@click="toggleCart"
 							class="nav-btn relative">
 							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -95,22 +95,23 @@
 			</div>
 
 			<!-- Mobile Menu -->
-			<div v-if="showMobileMenu" class="hide-desktop border-t border-gray-200 bg-white">
-				<div class="px-4 py-3 space-y-1">
-					<button @click="toggleSearch" class="mobile-nav-btn">
+				<div v-if="showMobileMenu" class="hide-desktop border-t border-gray-200 bg-white">
+					<div class="px-4 py-3 space-y-1">
+						<button @click="goToProducts" class="mobile-nav-btn">Shop</button>
+						<button @click="toggleSearch" class="mobile-nav-btn">
 						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
 						</svg>
 						Search
 					</button>
-					<button @click="toggleWishlist" class="mobile-nav-btn relative">
+						<button v-if="canUseWishlist" @click="toggleWishlist" class="mobile-nav-btn relative">
 						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
 						</svg>
 						Wishlist
 						<span v-if="wishlistStore.count > 0" class="ml-auto text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">{{ wishlistStore.count }}</span>
 					</button>
-					<button @click="toggleCart" class="mobile-nav-btn">
+						<button v-if="canShop" @click="toggleCart" class="mobile-nav-btn">
 						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
 						</svg>
@@ -535,6 +536,8 @@
 	const cartStore = useCartStore();
 	const authStore = useAuthStore();
 	const wishlistStore = useWishlistStore();
+	const canShop = computed(() => !authStore.isLoggedIn || ["customer", "buyer"].includes(authStore.role));
+	const canUseWishlist = computed(() => authStore.isLoggedIn && ["customer", "buyer"].includes(authStore.role));
 
 	// make cartCount reactive so UI updates immediately when store changes
 	const cartCount = computed(() => cartStore.totalItems);
@@ -569,7 +572,7 @@
 		handleResize();
 		measureHeader();
 		// if logged in, fetch remote cart to sync
-		if (authStore.checkAuth()) {
+		if (authStore.checkAuth() && ["customer", "buyer"].includes(authStore.role)) {
 			cartStore.fetchRemoteCart && cartStore.fetchRemoteCart();
 		}
 	});
@@ -608,16 +611,25 @@
 		searchQuery.value = "";
 	}
 
-	function submitSearch() {
-		if (searchQuery.value.trim()) {
-			console.log("Searching for:", searchQuery.value);
-			closeSearch();
-		}
+	async function submitSearch() {
+		const search = searchQuery.value.trim();
+		if (!search) return;
+
+		showSearchOverlay.value = false;
+		searchQuery.value = "";
+		await router.push({ path: "/", query: { search } });
+		nextTick(() => document.getElementById("products")?.scrollIntoView({ behavior: "smooth" }));
 	}
 
 	function toggleContact() {
-		showContactModal.value = true;
 		showMobileMenu.value = false;
+		router.push("/contact");
+	}
+
+	async function goToProducts() {
+		showMobileMenu.value = false;
+		if (router.currentRoute.value.path !== "/") await router.push("/");
+		nextTick(() => document.getElementById("products")?.scrollIntoView({ behavior: "smooth" }));
 	}
 
 	function closeContact() {
@@ -627,7 +639,6 @@
 
 	function submitContactForm() {
 		if (contactMessage.value.trim()) {
-			console.log("Contact message:", contactMessage.value);
 			alert("Message sent successfully! We'll get back to you soon.");
 			closeContact();
 		}
@@ -736,14 +747,15 @@
 		gap: 0.375rem;
 		padding: 0.375rem 0.625rem;
 		font-size: 0.875rem;
-		color: #4b5563;
-		border-radius: 0.375rem;
+		color: #536059;
+		border-radius: 0.5rem;
+		font-weight: 600;
 		transition: color 0.15s, background-color 0.15s;
 		position: relative;
 	}
 	.nav-btn:hover {
-		color: #111827;
-		background-color: #f3f4f6;
+		color: #244a42;
+		background-color: #edf2ef;
 	}
 
 	.nav-btn-primary {
@@ -753,12 +765,12 @@
 		font-size: 0.875rem;
 		font-weight: 500;
 		color: #fff;
-		background-color: #4f46e5;
-		border-radius: 0.375rem;
+		background-color: #315f55;
+		border-radius: 0.5rem;
 		transition: background-color 0.15s;
 	}
 	.nav-btn-primary:hover {
-		background-color: #4338ca;
+		background-color: #244a42;
 	}
 
 	.nav-badge {
@@ -771,7 +783,7 @@
 		font-size: 11px;
 		font-weight: 600;
 		color: #fff;
-		background-color: #4f46e5;
+		background-color: #987454;
 		border-radius: 9999px;
 		display: flex;
 		align-items: center;
@@ -790,8 +802,30 @@
 		transition: background-color 0.15s;
 	}
 	.mobile-nav-btn:hover {
-		background-color: #f3f4f6;
+		background-color: #edf2ef;
 	}
+
+	.site-header {
+		border-color: rgba(49, 64, 56, .12);
+		background: rgba(255, 253, 249, .94) !important;
+		box-shadow: 0 8px 28px rgba(29, 39, 34, .055);
+		backdrop-filter: blur(14px);
+	}
+	.nav-shell { max-width: 1180px; }
+	.brand-mark {
+		display: grid;
+		width: 2rem;
+		height: 2rem;
+		place-items: center;
+		border-radius: .55rem;
+		background: #315f55;
+		color: #fff;
+		font-family: Georgia, 'Times New Roman', serif;
+		font-size: 1rem;
+		font-weight: 700;
+		box-shadow: inset 0 0 0 1px rgba(255,255,255,.16);
+	}
+	.brand-name { color: #222a26; font-family: Georgia, 'Times New Roman', serif; letter-spacing: -.02em; }
 
 	/* Small devices tweaks */
 	@media (max-width: 640px) {

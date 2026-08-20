@@ -311,8 +311,6 @@ const approvalOptions = [
 const filteredProducts = computed(() => {
   // Ensure we always work with an array
   let filtered = Array.isArray(products.value) ? [...products.value] : []
-  console.log('Raw products:', products.value)
-  console.log('Filtered products before filtering:', filtered)
 
   // Search filter
   if (searchQuery.value) {
@@ -341,7 +339,6 @@ const filteredProducts = computed(() => {
     }
   }
 
-  console.log('Filtered products after filtering:', filtered)
   return filtered
 })
 
@@ -350,11 +347,9 @@ const fetchProducts = async () => {
   loading.value = true
   try {
     const response = await adminApi.getAllProducts()
-    console.log('API Response:', response)
     if (response.success) {
       // Extract the products array from the paginated response
       products.value = response.data?.data?.data || []
-      console.log('Products data:', products.value)
     } else {
       products.value = []
       $q.notify({

@@ -708,7 +708,9 @@
 
 		if (/^https?:\/\//i.test(cleanUrl)) return cleanUrl;
 
-		const baseUrl = "http://13.60.188.147/";
+		const baseUrl = `${String(import.meta.env.VITE_API_BASE_URL || "/api")
+			.replace(/\/api\/?$/, "")
+			.replace(/\/$/, "")}/`;
 		const cleanPath = cleanUrl.replace(/^\/+/, "");
 
 		if (/^(storage|uploads|public|images?)\//i.test(cleanPath)) {

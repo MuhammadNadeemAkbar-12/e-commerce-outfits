@@ -10,6 +10,7 @@ import '@quasar/extras/material-icons/material-icons.css'
 
 // Tailwind CSS (import after Quasar base styles)
 import './assets/main.css'
+import './assets/premium-system.css'
 
 // Quasar
 import { Quasar, Notify, Dialog } from 'quasar'
@@ -26,13 +27,13 @@ app.use(Quasar, {
   plugins: { Notify, Dialog },
   config: {
     brand: {
-      primary: '#1976D2',
-      secondary: '#26A69A',
-      accent: '#9C27B0',
-      positive: '#21BA45',
-      negative: '#C10015',
-      info: '#31CCEC',
-      warning: '#F2C037'
+      primary: '#315f55',
+      secondary: '#987454',
+      accent: '#536878',
+      positive: '#2f7d5e',
+      negative: '#b14b43',
+      info: '#39708a',
+      warning: '#b7791f'
     }
   }
 })

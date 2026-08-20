@@ -25,6 +25,15 @@ const invoiceApi = {
   createInvoice(data) {
     return axios.post('/sales/invoices', data)
   },
+  updateDraft(id, data) {
+    return axios.patch(`/sales/invoices/${id}`, data)
+  },
+  finalizeInvoice(id) {
+    return axios.patch(`/sales/invoices/${id}/finalize`)
+  },
+  cancelInvoice(id) {
+    return axios.patch(`/sales/invoices/${id}/cancel`)
+  },
 
   /**
    * Update invoice payment status

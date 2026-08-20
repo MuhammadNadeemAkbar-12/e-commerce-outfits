@@ -1,11 +1,17 @@
 <template>
-	<q-layout view="hHh lpR fFf">
+	<q-layout
+		view="hHh lpR fFf"
+		:class="{
+			'app-workspace': isInternalRoute,
+			'app-customer': isCustomerRoute,
+			'app-public': !isInternalRoute && !isCustomerRoute,
+		}">
 		<!-- Navbar sirf tab dikhaye jab route seller panel ka na ho, aur na hi login/signup ho, aur na hi admin ho -->
-		<Navbar v-if="!isSellerRoute && !isAuthRoute && !isAdminRoute" />
+		<Navbar v-if="!isInternalRoute && !isAuthRoute" />
 		<q-page-container>
 			<router-view :class="{ 'body--dark': $q.dark.isActive }" />
 		</q-page-container>
-		<Footer v-if="!isSellerRoute && !isAuthRoute && !isAdminRoute" />
+		<Footer v-if="!isInternalRoute && !isAuthRoute" />
 	</q-layout>
 </template>
 
@@ -29,16 +35,24 @@
 		return ["/registeruser", "/loginuser"].includes(route.path);
 	});
 
-	// Hide footer on seller routes
-	const hideFooter = computed(() => route.path.startsWith("/seller"));
+	// Internal workspaces provide their own navigation and must not mount
+	// customer-only cart/wishlist UI.
+	const isInternalRoute = computed(() =>
+		route.path.startsWith("/seller") ||
+		route.path.startsWith("/sales") ||
+		route.path.startsWith("/admin")
+	);
 
-	// Seller route check
-	const isSellerRoute = computed(() => route.path.startsWith("/seller"));
+	const isCustomerRoute = computed(() =>
+		route.path.startsWith("/customer") || route.path === "/checkout"
+	);
 </script>
 
 <style>
 	#app {
-		font-family: Avenir, Helvetica, Arial, sans-serif;
+		width: 100%;
+		min-width: 0;
+		font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 		-webkit-font-smoothing: antialiased;
 		-moz-osx-font-smoothing: grayscale;
 	}
@@ -50,6 +64,7 @@
 	}
 
 	.q-page-container {
+		min-width: 0;
 		flex: 1;
 	}
 </style>

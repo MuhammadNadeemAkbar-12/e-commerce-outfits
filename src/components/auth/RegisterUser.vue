@@ -800,7 +800,7 @@ function switchRole(newRole) {
 }
 
 function goHome() {
-  window.location.href = "http://localhost:5173/";
+  router.push("/");
 }
 
 function scrollToForm() {
@@ -1080,7 +1080,6 @@ async function handleSellerRegister() {
       errorMessage.value = response?.data?.message || "Registration failed. Please try again.";
     }
   } catch (error) {
-    console.log(error?.response?.data);
     errorMessage.value = error?.response?.data?.message || "Registration failed. Please try again.";
   } finally {
     seller.value.loading = false;

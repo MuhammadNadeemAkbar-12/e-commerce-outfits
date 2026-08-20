@@ -5,10 +5,9 @@
       <q-btn
         unelevated
         color="primary"
-        icon="download"
-        label="Download Backup"
-        :loading="backupLoading"
-        @click="downloadBackup"
+        icon="backup"
+        label="Backup & Restore"
+        @click="router.push('/admin/backups')"
       />
     </div>
     
@@ -59,9 +58,9 @@
             <div class="flex justify-center mb-2">
               <q-icon name="shopping_cart" size="2rem" class="text-orange-100" />
             </div>
-            <div class="text-h6 font-semibold">Total Orders</div>
-            <div class="text-h4 font-bold">{{ stats.totalOrders }}</div>
-            <div class="text-sm opacity-90">This month</div>
+            <div class="text-h6 font-semibold">Finalized Invoices</div>
+            <div class="text-h4 font-bold">{{ stats.totalInvoices }}</div>
+            <div class="text-sm opacity-90">PKR {{ stats.salesMonthFormatted }} this month</div>
           </q-card-section>
         </q-card>
       </div>
@@ -75,6 +74,17 @@
             <div class="text-h6 font-semibold">Low Stock</div>
             <div class="text-h4 font-bold">{{ stats.lowStockCount }}</div>
             <div class="text-sm opacity-90">Needs attention</div>
+          </q-card-section>
+        </q-card>
+      </div>
+
+      <div class="col-12 col-md-3">
+        <q-card class="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white shadow-lg hover:shadow-xl transition-colors cursor-pointer">
+          <q-card-section class="text-center">
+            <div class="flex justify-center mb-2"><q-icon name="assignment_return" size="2rem" class="text-cyan-100" /></div>
+            <div class="text-h6 font-semibold">Pending Returns</div>
+            <div class="text-h4 font-bold">{{ stats.pendingReturns }}</div>
+            <div class="text-sm opacity-90">Awaiting review</div>
           </q-card-section>
         </q-card>
       </div>
@@ -208,13 +218,13 @@
         <q-card class="shadow-md dark:bg-gray-800 dark:border dark:border-gray-700 rounded-xl">
           <q-card-section class="text-center q-pb-xs">
             <div class="text-subtitle2 font-semibold text-gray-700 dark:text-gray-200 q-mb-sm">
-              <q-icon name="shopping_cart" color="orange-6" class="q-mr-xs" />Sales / Orders
+              <q-icon name="receipt_long" color="orange-6" class="q-mr-xs" />Finalized Sales
             </div>
             <div style="position:relative;height:160px;display:flex;align-items:center;justify-content:center">
               <canvas ref="ordersChartRef"></canvas>
             </div>
             <div class="q-mt-sm text-xs text-gray-500 dark:text-gray-400">
-              <span class="font-bold text-gray-700 dark:text-gray-300">{{ stats.totalOrders }}</span> total &middot; <span class="text-green-600 font-bold">PKR {{ stats.revenueTodayFormatted }}</span> today
+              <span class="font-bold text-gray-700 dark:text-gray-300">{{ stats.totalInvoices }}</span> invoices &middot; <span class="text-green-600 font-bold">PKR {{ stats.revenueTodayFormatted }}</span> today
             </div>
           </q-card-section>
         </q-card>
@@ -229,12 +239,16 @@
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import Chart from 'chart.js/auto';
 import AdminService from '@/services/adminApi';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 const stats = ref({
   totalUsers: 0,
   totalSellers: 0,
   totalProducts: 0,
   totalOrders: 0,
+  totalInvoices: 0,
   lowStockCount: 0,
   // extended
   usersNewLast7: 0,
@@ -246,9 +260,10 @@ const stats = ref({
   ordersByStatus: {},
   revenueToday: 0,
   revenueTodayFormatted: '0',
+  salesMonthFormatted: '0',
+  pendingReturns: 0,
 });
 const loading = ref(true);
-const backupLoading = ref(false);
 const error = ref(null);
 const revenueChartRef = ref(null);
 const usersChartRef    = ref(null);
@@ -329,7 +344,7 @@ const renderBreakdownCharts = async (data) => {
   const ctxO = ordersChartRef.value?.getContext('2d');
   if (ctxO) {
     ordersChartInstance?.destroy();
-    const byStatus = data.orders?.by_status || {};
+    const byStatus = data.sales?.by_status || {};
     const statusLabels = Object.keys(byStatus).map(s => s.charAt(0).toUpperCase() + s.slice(1));
     const statusData   = Object.values(byStatus).map(Number);
     const statusColors = ['#f97316','#22c55e','#3b82f6','#ef4444','#8b5cf6','#14b8a6','#f59e0b'];
@@ -365,7 +380,7 @@ const renderRevenueChart = async (charts) => {
         },
         {
           type: 'bar',
-          label: 'Orders',
+          label: 'Invoices',
           data: orderSeries,
           borderColor: '#16a34a',
           backgroundColor: 'rgba(22, 163, 74, 0.25)',
@@ -436,6 +451,7 @@ const fetchDashboardStats = async () => {
         totalSellers:  d.sellers?.total      || 0,
         totalProducts: d.products?.total     || 0,
         totalOrders:   d.orders?.total       || 0,
+        totalInvoices: d.sales?.total_invoices || 0,
         lowStockCount: d.products?.low_stock_count || 0,
         // extended for charts
         usersNewLast7:    d.users?.new_last_7_days  || 0,
@@ -444,9 +460,11 @@ const fetchDashboardStats = async () => {
         blockedSellers:   d.sellers?.blocked        || 0,
         approvedProducts: d.products?.approved      || 0,
         pendingProducts:  d.products?.pending       || 0,
-        ordersByStatus:   d.orders?.by_status       || {},
-        revenueToday:     d.orders?.revenue_today   || 0,
-        revenueTodayFormatted: Number(d.orders?.revenue_today || 0).toLocaleString('en-PK', { maximumFractionDigits: 0 }),
+        ordersByStatus:   d.sales?.by_status        || {},
+        revenueToday:     d.sales?.revenue_today    || 0,
+        revenueTodayFormatted: Number(d.sales?.revenue_today || 0).toLocaleString('en-PK', { maximumFractionDigits: 0 }),
+        salesMonthFormatted: Number(d.sales?.revenue_this_month || 0).toLocaleString('en-PK', { maximumFractionDigits: 0 }),
+        pendingReturns: d.sales?.pending_returns || 0,
       };
 
       recentActivity.value  = d.recent_activity || [];
@@ -462,29 +480,6 @@ const fetchDashboardStats = async () => {
     console.error('Dashboard stats fetch error:', err);
   } finally {
     loading.value = false;
-  }
-};
-
-const downloadBackup = async () => {
-  backupLoading.value = true;
-  try {
-    const response = await AdminService.exportSystemBackup();
-    if (!response.success) {
-      throw new Error(response.message || 'Failed to export backup');
-    }
-
-    const blob = new Blob([response.data], { type: 'application/json;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    const ts = new Date().toISOString().replace(/[:.]/g, '-');
-    link.href = url;
-    link.download = `inventory-backup-${ts}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-  } catch (err) {
-    error.value = err?.message || 'Failed to download backup';
-  } finally {
-    backupLoading.value = false;
   }
 };
 
