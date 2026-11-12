@@ -15,16 +15,21 @@
 						tabindex="0"
 						role="button"
 						aria-label="Go to Home">
-						<div class="brand-mark">S</div>
-						<span class="brand-name text-lg font-semibold text-gray-900">StyleHub</span>
+						<div class="brand-mark">B</div>
+						<span class="brand-name text-lg font-semibold text-gray-900">Stock &amp; Sales BMS</span>
+						<span class="hidden sm:inline text-xs text-gray-500 ml-2">Inventory · Purchases · Invoices</span>
 					</div>
 
 					<!-- Desktop Navigation (>= 969px) -->
 					<nav class="show-desktop items-center gap-1">
-						<button @click="goToProducts" class="nav-btn">
-							<span>Shop</span>
+						<button v-if="isStaff" @click="openStaffWorkspace" class="nav-btn">
+							<span>Open BMS</span>
+						</button>
+						<button v-if="canShop" @click="goToProducts" class="nav-btn">
+							<span>Catalogue</span>
 						</button>
 						<button
+							v-if="canShop"
 							@click="toggleSearch"
 							class="nav-btn">
 							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,7 +102,8 @@
 			<!-- Mobile Menu -->
 				<div v-if="showMobileMenu" class="hide-desktop border-t border-gray-200 bg-white">
 					<div class="px-4 py-3 space-y-1">
-						<button @click="goToProducts" class="mobile-nav-btn">Shop</button>
+						<button v-if="isStaff" @click="openStaffWorkspace" class="mobile-nav-btn">Open BMS</button>
+						<button v-if="canShop" @click="goToProducts" class="mobile-nav-btn">Catalogue</button>
 						<button @click="toggleSearch" class="mobile-nav-btn">
 						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -372,7 +378,7 @@
 											{{ item.title }}
 										</div>
 										<div class="text-sm text-gray-500">
-											${{ (item.price || 0).toFixed(2) }}
+											{{ formatMoney(item.price || 0) }}
 										</div>
 									</div>
 								</div>
@@ -391,8 +397,8 @@
 										</button>
 									</div>
 									<div class="text-sm text-gray-600">
-										Total: ${{
-											((item.price || 0) * (item.quantity || 0)).toFixed(2)
+										Total: {{
+											formatMoney((item.price || 0) * (item.quantity || 0))
 										}}
 									</div>
 									<button
@@ -407,7 +413,7 @@
 							<div class="flex items-center justify-between mb-3">
 								<div class="font-semibold">Subtotal</div>
 								<div class="font-semibold text-indigo-600">
-									${{ safeSubtotal }}
+									{{ formatMoney(safeSubtotal) }}
 								</div>
 							</div>
 							<div class="flex gap-2">
@@ -521,6 +527,7 @@
 	import { useQuasar } from "quasar";
 	import UserProfile from "./common/UserProfile.vue";
 	import { useWishlistStore } from "@/stores/wishlist";
+	import { formatMoney } from "@/utils/currency";
 
 	const showMobileMenu = ref(false);
 	const showSearchOverlay = ref(false);
@@ -538,6 +545,16 @@
 	const wishlistStore = useWishlistStore();
 	const canShop = computed(() => !authStore.isLoggedIn || ["customer", "buyer"].includes(authStore.role));
 	const canUseWishlist = computed(() => authStore.isLoggedIn && ["customer", "buyer"].includes(authStore.role));
+	const isStaff = computed(() => ["admin", "manager", "seller", "salesman"].includes(authStore.role));
+
+	function openStaffWorkspace() {
+		const r = authStore.role;
+		if (r === "admin") router.push("/admin/dashboard");
+		else if (r === "manager" || r === "seller") router.push("/seller/dashboard");
+		else if (r === "salesman") router.push("/sales/dashboard");
+		else router.push("/loginuser");
+		showMobileMenu.value = false;
+	}
 
 	// make cartCount reactive so UI updates immediately when store changes
 	const cartCount = computed(() => cartStore.totalItems);
@@ -628,8 +645,10 @@
 
 	async function goToProducts() {
 		showMobileMenu.value = false;
-		if (router.currentRoute.value.path !== "/") await router.push("/");
-		nextTick(() => document.getElementById("products")?.scrollIntoView({ behavior: "smooth" }));
+		if (router.currentRoute.value.path !== '/catalogue') {
+			await router.push('/catalogue');
+		}
+		requestAnimationFrame(() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' }));
 	}
 
 	function closeContact() {

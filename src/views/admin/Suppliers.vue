@@ -144,6 +144,7 @@
 </template>
 
 <script setup>
+import { formatMoney as formatAmt } from '@/utils/currency'
 import { ref, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import suppliersApi from '@/services/suppliersApi'
@@ -174,7 +175,7 @@ const columns = [
 const txColumns = [
   { name: 'date', label: 'Date', field: row => formatDate(row.created_at), align: 'left' },
   { name: 'type', label: 'Type', field: 'type', align: 'left' },
-  { name: 'amount', label: 'Amount', field: row => `PKR ${formatAmt(row.amount)}`, align: 'right' },
+  { name: 'amount', label: 'Amount', field: row => formatAmt(row.amount), align: 'right' },
   { name: 'ref', label: 'Reference', field: 'reference', align: 'left' },
 ]
 
@@ -236,7 +237,6 @@ async function openHistory(s) {
   finally { historyLoading.value = false }
 }
 
-function formatAmt(v) { return new Intl.NumberFormat('en-PK').format(Math.round(parseFloat(v) || 0)) }
 function formatDate(d) {
   if (!d) return '—'
   return new Date(d).toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' })

@@ -52,7 +52,7 @@
               <td class="px-4 py-3 text-slate-600">{{ r.invoice?.invoice_number || '#' + r.invoice_id }}</td>
               <td class="px-4 py-3 text-slate-600">{{ r.invoice?.customer?.name || 'Walk-in' }}</td>
               <td class="px-4 py-3 text-slate-500 text-xs">{{ r.reason || '—' }}</td>
-              <td class="px-4 py-3 text-right font-semibold text-slate-800">PKR {{ fmt(r.total_refund) }}</td>
+              <td class="px-4 py-3 text-right font-semibold text-slate-800">{{ fmt(r.total_refund) }}</td>
               <td class="px-4 py-3 text-center">
                 <span :class="statusBadge(r.status)" class="px-2 py-1 rounded-full text-xs font-medium capitalize">{{ r.status }}</span>
               </td>
@@ -97,13 +97,13 @@
               <tr v-for="item in selected.items" :key="item.id">
                 <td class="px-2 py-2">{{ item.product_name }}</td>
                 <td class="px-2 py-2 text-center">{{ item.quantity }}</td>
-                <td class="px-2 py-2 text-right">PKR {{ fmt(item.unit_price) }}</td>
-                <td class="px-2 py-2 text-right font-medium">PKR {{ fmt(item.line_total) }}</td>
+                <td class="px-2 py-2 text-right">{{ fmt(item.unit_price) }}</td>
+                <td class="px-2 py-2 text-right font-medium">{{ fmt(item.line_total) }}</td>
               </tr>
             </tbody>
           </table>
           <div class="flex justify-end font-bold text-slate-900 border-t pt-2">
-            Total Refund: PKR {{ fmt(selected.total_refund) }}
+            Total Refund: {{ fmt(selected.total_refund) }}
           </div>
         </q-card-section>
       </q-card>
@@ -131,7 +131,7 @@
                 <input type="checkbox" v-model="item.selected" class="w-4 h-4" />
                 <div class="flex-1">
                   <div class="text-sm font-medium">{{ item.product_name }}</div>
-                  <div class="text-xs text-slate-400">Sold qty: {{ item.quantity }} × PKR {{ fmt(item.unit_price) }}</div>
+                  <div class="text-xs text-slate-400">Sold qty: {{ item.quantity }} × {{ fmt(item.unit_price) }}</div>
                 </div>
                 <div v-if="item.selected">
                   <input v-model.number="item.returnQty" type="number" min="1" :max="item.quantity" class="w-16 input-base text-center" />
@@ -156,6 +156,7 @@
 </template>
 
 <script setup>
+import { formatMoney as fmt } from '@/utils/currency'
 import { computed, ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
@@ -252,7 +253,6 @@ const closeCreate = () => {
   invoiceItems.value = []; createError.value = null
 }
 
-const fmt = (v) => Number(v || 0).toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-PK', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
 
 const statusBadge = (s) => ({

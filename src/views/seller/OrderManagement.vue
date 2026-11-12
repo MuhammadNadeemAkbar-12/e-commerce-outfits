@@ -191,7 +191,7 @@
 										{{ (props.row.items || []).length }} items
 									</div>
 									<div class="items-value">
-										${{ formatPrice(props.row.amount) }}
+										{{ formatPrice(props.row.amount) }}
 									</div>
 								</div>
 							</div>
@@ -295,7 +295,7 @@
 								size="sm" />
 						</div>
 						<div class="order-amount-mobile">
-							${{ formatPrice(order.amount) }}
+							{{ formatPrice(order.amount) }}
 						</div>
 					</q-card-section>
 
@@ -415,25 +415,25 @@
 							<div class="summary-item">
 								<span class="summary-label">Subtotal</span>
 								<span class="summary-value"
-									>${{ formatPrice(selectedOrder.raw?.subtotal) }}</span
+									>{{ formatPrice(selectedOrder.raw?.subtotal) }}</span
 								>
 							</div>
 							<div class="summary-item">
 								<span class="summary-label">Shipping</span>
 								<span class="summary-value"
-									>${{ formatPrice(selectedOrder.raw?.shipping) }}</span
+									>{{ formatPrice(selectedOrder.raw?.shipping) }}</span
 								>
 							</div>
 							<div class="summary-item">
 								<span class="summary-label">Tax</span>
 								<span class="summary-value"
-									>${{ formatPrice(selectedOrder.raw?.tax) }}</span
+									>{{ formatPrice(selectedOrder.raw?.tax) }}</span
 								>
 							</div>
 							<div class="summary-item total-row">
 								<span class="summary-label">Total</span>
 								<span class="summary-value total-amount"
-									>${{ formatPrice(selectedOrder.amount) }}</span
+									>{{ formatPrice(selectedOrder.amount) }}</span
 								>
 							</div>
 						</div>
@@ -497,13 +497,13 @@
 										{{ item.product_name || item.name }}
 									</div>
 									<div class="item-meta">
-										<span class="item-price">${{ item.price }}</span>
+										<span class="item-price">{{ formatPrice(item.price) }}</span>
 										<span class="item-separator">×</span>
 										<span class="item-quantity">{{ item.quantity }}</span>
 									</div>
 								</div>
 								<div class="item-total">
-									${{
+									{{
 										formatPrice(
 											Number(item.total || item.price * item.quantity)
 										)
@@ -607,6 +607,7 @@
 	import { ref, computed, watch, onMounted } from "vue";
 	import { useQuasar } from "quasar";
 	import axios from "@/api/axios";
+	import { formatPrice } from "@/utils/currency";
 
 	// State
 	const $q = useQuasar();
@@ -937,13 +938,6 @@
 			.slice(0, 2)
 			.join("")
 			.toUpperCase();
-	}
-
-	function formatPrice(value) {
-		return Number(value || 0).toLocaleString(undefined, {
-			minimumFractionDigits: 2,
-			maximumFractionDigits: 2,
-		});
 	}
 
 	function formatDate(dateString) {

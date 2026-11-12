@@ -30,16 +30,16 @@
                   </svg>
                 </div>
                 <h1 class="text-4xl lg:text-5xl font-bold mb-2 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
-                  StyleHub
+                  Stock &amp; Sales BMS
                 </h1>
                 <div class="w-16 h-1 bg-gradient-to-r from-pink-300 to-blue-300 mx-auto rounded-full"></div>
               </div>
 
               <!-- Welcome Text -->
               <div class="mb-8">
-                <h2 class="text-2xl lg:text-3xl font-semibold mb-4">Join StyleHub</h2>
+                <h2 class="text-2xl lg:text-3xl font-semibold mb-4">Account registration</h2>
                 <p class="text-lg opacity-90 leading-relaxed max-w-md">
-                  Create your account and become part of our fashion community. Whether you're here to shop or sell, we've got you covered.
+                  Staff accounts (Admin, Manager, Salesman) are normally created by an administrator. This form is a legacy self-registration path and is not the primary BMS workflow.
                 </p>
               </div>
 

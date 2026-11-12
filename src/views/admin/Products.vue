@@ -124,7 +124,7 @@
 
           <template v-slot:body-cell-price="props">
             <q-td :props="props">
-              ${{ formatCurrency(props.row.price) }}
+              {{ formatMoney(props.row.price) }}
             </q-td>
           </template>
 
@@ -228,7 +228,7 @@
             <div class="col-12 col-md-6"><q-input v-model="productForm.name" dense outlined label="Product Name" /></div>
             <div class="col-12 col-md-6"><q-input v-model="productForm.sku" dense outlined label="SKU" /></div>
             <div class="col-12"><q-input v-model="productForm.description" dense outlined label="Description" type="textarea" autogrow /></div>
-            <div class="col-12 col-md-4"><q-input v-model.number="productForm.price" dense outlined type="number" label="Price" /></div>
+            <div class="col-12 col-md-4"><q-input v-model.number="productForm.price" dense outlined type="number" label="Price (PKR)" /></div>
             <div class="col-12 col-md-4"><q-input v-model.number="productForm.stock" dense outlined type="number" label="Stock" /></div>
             <div class="col-12 col-md-4"><q-input v-model.number="productForm.reorder_level" dense outlined type="number" label="Reorder Level" /></div>
           </div>
@@ -244,6 +244,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { formatMoney } from '@/utils/currency'
 import { useQuasar } from 'quasar'
 import adminApi from '@/services/adminApi'
 import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
@@ -442,10 +443,6 @@ const submitProductForm = async () => {
   } finally {
     productFormLoading.value = false
   }
-}
-
-const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('en-US').format(amount || 0)
 }
 
 const getProductImage = (product) => {

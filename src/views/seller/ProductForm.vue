@@ -148,7 +148,7 @@
 							</td>
 
 							<td class="p-4 text-right text-sky-600 font-semibold">
-								${{ formatPrice(prod.price) }}
+								{{ formatMoney(prod.price) }}
 							</td>
 
 							<td class="p-4">
@@ -473,6 +473,7 @@
 <script setup>
 	import { ref, reactive, onMounted, watch, computed } from "vue";
 	import axios from "@/api/axios"; // use shared instance
+	import { formatMoney } from "@/utils/currency";
 
 	/* base url (backend) - used to build image URLs when server returns relative paths */
 	const BASE_URL = String(import.meta.env.VITE_API_BASE_URL || "/api")
@@ -548,13 +549,6 @@
 	});
 
 	/* helpers */
-	function formatPrice(p) {
-		try {
-			return Number(p).toFixed(2);
-		} catch {
-			return p;
-		}
-	}
 	function statusLabel(prod) {
 		if (prod.is_blocked) return "BLOCKED";
 		if (prod.is_approved) return "APPROVED";

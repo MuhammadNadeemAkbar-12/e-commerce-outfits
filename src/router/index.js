@@ -1,15 +1,21 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import HomePage from '../views/home/HomePage.vue'
+import StaffLanding from '../views/home/StaffLanding.vue'
 import Contact from '../views/home/Contact.vue'
 
 
 const routes = [
-  // Home routes
+  // Primary BMS entry — not an e-commerce storefront
   {
     path: '/',
+    name: 'StaffLanding',
+    component: StaffLanding,
+  },
+  // Legacy catalogue retained but demoted from the primary experience
+  {
+    path: '/catalogue',
     name: 'HomePage',
-    component: HomePage,
+    component: () => import('../views/home/HomePage.vue'),
   },
 
   {
@@ -108,6 +114,12 @@ const routes = [
         path: 'invoices',
         name: 'AdminInvoices',
         component: () => import('@/views/admin/Invoices.vue'),
+      },
+      {
+        path: 'invoices/:id/print',
+        name: 'AdminInvoicePrint',
+        component: () => import('@/views/seller/InvoicePrint.vue'),
+        meta: { requiresAuth: true, requiresRole: 'admin' },
       },
       {
         path: 'stock-movements',
@@ -265,7 +277,8 @@ const routes = [
     component: () => import('@/views/seller/SellerLayout.vue'),
     meta: { requiresAuth: true, requiresRole: 'salesman' },
     children: [
-      { path: '', redirect: '/sales/invoices' },
+      { path: '', redirect: '/sales/dashboard' },
+      { path: 'dashboard', component: () => import('@/views/seller/SalesDashboard.vue'), meta: { requiresAuth: true, requiresRole: 'salesman' } },
       { path: 'invoices', component: () => import('@/views/seller/Invoices.vue'), meta: { requiresAuth: true, requiresRole: 'salesman' } },
       { path: 'invoices/create', component: () => import('@/views/seller/InvoiceCreate.vue'), meta: { requiresAuth: true, requiresRole: 'salesman' } },
       { path: 'invoices/:id/print', component: () => import('@/views/seller/InvoicePrint.vue'), meta: { requiresAuth: true, requiresRole: 'salesman' } },
@@ -316,6 +329,10 @@ const routes = [
 
   // User authentication routes
   {
+    path: '/login',
+    redirect: '/loginuser',
+  },
+  {
     path: '/registeruser',
     name: 'RegisterUser',
     component: () => import('@/components/auth/RegisterUser.vue'),
@@ -356,8 +373,14 @@ router.beforeEach(async (to, from, next) => {
     authStore.checkAuth()
   }
 
-  // Allow home page to be accessed without any checks
+  // Staff never use the public catalogue as their home — send them into the BMS.
   if (to.path === '/') {
+    if (authStore.isLoggedIn) {
+      const r = authStore.role
+      if (r === 'admin') return next('/admin/dashboard')
+      if (r === 'manager' || r === 'seller') return next('/seller/dashboard')
+      if (r === 'salesman') return next('/sales/dashboard')
+    }
     next()
     return
   }
@@ -382,10 +405,12 @@ router.beforeEach(async (to, from, next) => {
           next('/admin/dashboard')
         } else if (userRole === 'seller' || userRole === 'manager') {
           next('/seller/dashboard')
-        } else if (userRole === 'buyer' || userRole === 'customer' || userRole === 'salesman') {
+        } else if (userRole === 'salesman') {
+          next('/sales/dashboard')
+        } else if (userRole === 'buyer' || userRole === 'customer') {
           next('/')
         } else {
-          next('/')
+          next('/loginuser')
         }
         return
       }
@@ -397,7 +422,7 @@ router.beforeEach(async (to, from, next) => {
     const r = authStore.role
     if (r === 'admin') next('/admin/dashboard')
     else if (r === 'seller' || r === 'manager') next('/seller/dashboard')
-    else if (r === 'salesman') next('/sales/invoices')
+    else if (r === 'salesman') next('/sales/dashboard')
     else next('/')
     return
   }

@@ -3,14 +3,14 @@
     <!-- Header -->
     <div class="row items-center justify-between q-mb-md">
       <div>
-        <h1 class="text-h4 text-weight-bold  dark:text-white">Seller Management</h1>
+        <h1 class="text-h4 text-weight-bold  dark:text-white">Manager Management</h1>
         <p class="text-subtitle2 text-grey-7 dark:text-gray-400">Manage and monitor all platform sellers</p>
       </div>
       <div class="row q-gutter-sm">
         <q-btn 
           @click="openCreateSeller" 
           icon="add_business" 
-          label="Add Seller" 
+          label="Add Manager" 
           color="positive" 
           unelevated
           class="hover:scale-105 transition-transform duration-200"
@@ -36,7 +36,7 @@
               <q-avatar color="blue-1" text-color="primary" icon="store" class="dark:bg-blue-900 dark:text-blue-200" />
               <div class="q-ml-md">
                 <div class="text-h6 text-weight-bold dark:text-white">{{ totalSellers }}</div>
-                <div class="text-caption text-grey-7 dark:text-gray-400">Total Sellers</div>
+                <div class="text-caption text-grey-7 dark:text-gray-400">Total Managers</div>
               </div>
             </div>
           </q-card-section>
@@ -50,7 +50,7 @@
               <q-avatar color="green-1" text-color="positive" icon="verified" class="dark:bg-green-900 dark:text-green-200" />
               <div class="q-ml-md">
                 <div class="text-h6 text-weight-bold dark:text-white">{{ verifiedSellers }}</div>
-                <div class="text-caption text-grey-7 dark:text-gray-400">Verified Sellers</div>
+                <div class="text-caption text-grey-7 dark:text-gray-400">Verified Managers</div>
               </div>
             </div>
           </q-card-section>
@@ -204,7 +204,7 @@
 
           <template v-slot:body-cell-revenue="props">
             <q-td :props="props">
-              ${{ formatCurrency(props.row.revenue || 0) }}
+              {{ formatMoney(props.row.revenue || 0) }}
             </q-td>
           </template>
 
@@ -428,7 +428,7 @@
                 </q-item>
                 <q-item class="dark:bg-gray-700">
                   <q-item-label caption class="dark:text-gray-300">Revenue</q-item-label>
-                  <q-item-label class="dark:text-white">${{ formatCurrency(selectedSeller.revenue || 0) }}</q-item-label>
+                  <q-item-label class="dark:text-white">{{ formatMoney(selectedSeller.revenue || 0) }}</q-item-label>
                 </q-item>
                 <q-item class="dark:bg-gray-700">
                   <q-item-label caption class="dark:text-gray-300">Joined</q-item-label>
@@ -454,6 +454,7 @@ import { useRouter } from 'vue-router'
 import adminApi from '@/services/adminApi'
 import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
 import axios from '@/api/axios'
+import { formatMoney } from '@/utils/currency'
 import { resolveUrl, getInitials, getAvatarColor } from '@/utils/imageUrl'
 
 const normalizeAvatarUrl = resolveUrl
@@ -847,10 +848,6 @@ const getStatusActionColor = (seller) => {
   } else {
     return seller.is_blocked ? 'positive' : 'negative'
   }
-}
-
-const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('en-US').format(amount)
 }
 
 const formatDate = (dateString) => {

@@ -11,7 +11,7 @@
           Manager Dashboard
         </h1>
         <p class="text-sm text-slate-500 mt-1 max-w-2xl">
-          Products, stock alerts, invoices & revenue overview
+          Stock, inventory, purchases and sales invoice overview (amounts in Rs.)
         </p>
       </div>
 
@@ -61,7 +61,7 @@
             <div>
               <div class="label">Total products</div>
               <div class="value" aria-live="polite">{{ displayed.total }}</div>
-              <div class="sub">All items in your catalog</div>
+              <div class="sub">Inventory products</div>
             </div>
           </div>
           <div class="kpi-footer">
@@ -83,7 +83,7 @@
               <div class="value" aria-live="polite">
                 {{ displayed.approved }}
               </div>
-              <div class="sub">Live on marketplace</div>
+              <div class="sub">Active inventory items</div>
             </div>
           </div>
           <div class="kpi-footer">
@@ -116,12 +116,12 @@
       >
         <div class="flex items-start gap-3">
           <div class="flex-1">
-            <div class="text-xs text-slate-400">Revenue (this month)</div>
+            <div class="text-xs text-slate-400">Invoice sales (this month)</div>
             <div class="text-xl font-semibold mt-1">
-              {{ formatCurrency(stats.orders.revenue_this_month) }}
+              {{ formatCurrency(stats.sales.revenue_this_month) }}
             </div>
             <div class="text-xs text-slate-400 mt-1">
-              All time: {{ formatCurrency(stats.orders.revenue_total) }}
+              All time: {{ formatCurrency(stats.sales.revenue_total) }}
             </div>
           </div>
 
@@ -183,7 +183,8 @@
         </div>
 
         <div class="flex items-center gap-2 mt-2">
-          <q-btn flat color="primary" label="View orders" @click="goToOrders" />
+          <q-btn flat color="primary" label="View invoices" @click="goToInvoices" />
+          <q-btn flat color="primary" label="Purchases" @click="goToPurchases" />
           <q-btn
             outline
             color="primary"
@@ -194,28 +195,36 @@
       </aside>
     </section>
 
-    <!-- Summaries -->
-    <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <!-- Summaries — invoice sales + received purchases -->
+    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <div class="summary-card">
-        <div class="summary-label">Orders</div>
-        <div class="summary-value">{{ stats.orders.orders_count }}</div>
-        <div class="summary-sub">Total orders received</div>
+        <div class="summary-label">Finalized Invoices</div>
+        <div class="summary-value">{{ stats.sales.total_invoices }}</div>
+        <div class="summary-sub">status = finalized only</div>
       </div>
 
       <div class="summary-card">
-        <div class="summary-label">Revenue (total)</div>
+        <div class="summary-label">Invoice Sales (total)</div>
         <div class="summary-value">
-          {{ formatCurrency(stats.orders.revenue_total) }}
+          {{ formatCurrency(stats.sales.revenue_total) }}
         </div>
-        <div class="summary-sub">All time</div>
+        <div class="summary-sub">Not e-commerce orders</div>
       </div>
 
       <div class="summary-card">
-        <div class="summary-label">Revenue (this month)</div>
+        <div class="summary-label">Invoice Sales (month)</div>
         <div class="summary-value">
-          {{ formatCurrency(stats.orders.revenue_this_month) }}
+          {{ formatCurrency(stats.sales.revenue_this_month) }}
         </div>
         <div class="summary-sub">This month</div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-label">Purchases Received</div>
+        <div class="summary-value">
+          {{ formatCurrency(stats.purchases.value_total) }}
+        </div>
+        <div class="summary-sub">{{ stats.purchases.received_count }} received · month {{ formatCurrency(stats.purchases.value_this_month) }}</div>
       </div>
     </section>
 
@@ -283,7 +292,7 @@
       <div class="bg-white rounded-2xl shadow-md overflow-hidden">
         <div class="px-6 py-4 border-b flex items-center justify-between">
           <div>
-            <h2 class="text-lg font-semibold">Sales Revenue (Last 7 Days)</h2>
+            <h2 class="text-lg font-semibold">Invoice Sales (Last 7 Days)</h2>
             <div class="text-sm text-slate-500">Daily revenue &amp; order trend</div>
           </div>
           <q-btn dense flat label="Refresh" @click="refreshStats" />
@@ -383,6 +392,7 @@ import Chart from 'chart.js/auto';
 import axios from "@/api/axios";
 import { useRouter } from "vue-router";
 import { useQuasar } from "quasar";
+import { formatMoney } from "@/utils/currency";
 
 const $q = useQuasar();
 const router = useRouter();
@@ -412,7 +422,7 @@ const renderSalesChart = async () => {
       datasets: [
         {
           type: 'line',
-          label: 'Revenue (PKR)',
+          label: 'Sales (Rs.)',
           data: salesData,
           borderColor: '#6366f1',
           backgroundColor: 'rgba(99,102,241,0.12)',
@@ -425,7 +435,7 @@ const renderSalesChart = async () => {
         },
         {
           type: 'bar',
-          label: 'Orders',
+          label: 'Invoices',
           data: stats.value.charts?.orders_last_7_days || salesData.map(() => 0),
           backgroundColor: 'rgba(16,185,129,0.18)',
           borderColor: '#10b981',
@@ -443,8 +453,8 @@ const renderSalesChart = async () => {
         legend: { position: 'top', labels: { font: { size: 12 } } },
         tooltip: { callbacks: {
           label: (ctx) => {
-            if (ctx.datasetIndex === 0) return ` Revenue: PKR ${Number(ctx.parsed.y || 0).toLocaleString('en-PK', { minimumFractionDigits: 0 })}`;
-            return ` Orders: ${ctx.parsed.y}`;
+            if (ctx.datasetIndex === 0) return ` Sales: ${formatCurrency(ctx.parsed.y || 0)}`;
+            return ` Invoices: ${ctx.parsed.y}`;
           }
         }},
       },
@@ -452,7 +462,7 @@ const renderSalesChart = async () => {
         y: {
           type: 'linear',
           position: 'left',
-          ticks: { callback: (v) => 'PKR ' + Number(v).toLocaleString('en-PK', { maximumFractionDigits: 0 }) },
+          ticks: { callback: (v) => formatCurrency(v) },
           grid: { color: 'rgba(0,0,0,0.05)' },
         },
         y1: {
@@ -476,6 +486,8 @@ const fetchedAt = ref("");
 const stats = ref({
   products: { total: 0, approved: 0, pending: 0, low_stock_list: [] },
   orders: { orders_count: 0, revenue_total: 0, revenue_this_month: 0 },
+  sales: { total_invoices: 0, revenue_total: 0, revenue_this_month: 0, revenue_today: 0 },
+  purchases: { received_count: 0, value_total: 0, value_this_month: 0 },
   charts: { labels: [], sales_last_7_days: [], stock_in_last_7_days: [], stock_out_last_7_days: [] },
   recent_transactions: [],
   insights: { top_products: [] },
@@ -540,14 +552,7 @@ const sparklinePoints = computed(() => {
 
 function formatCurrency(n) {
   if (n == null) return "—";
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency: "USD",
-    }).format(Number(n));
-  } catch {
-    return n;
-  }
+  return formatMoney(n);
 }
 
 function formatDate(d) {
@@ -589,19 +594,26 @@ async function fetchDashboardStats() {
         : [];
     }
 
-    if (payload?.orders) {
-      stats.value.orders.orders_count =
-        payload.orders.orders_count ??
-        payload.orders.orders ??
-        stats.value.orders.orders_count;
-      stats.value.orders.revenue_total =
-        payload.orders.revenue_total ??
-        payload.orders.revenue ??
-        stats.value.orders.revenue_total;
-      stats.value.orders.revenue_this_month =
-        payload.orders.revenue_this_month ??
-        stats.value.orders.revenue_this_month;
-    }
+    // Prefer sales.* (finalized invoices). Keep orders.* as compatibility mirror of invoice KPIs.
+    const sales = payload?.sales || {};
+    const purchases = payload?.purchases || {};
+    const ordersCompat = payload?.orders || {};
+
+    stats.value.sales.total_invoices =
+      sales.total_invoices ?? ordersCompat.orders_count ?? stats.value.sales.total_invoices;
+    stats.value.sales.revenue_total =
+      sales.revenue_total ?? ordersCompat.revenue_total ?? stats.value.sales.revenue_total;
+    stats.value.sales.revenue_this_month =
+      sales.revenue_this_month ?? ordersCompat.revenue_this_month ?? stats.value.sales.revenue_this_month;
+    stats.value.sales.revenue_today = sales.revenue_today ?? stats.value.sales.revenue_today;
+
+    stats.value.purchases.received_count = purchases.received_count ?? 0;
+    stats.value.purchases.value_total = purchases.value_total ?? 0;
+    stats.value.purchases.value_this_month = purchases.value_this_month ?? 0;
+
+    stats.value.orders.orders_count = stats.value.sales.total_invoices;
+    stats.value.orders.revenue_total = stats.value.sales.revenue_total;
+    stats.value.orders.revenue_this_month = stats.value.sales.revenue_this_month;
 
     if (payload?.insights) {
       stats.value.insights.top_products = payload.insights.top_products ?? [];
@@ -648,6 +660,12 @@ function openRestock(id) {
 }
 function goToOrders() {
   router.push("/seller/orders").catch(() => {});
+}
+function goToInvoices() {
+  router.push("/seller/invoices").catch(() => {});
+}
+function goToPurchases() {
+  router.push("/seller/purchases").catch(() => {});
 }
 function exportCSV() {
   $q.notify({ type: "info", message: "Export not implemented in this demo" });

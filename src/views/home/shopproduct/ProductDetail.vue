@@ -8,7 +8,7 @@
         <div class="text-h6">{{ product.title }}</div>
         <div class="text-subtitle2 text-gray-500 mb-2">{{ product.brand }}</div>
         <q-rating :model-value="product.rating" max="5" size="20px" color="amber" readonly />
-        <div class="text-primary text-xl font-bold mt-2">${{ product.price }}</div>
+        <div class="text-primary text-xl font-bold mt-2">{{ formatMoney(product.price) }}</div>
         <div class="text-sm text-gray-600 mt-2">{{ product.description }}</div>
         <div class="mt-2">
           <span class="font-medium">Variants:</span>
@@ -35,6 +35,8 @@
 </template>
 
 <script setup>
+import { formatMoney } from '@/utils/currency'
+
 defineProps({
   product: Object,
   inCart: Boolean,

@@ -120,7 +120,7 @@
         <!-- Total -->
         <template #body-cell-total="props">
           <q-td :props="props">
-            PKR {{ Number(props.value).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+            {{ formatMoney(props.value) }}
           </q-td>
         </template>
 
@@ -191,7 +191,7 @@
             </div>
             <div class="col-6">
               <div class="text-caption text-grey-6">Total</div>
-              <div class="text-weight-bold">PKR {{ Number(viewOrder.total).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</div>
+              <div class="text-weight-bold">{{ formatMoney(viewOrder.total) }}</div>
             </div>
             <div class="col-6" v-if="viewOrder.tracking_id">
               <div class="text-caption text-grey-6">Tracking ID</div>
@@ -204,10 +204,10 @@
             <q-item v-for="item in viewOrder.items" :key="item.id">
               <q-item-section>
                 <q-item-label>{{ item.product?.name || 'Product #' + item.product_id }}</q-item-label>
-                <q-item-label caption>Qty: {{ item.quantity }} × PKR {{ Number(item.price).toLocaleString() }}</q-item-label>
+                <q-item-label caption>Qty: {{ item.quantity }} × {{ formatMoney(item.price) }}</q-item-label>
               </q-item-section>
               <q-item-section side class="text-weight-bold">
-                PKR {{ Number(item.total).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+                {{ formatMoney(item.total) }}
               </q-item-section>
             </q-item>
           </q-list>
@@ -218,6 +218,7 @@
 </template>
 
 <script setup>
+import { formatMoney } from '@/utils/currency'
 import { ref, reactive, onMounted } from 'vue'
 import axios from '@/api/axios'
 import { useQuasar } from 'quasar'

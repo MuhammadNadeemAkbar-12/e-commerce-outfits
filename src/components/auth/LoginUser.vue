@@ -29,17 +29,17 @@
                     <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                   </svg>
                 </div>
-                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold mb-2 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
-                  StyleHub
+                <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+                  Stock &amp; Sales BMS
                 </h1>
                 <div class="w-16 h-1 bg-gradient-to-r from-pink-300 to-blue-300 mx-auto rounded-full"></div>
               </div>
 
               <!-- Welcome Text -->
               <div class="mb-8">
-                <h2 class="text-xl sm:text-2xl lg:text-3xl font-semibold mb-4">Welcome Back!</h2>
+                <h2 class="text-xl sm:text-2xl lg:text-3xl font-semibold mb-4">Staff Sign In</h2>
                 <p class="text-base sm:text-lg opacity-90 leading-relaxed max-w-md mx-auto">
-                  Step into your style sanctuary. Manage your wardrobe, discover trends, and express your unique fashion identity.
+                  Web-based Stock, Inventory and Sales Management System — internal access for Admin, Manager, and Salesman roles.
                 </p>
               </div>
 
@@ -47,15 +47,15 @@
               <div class="space-y-3 sm:space-y-4 mb-6 sm:mb-8 w-full max-w-md">
                 <div class="flex items-center justify-center space-x-3">
                   <div class="w-2 h-2 bg-pink-300 rounded-full"></div>
-                  <span class="text-sm opacity-80">Personalized Style Recommendations</span>
+                  <span class="text-sm opacity-80">Inventory &amp; stock control</span>
                 </div>
                 <div class="flex items-center justify-center space-x-3">
                   <div class="w-2 h-2 bg-blue-300 rounded-full"></div>
-                  <span class="text-sm opacity-80">Smart Wardrobe Management</span>
+                  <span class="text-sm opacity-80">Purchases, sales invoices &amp; returns</span>
                 </div>
                 <div class="flex items-center justify-center space-x-3">
                   <div class="w-2 h-2 bg-green-300 rounded-full"></div>
-                  <span class="text-sm opacity-80">Trending Fashion Insights</span>
+                  <span class="text-sm opacity-80">Reports &amp; dashboard analytics (PKR)</span>
                 </div>
               </div>
 
@@ -77,8 +77,8 @@
             <div class="w-full max-w-md" ref="formRef">
               <!-- Form Header -->
               <div class="text-center mb-6 sm:mb-8">
-                <h3 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Sign In</h3>
-                <p class="text-sm sm:text-base text-gray-600">Welcome back! Please sign in to your account</p>
+                <h3 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Staff Login</h3>
+                <p class="text-sm sm:text-base text-gray-600">Sign in with your authorized business account</p>
               </div>
 
               <!-- Login Form -->
@@ -404,7 +404,7 @@ const scrollToForm = () => {
 const redirectByRole = (role) => {
   if (role === 'admin') router.push('/admin/dashboard');
   else if (role === 'seller' || role === 'manager') router.push('/seller/dashboard');
-  else if (role === 'salesman') router.push('/sales/invoices');
+  else if (role === 'salesman') router.push('/sales/dashboard');
   else router.push('/');
 };
 

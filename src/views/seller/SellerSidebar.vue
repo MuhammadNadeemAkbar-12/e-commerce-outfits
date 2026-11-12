@@ -51,8 +51,8 @@
 							</q-avatar>
 
 							<div v-if="!collapsed" class="brand-text">
-								<div class="brand-title">Seller Panel</div>
-								<div class="brand-sub">Manage your store</div>
+								<div class="brand-title">{{ userRole === 'salesman' ? 'Sales Panel' : 'Manager Panel' }}</div>
+								<div class="brand-sub">Stock, Inventory &amp; Sales</div>
 							</div>
 						</div>
 
@@ -244,7 +244,7 @@
 
 	// user
 	const userName = computed(
-		() => userStore?.name || safeGet("userName", "Seller")
+		() => userStore?.name || safeGet("userName", "Manager")
 	);
 	const userRole = computed(
 		() => userStore?.role || authStore.role || safeGet("role", safeGet("userRole", "manager"))
@@ -270,29 +270,23 @@
 
 	// menu
 	const managerMenu = [
-		{ to: "/seller/dashboard", icon: "dashboard", label: "Dashboard" },
-		{ to: "/seller/products", icon: "inventory_2", label: "Products" },
-		{
-			to: "/seller/orders",
-			icon: "assignment",
-			label: "Orders",
-			badge: safeGetNumber("sellerOrdersCount") || null,
-			badgeColor: "accent",
-		},
+		{ to: "/seller/dashboard", icon: "dashboard", label: "Dashboard", caption: "Business overview" },
+		{ to: "/seller/products", icon: "inventory_2", label: "Inventory", caption: "Products & stock" },
 		{ to: "/seller/stock", icon: "inventory", label: "Update Stock" },
-		{ to: "/seller/invoices", icon: "receipt_long", label: "Invoices" },
 		{ to: "/seller/stock-ledger", icon: "trending_up", label: "Stock Ledger" },
-		{ to: "/seller/returns", icon: "keyboard_return", label: "Returns" },
-		{ to: "/seller/customers", icon: "people", label: "Customers" },
+		{ to: "/seller/purchases", icon: "add_shopping_cart", label: "Purchases", caption: "Stock-in" },
 		{ to: "/seller/suppliers", icon: "local_shipping", label: "Suppliers" },
-		{ to: "/seller/purchases", icon: "add_shopping_cart", label: "Purchases" },
+		{ to: "/seller/invoices", icon: "receipt_long", label: "Sales Invoices" },
+		{ to: "/seller/customers", icon: "people", label: "Customers" },
+		{ to: "/seller/returns", icon: "keyboard_return", label: "Returns" },
 		{ to: "/seller/reports", icon: "bar_chart", label: "Reports" },
 		{ to: "/seller/profile", icon: "person", label: "Profile" },
 	];
 	const salesmanMenu = [
-		{ to: "/sales/invoices", icon: "receipt_long", label: "Invoices" },
-		{ to: "/sales/returns", icon: "keyboard_return", label: "Returns" },
+		{ to: "/sales/dashboard", icon: "dashboard", label: "Dashboard" },
+		{ to: "/sales/invoices", icon: "receipt_long", label: "Sales Invoices" },
 		{ to: "/sales/customers", icon: "people", label: "Customers" },
+		{ to: "/sales/returns", icon: "keyboard_return", label: "Returns" },
 	];
 	const menu = computed(() => userRole.value === "salesman" ? salesmanMenu : managerMenu);
 
@@ -326,7 +320,7 @@
 	async function handleLogout() {
 		try {
 			await authStore.logout();
-			router.push("/");
+			router.push("/loginuser");
 		} catch (error) {
 			console.error("Seller logout failed", error);
 		}

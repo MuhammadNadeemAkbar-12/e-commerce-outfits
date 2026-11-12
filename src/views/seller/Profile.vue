@@ -140,11 +140,7 @@
 							<div class="stat p-3 rounded-lg bg-surface-2 text-center">
 								<div class="text-xs text-muted">Revenue</div>
 								<div class="text-lg font-bold">
-									${{
-										Number(
-											sellerRevenue
-										).toFixed(2)
-									}}
+									{{ formatMoney(sellerRevenue) }}
 								</div>
 							</div>
 						</div>
@@ -365,6 +361,7 @@
 <script setup>
 	import { ref, onMounted, computed, watch } from "vue";
 	import axios from "@/api/axios";
+	import { formatMoney } from "@/utils/currency";
 	import { useRouter } from "vue-router";
 
 	const router = useRouter();
