@@ -153,7 +153,7 @@
           
           <template v-slot:body-cell-total="props">
             <q-td :props="props">
-              ${{ props.row.total }}
+              {{ formatMoney(props.row.total) }}
             </q-td>
           </template>
           
@@ -191,6 +191,7 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
+import { formatMoney } from '@/utils/currency'
 import { useOrderStore } from '@/stores/order'
 import { useQuasar } from 'quasar'
 import OrderDetailModal from '@/components/admin/OrderDetailModal.vue'

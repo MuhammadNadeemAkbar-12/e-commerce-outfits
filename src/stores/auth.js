@@ -174,7 +174,7 @@ export const useAuthStore = defineStore('auth', () => {
     const routes = {
       admin: '/admin/dashboard',
       manager: '/seller/dashboard',
-      salesman: '/sales/invoices',
+      salesman: '/sales/dashboard',
       seller: '/seller/dashboard',
       buyer: '/'
     }

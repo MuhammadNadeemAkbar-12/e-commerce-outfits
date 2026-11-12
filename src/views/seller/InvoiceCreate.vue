@@ -127,7 +127,7 @@
             <div class="sm:col-span-2">
               <label class="block text-xs font-semibold text-slate-600 mb-1">Line Total</label>
               <div class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800">
-                PKR {{ formatAmount(item.line_total) }}
+                {{ formatAmount(item.line_total) }}
               </div>
             </div>
           </div>
@@ -171,16 +171,16 @@
           </div>
           <div class="bg-indigo-50 rounded-lg p-3 border border-indigo-200">
             <div class="flex justify-between text-sm text-slate-600 mb-1">
-              <span>Subtotal</span><span>PKR {{ formatAmount(subtotal) }}</span>
+              <span>Subtotal</span><span>{{ formatAmount(subtotal) }}</span>
             </div>
             <div v-if="form.tax_amount" class="flex justify-between text-sm text-slate-600 mb-1">
-              <span>Tax</span><span>PKR {{ formatAmount(form.tax_amount) }}</span>
+              <span>Tax</span><span>{{ formatAmount(form.tax_amount) }}</span>
             </div>
             <div v-if="form.discount_amount" class="flex justify-between text-sm text-green-700 mb-1">
-              <span>Discount</span><span>-PKR {{ formatAmount(form.discount_amount) }}</span>
+              <span>Discount</span><span>-{{ formatAmount(form.discount_amount) }}</span>
             </div>
             <div class="flex justify-between font-bold text-slate-900 text-base border-t border-indigo-200 pt-2 mt-1">
-              <span>Grand Total</span><span>PKR {{ formatAmount(grandTotal) }}</span>
+              <span>Grand Total</span><span>{{ formatAmount(grandTotal) }}</span>
             </div>
           </div>
         </div>
@@ -214,6 +214,7 @@
 </template>
 
 <script setup>
+import { formatMoney as formatAmount } from '@/utils/currency'
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import invoiceApi from '@/services/invoiceApi'
@@ -286,8 +287,6 @@ const calcLine = (item) => {
   item.line_total = (item.quantity || 0) * (item.unit_price || 0)
 }
 
-const formatAmount = (v) =>
-  Number(v || 0).toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 const submitInvoice = async () => {
   submitError.value = null

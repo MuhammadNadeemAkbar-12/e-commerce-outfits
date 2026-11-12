@@ -60,7 +60,8 @@
       <div class="col-12 col-md-6">
         <q-card flat bordered class="chart-card">
           <q-card-section>
-            <div class="text-h6 q-mb-sm">Profit & Loss</div>
+            <div class="text-h6 q-mb-sm">Gross Profit (trading)</div>
+            <div class="text-caption text-grey-7 q-mb-sm">Operating expenses are not tracked — this is gross profit only (net sales − COGS).</div>
             <div class="chart-wrap">
               <q-skeleton v-if="loading" height="220px" />
               <canvas v-else ref="plChartRef"></canvas>
@@ -130,6 +131,7 @@
 </template>
 
 <script setup>
+import { formatMoney as formatCurrency } from '@/utils/currency';
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import Chart from 'chart.js/auto';
 import axios from '@/api/axios';
@@ -162,10 +164,6 @@ const stockChartRef   = ref(null);
 let revenueChart = null, plChart = null, stockChart = null;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function formatCurrency(v) {
-  return 'PKR ' + Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
 function buildParams() {
   const p = { type: reportType.value, year: selectedYear.value };
   if (reportType.value === 'daily') {
@@ -177,9 +175,9 @@ function buildParams() {
 const summaryCards = computed(() => [
   { label: 'Total Revenue',  value: formatCurrency(salesTotals.value.total_revenue), color: 'text-primary' },
   { label: 'Total Invoices', value: salesTotals.value.total_invoices ?? 0,           color: '' },
-  { label: 'Gross Profit',   value: formatCurrency(plTotals.value.gross_profit),     color: 'text-positive' },
-  { label: 'Net Profit',     value: formatCurrency(plTotals.value.net_profit),
-    color: (plTotals.value.net_profit >= 0) ? 'text-positive' : 'text-negative' },
+  { label: 'Net Sales',      value: formatCurrency(plTotals.value.net_sales),        color: 'text-primary' },
+  { label: 'Gross Profit',   value: formatCurrency(plTotals.value.gross_profit),
+    color: (Number(plTotals.value.gross_profit) >= 0) ? 'text-positive' : 'text-negative' },
 ]);
 
 // ── Chart builders ────────────────────────────────────────────────────────────

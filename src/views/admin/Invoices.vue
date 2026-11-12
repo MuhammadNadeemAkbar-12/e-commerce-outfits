@@ -38,7 +38,7 @@
         <q-card flat bordered class="dark:bg-gray-800">
           <q-card-section class="text-center q-pa-sm">
             <div class="text-caption text-grey-6">Total Value</div>
-            <div class="text-h6 text-weight-bold text-info">PKR {{ formatAmt(kpi.value) }}</div>
+            <div class="text-h6 text-weight-bold text-info">{{ formatAmt(kpi.value) }}</div>
           </q-card-section>
         </q-card>
       </div>
@@ -65,6 +65,12 @@
           <div class="col-6 col-sm-3 col-md-2">
             <q-input v-model="filters.to_date" type="date" label="To" dense outlined @update:model-value="fetchInvoices" />
           </div>
+          <div class="col-6 col-sm-3 col-md-2">
+            <q-input v-model.number="filters.product_id" type="number" min="1" label="Product ID" dense outlined clearable @update:model-value="fetchInvoices" />
+          </div>
+          <div class="col-6 col-sm-3 col-md-2">
+            <q-input v-model.number="filters.biz_customer_id" type="number" min="1" label="Customer ID" dense outlined clearable @update:model-value="fetchInvoices" />
+          </div>
           <div class="col-12 col-sm-auto">
             <q-btn flat icon="restart_alt" label="Reset" @click="resetFilters" dense />
           </div>
@@ -73,14 +79,16 @@
     </q-card>
 
     <!-- Table -->
-    <q-card flat bordered class="dark:bg-gray-800">
+    <q-card flat bordered class="dark:bg-gray-800 invoice-table-card">
       <q-table
+        class="invoice-table"
         :rows="invoices"
         :columns="columns"
         row-key="id"
         :loading="loading"
         :pagination="{ rowsPerPage: 15 }"
         flat bordered
+        wrap-cells
       >
         <template v-slot:loading><q-inner-loading showing color="primary" /></template>
 
@@ -92,13 +100,13 @@
 
         <template v-slot:body-cell-customer="props">
           <q-td :props="props">
-            <div class="text-weight-medium">{{ props.row.customer_name || 'Walk-in' }}</div>
+            <div class="text-weight-medium">{{ customerLabel(props.row) }}</div>
           </q-td>
         </template>
 
         <template v-slot:body-cell-total="props">
           <q-td :props="props">
-            <span class="text-weight-medium">PKR {{ formatAmt(props.row.total_amount) }}</span>
+            <span class="text-weight-medium">{{ formatAmt(invoiceTotal(props.row)) }}</span>
           </q-td>
         </template>
 
@@ -146,13 +154,23 @@
         <q-card-section class="row items-center bg-primary text-white q-pa-md">
           <div class="text-h6">Invoice #{{ selectedInvoice.invoice_number }}</div>
           <q-space />
+          <q-btn
+            class="q-mr-sm"
+            icon="print"
+            flat
+            round
+            dense
+            :to="`/admin/invoices/${selectedInvoice.id}/print`"
+          >
+            <q-tooltip>Print / Save PDF (PKR)</q-tooltip>
+          </q-btn>
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
         <q-card-section class="q-pa-lg">
           <div class="row q-col-gutter-md q-mb-md">
             <div class="col-6 col-sm-3">
               <div class="text-caption text-grey-6">Customer</div>
-              <div class="text-weight-medium">{{ selectedInvoice.customer_name || 'Walk-in' }}</div>
+              <div class="text-weight-medium">{{ customerLabel(selectedInvoice) }}</div>
             </div>
             <div class="col-6 col-sm-3">
               <div class="text-caption text-grey-6">Date</div>
@@ -179,21 +197,21 @@
           <div class="row justify-end q-mt-md">
             <div class="col-12 col-sm-4">
               <div class="row justify-between q-mb-xs">
-                <span class="text-grey-6">Subtotal</span>
-                <span>PKR {{ formatAmt(selectedInvoice.subtotal) }}</span>
+                <span class="text-grey-6">Subtotal (PKR)</span>
+                <span>{{ formatAmt(selectedInvoice.subtotal) }}</span>
               </div>
               <div class="row justify-between q-mb-xs">
-                <span class="text-grey-6">Tax</span>
-                <span>PKR {{ formatAmt(selectedInvoice.tax_amount) }}</span>
+                <span class="text-grey-6">Tax (PKR)</span>
+                <span>{{ formatAmt(selectedInvoice.tax_amount) }}</span>
               </div>
               <div class="row justify-between q-mb-xs">
-                <span class="text-grey-6">Discount</span>
-                <span class="text-negative">- PKR {{ formatAmt(selectedInvoice.discount_amount) }}</span>
+                <span class="text-grey-6">Discount (PKR)</span>
+                <span class="text-negative">- {{ formatAmt(selectedInvoice.discount_amount) }}</span>
               </div>
               <q-separator class="q-my-sm" />
               <div class="row justify-between text-weight-bold text-h6">
-                <span>Total</span>
-                <span class="text-primary">PKR {{ formatAmt(selectedInvoice.total_amount) }}</span>
+                <span>Grand Total (PKR)</span>
+                <span class="text-primary">{{ formatAmt(invoiceTotal(selectedInvoice)) }}</span>
               </div>
             </div>
           </div>
@@ -204,6 +222,7 @@
 </template>
 
 <script setup>
+import { formatMoney as formatAmt } from '@/utils/currency'
 import { ref, computed, onMounted } from 'vue'
 import invoiceApi from '@/services/invoiceApi'
 
@@ -212,7 +231,7 @@ const loading = ref(false)
 const showDetail = ref(false)
 const selectedInvoice = ref(null)
 
-const filters = ref({ search: '', payment_status: '', status: '', from_date: '', to_date: '' })
+const filters = ref({ search: '', payment_status: '', status: '', from_date: '', to_date: '', product_id: null, biz_customer_id: null })
 
 const payStatusOpts = [
   { label: 'All', value: '' },
@@ -230,26 +249,39 @@ const statusOpts = [
 
 const columns = [
   { name: 'invoice_number', label: 'Invoice #', field: 'invoice_number', align: 'left', sortable: true },
-  { name: 'customer', label: 'Customer', field: 'customer_name', align: 'left', sortable: true },
-  { name: 'total', label: 'Total', field: 'total_amount', align: 'left', sortable: true },
+  { name: 'customer', label: 'Customer', field: row => customerLabel(row), align: 'left', sortable: true },
+  { name: 'total', label: 'Grand Total (PKR)', field: row => invoiceTotal(row), align: 'right', sortable: true },
   { name: 'payment_status', label: 'Payment', field: 'payment_status', align: 'center' },
   { name: 'status', label: 'Status', field: 'status', align: 'center' },
   { name: 'date', label: 'Date', field: 'invoice_date', align: 'left', sortable: true },
   { name: 'actions', label: '', field: 'actions', align: 'center' },
 ]
 
+function customerLabel(row) {
+  return row?.biz_customer?.name
+    || row?.bizCustomer?.name
+    || row?.customer?.name
+    || row?.customer_name
+    || 'Walk-in'
+}
+
+function invoiceTotal(row) {
+  const value = row?.grand_total ?? row?.total_amount ?? 0
+  return Number(value) || 0
+}
+
 const itemColumns = [
   { name: 'product', label: 'Product', field: row => row.product?.name || row.product_name || '—', align: 'left' },
   { name: 'qty', label: 'Qty', field: 'quantity', align: 'center' },
-  { name: 'price', label: 'Unit Price', field: row => `PKR ${formatAmt(row.unit_price)}`, align: 'right' },
-  { name: 'subtotal', label: 'Subtotal', field: row => `PKR ${formatAmt((row.unit_price || 0) * (row.quantity || 0))}`, align: 'right' },
+  { name: 'price', label: 'Unit Price', field: row => formatAmt(row.unit_price), align: 'right' },
+  { name: 'subtotal', label: 'Subtotal', field: row => formatAmt((row.unit_price || 0) * (row.quantity || 0)), align: 'right' },
 ]
 
 const kpi = computed(() => {
   const total = invoices.value.length
   const paid = invoices.value.filter(i => i.payment_status === 'paid').length
   const pending = invoices.value.filter(i => i.payment_status === 'pending').length
-  const value = invoices.value.reduce((s, i) => s + parseFloat(i.total_amount || 0), 0)
+  const value = invoices.value.reduce((s, i) => s + invoiceTotal(i), 0)
   return { total, paid, pending, value }
 })
 
@@ -260,8 +292,10 @@ async function fetchInvoices() {
     if (filters.value.search) params.search = filters.value.search
     if (filters.value.payment_status) params.payment_status = filters.value.payment_status
     if (filters.value.status) params.status = filters.value.status
-    if (filters.value.from_date) params.date_from = filters.value.from_date
-    if (filters.value.to_date) params.date_to = filters.value.to_date
+    if (filters.value.from_date) params.from_date = filters.value.from_date
+    if (filters.value.to_date) params.to_date = filters.value.to_date
+    if (filters.value.product_id) params.product_id = filters.value.product_id
+    if (filters.value.biz_customer_id) params.biz_customer_id = filters.value.biz_customer_id
     params.per_page = 200
     const res = await invoiceApi.getInvoices(params)
     const d = res.data?.data ?? res.data
@@ -274,7 +308,7 @@ async function fetchInvoices() {
 }
 
 function resetFilters() {
-  filters.value = { search: '', payment_status: '', status: '', from_date: '', to_date: '' }
+  filters.value = { search: '', payment_status: '', status: '', from_date: '', to_date: '', product_id: null, biz_customer_id: null }
   fetchInvoices()
 }
 
@@ -288,9 +322,6 @@ async function viewInvoice(row) {
   showDetail.value = true
 }
 
-function formatAmt(v) {
-  return new Intl.NumberFormat('en-PK').format(Math.round(parseFloat(v) || 0))
-}
 function formatDate(d) {
   if (!d) return '—'
   return new Date(d).toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' })
@@ -304,3 +335,17 @@ function statusColor(s) {
 
 onMounted(fetchInvoices)
 </script>
+
+<style scoped>
+.invoice-table-card {
+  overflow-x: auto;
+}
+.invoice-table :deep(.q-table__middle) {
+  overflow-x: auto;
+}
+@media (max-width: 640px) {
+  .text-h5 {
+    font-size: 1.15rem;
+  }
+}
+</style>

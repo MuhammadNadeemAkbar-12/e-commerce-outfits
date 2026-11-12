@@ -59,6 +59,7 @@
 import { computed, defineComponent, h, onMounted, reactive, ref } from 'vue'
 import { QCard, QCardSection, QTable } from 'quasar'
 import reportsApi from '@/services/reportsApi'
+import { formatMoney } from '@/utils/currency'
 
 const today = new Date().toISOString().slice(0, 10)
 const year = new Date().getFullYear()
@@ -72,7 +73,7 @@ const inventory = reactive({ stock_status: 'all', product: '', category_id: '', 
 const profit = reactive({ type: 'monthly', date: today, year, month, from_date: today, to_date: today, product_id: '', category_id: '' })
 const unwrap = (result) => result.data?.data ?? result.data
 const clean = (parameters) => Object.fromEntries(Object.entries(parameters).filter(([, value]) => value !== '' && value !== null))
-const money = (value) => `PKR ${Number(value || 0).toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+const money = (value) => formatMoney(value)
 
 const salesCards = computed(() => { const t = salesData.value?.totals || {}; return [{ label: 'Gross Sales', value: money(t.gross_sales), color: 'primary' }, { label: 'Invoices', value: t.invoice_count || 0, color: 'indigo' }, { label: 'Discounts', value: money(t.total_discounts), color: 'orange' }, { label: 'Tax', value: money(t.total_tax), color: 'blue' }, { label: 'Net Sales', value: money(t.net_sales), color: 'positive' }, { label: 'Items Sold', value: t.items_sold || 0, color: 'teal' }] })
 const inventoryCards = computed(() => { const t = inventoryData.value?.summary || {}; return [{ label: 'Products', value: t.total_products || 0, color: 'primary' }, { label: 'Units', value: t.total_units || 0, color: 'indigo' }, { label: 'Stock Value', value: money(t.total_cost_value), color: 'positive' }, { label: 'Low Stock', value: t.low_stock_count || 0, color: 'orange' }, { label: 'Out of Stock', value: t.out_of_stock_count || 0, color: 'negative' }] })

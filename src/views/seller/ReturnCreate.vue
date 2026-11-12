@@ -57,8 +57,8 @@
                 class="input-base w-20 text-center mx-auto"
               />
             </td>
-            <td class="px-4 py-3 text-right text-slate-600">PKR {{ fmt(item.unit_price) }}</td>
-            <td class="px-4 py-3 text-right font-semibold text-slate-800">PKR {{ fmt((item.returnQty || 0) * Number(item.unit_price || 0)) }}</td>
+            <td class="px-4 py-3 text-right text-slate-600">{{ fmt(item.unit_price) }}</td>
+            <td class="px-4 py-3 text-right font-semibold text-slate-800">{{ fmt((item.returnQty || 0) * Number(item.unit_price || 0)) }}</td>
           </tr>
         </tbody>
       </table>
@@ -77,7 +77,7 @@
       </div>
       <div class="flex items-center justify-between mt-4">
         <div class="text-sm text-slate-600">
-          Estimated Refund: <span class="font-bold text-slate-900">PKR {{ fmt(estimatedRefund) }}</span>
+          Estimated Refund: <span class="font-bold text-slate-900">{{ fmt(estimatedRefund) }}</span>
         </div>
         <q-btn
           unelevated
@@ -94,6 +94,7 @@
 </template>
 
 <script setup>
+import { formatMoney as fmt } from '@/utils/currency'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import invoiceApi from '@/services/invoiceApi'
@@ -167,7 +168,6 @@ const submitReturn = async () => {
   }
 }
 
-const fmt = (v) => Number(v || 0).toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-PK', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
 </script>
 

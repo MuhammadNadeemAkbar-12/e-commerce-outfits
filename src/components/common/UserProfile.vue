@@ -203,10 +203,10 @@
 						</q-item-section>
 						<q-item-section>
 							<q-item-label class="font-medium text-gray-800">
-								{{ (profile?.role || user?.role) === "admin" ? "Admin Dashboard" : "Seller Dashboard" }}
+								{{ (profile?.role || user?.role) === "admin" ? "Admin Dashboard" : ((profile?.role || user?.role) === "salesman" ? "Sales Dashboard" : "Manager Dashboard") }}
 							</q-item-label>
 							<q-item-label caption class="text-gray-500">
-								{{ (profile?.role || user?.role) === "admin" ? "Manage system settings" : "Manage your products" }}
+								{{ (profile?.role || user?.role) === "admin" ? "Stock, inventory and sales control" : ((profile?.role || user?.role) === "salesman" ? "Create and manage sales invoices" : "Manage inventory and sales") }}
 							</q-item-label>
 						</q-item-section>
 						<q-item-section side>

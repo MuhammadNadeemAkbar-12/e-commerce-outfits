@@ -38,7 +38,7 @@
 				<q-card flat bordered class="metric-card">
 					<q-card-section>
 						<div class="metric-label">Visible Spend</div>
-						<div class="metric-value">Rs {{ formatPrice(analytics.visibleRevenue) }}</div>
+						<div class="metric-value">{{ formatPrice(analytics.visibleRevenue) }}</div>
 					</q-card-section>
 				</q-card>
 				<q-card flat bordered class="metric-card">
@@ -207,7 +207,7 @@
 						<!-- Order Summary -->
 						<div class="order-card__summary col-auto text-right">
 							<div class="text-h6 text-weight-bold q-mb-xs">
-								Rs {{ formatPrice(order.total) }}
+								{{ formatPrice(order.total) }}
 							</div>
 
 							<q-chip
@@ -299,13 +299,13 @@
 											{{ item.name || item.product_name }}
 										</q-item-label>
 										<q-item-label caption>
-											Quantity: {{ item.quantity }} × Rs
+											Quantity: {{ item.quantity }} ×
 											{{ formatPrice(item.price) }}
 										</q-item-label>
 									</q-item-section>
 									<q-item-section side>
 										<q-item-label class="text-weight-bold">
-											Rs {{ formatPrice(item.total) }}
+											{{ formatPrice(item.total) }}
 										</q-item-label>
 									</q-item-section>
 								</q-item>
@@ -333,27 +333,26 @@
 							<div class="row justify-between q-mb-sm">
 								<span class="text-body2">Subtotal</span>
 								<span class="text-body2"
-									>Rs
-									{{ formatPrice(detail.subtotal ?? detail.total ?? 0) }}</span
+									>{{ formatPrice(detail.subtotal ?? detail.total ?? 0) }}</span
 								>
 							</div>
 							<div class="row justify-between q-mb-sm">
 								<span class="text-body2">Shipping</span>
 								<span class="text-body2"
-									>Rs {{ formatPrice(detail.shipping ?? 0) }}</span
+									>{{ formatPrice(detail.shipping ?? 0) }}</span
 								>
 							</div>
 							<div class="row justify-between q-mb-md">
 								<span class="text-body2">Tax</span>
 								<span class="text-body2"
-									>Rs {{ formatPrice(detail.tax ?? 0) }}</span
+									>{{ formatPrice(detail.tax ?? 0) }}</span
 								>
 							</div>
 							<q-separator class="q-mb-md" />
 							<div class="row justify-between">
 								<span class="text-h6 text-weight-bold">Total</span>
 								<span class="text-h6 text-weight-bold text-primary">
-									Rs {{ formatPrice(detail.total ?? 0) }}
+									{{ formatPrice(detail.total ?? 0) }}
 								</span>
 							</div>
 						</div>
@@ -402,6 +401,7 @@
 <script setup>
 	import { ref, computed, onMounted } from "vue";
 	import ordersService from "@/services/orders";
+	import { formatPrice } from "@/utils/currency";
 
 	const orders = ref([]);
 	const loading = ref(true);
@@ -599,14 +599,6 @@
 		} catch (e) {
 			return iso;
 		}
-	};
-
-	const formatPrice = (value) => {
-		if (value == null) return "0";
-		return Number(value).toLocaleString("en-US", {
-			minimumFractionDigits: 2,
-			maximumFractionDigits: 2,
-		});
 	};
 
 	const formatShippingAddress = (address) => {

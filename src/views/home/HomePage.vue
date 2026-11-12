@@ -3,14 +3,14 @@
     <section class="hero" aria-labelledby="hero-title">
       <div class="page-width hero-grid">
         <div class="hero-copy">
-          <p class="eyebrow">StyleHub collection</p>
-          <h1 id="hero-title">Thoughtful products for the spaces you use every day.</h1>
+          <p class="eyebrow">Web-based Stock, Inventory and Sales Management</p>
+          <h1 id="hero-title">Internal business operations for inventory, purchases and sales.</h1>
           <p class="hero-description">
-            Browse the current collection, compare what is available, and add the pieces that suit your needs.
+            Staff use the login portal for Admin, Manager and Salesman dashboards. Product browsing below is a legacy catalogue view — primary workflows run inside the BMS after sign-in.
           </p>
           <div class="hero-actions">
-            <button class="button button--primary" type="button" @click="scrollTo('products')">Explore products</button>
-            <button class="button button--secondary" type="button" @click="scrollTo('categories')">Browse categories</button>
+            <router-link class="button button--primary" to="/login">Staff login</router-link>
+            <button class="button button--secondary" type="button" @click="scrollTo('products')">View catalogue</button>
           </div>
         </div>
 
@@ -35,7 +35,7 @@
       <div class="section-heading">
         <div>
           <p class="eyebrow">Browse your way</p>
-          <h2 id="categories-title">Shop by category</h2>
+          <h2 id="categories-title">Browse by category</h2>
         </div>
         <button v-if="selectedCategory" class="text-button" type="button" @click="selectCategory(null)">View all products</button>
       </div>
@@ -177,6 +177,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
 import { useWishlistStore } from '@/stores/wishlist'
 import { resolveUrl } from '@/utils/imageUrl'
+import { formatPrice } from '@/utils/currency'
 
 const $q = useQuasar()
 const route = useRoute()
@@ -230,10 +231,6 @@ function normaliseProduct(product) {
     categoryName: category?.name || 'Uncategorised',
     image: productImage(product),
   }
-}
-
-function formatPrice(value) {
-  return new Intl.NumberFormat('en-PK', { style: 'currency', currency: 'PKR', maximumFractionDigits: 0 }).format(value || 0)
 }
 
 async function loadCategories() {

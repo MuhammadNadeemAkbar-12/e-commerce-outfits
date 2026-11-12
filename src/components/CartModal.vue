@@ -40,7 +40,7 @@
 							}}</q-item-label>
 							<q-item-label caption>{{ item.brand }}</q-item-label>
 							<q-item-label class="text-primary text-weight-bold"
-								>${{ item.price }}</q-item-label
+								>{{ formatMoney(item.price) }}</q-item-label
 							>
 						</q-item-section>
 
@@ -78,7 +78,7 @@
 				<div class="row justify-between items-center q-mb-md">
 					<div class="text-h6">Total:</div>
 					<div class="text-h6 text-primary">
-						${{ cartStore.totalPrice.toFixed(2) }}
+						{{ formatMoney(cartStore.totalPrice) }}
 					</div>
 				</div>
 
@@ -103,6 +103,7 @@
 	import { ref, watch, onMounted, nextTick, computed } from "vue";
 	import { useCartStore } from "../stores/cart";
 	import { useQuasar } from "quasar";
+	import { formatMoney } from "@/utils/currency";
 	import { useAuthStore } from '@/stores/auth'
 
 	const $q = useQuasar();

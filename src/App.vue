@@ -6,12 +6,12 @@
 			'app-customer': isCustomerRoute,
 			'app-public': !isInternalRoute && !isCustomerRoute,
 		}">
-		<!-- Navbar sirf tab dikhaye jab route seller panel ka na ho, aur na hi login/signup ho, aur na hi admin ho -->
-		<Navbar v-if="!isInternalRoute && !isAuthRoute" />
+		<!-- Shop chrome only on legacy catalogue/customer paths — not on BMS landing or staff panels -->
+		<Navbar v-if="showShopChrome" />
 		<q-page-container>
 			<router-view :class="{ 'body--dark': $q.dark.isActive }" />
 		</q-page-container>
-		<Footer v-if="!isInternalRoute && !isAuthRoute" />
+		<Footer v-if="showShopChrome" />
 	</q-layout>
 </template>
 
@@ -32,7 +32,7 @@
 
 	// Check if current route is an auth route (register or login)
 	const isAuthRoute = computed(() => {
-		return ["/registeruser", "/loginuser"].includes(route.path);
+		return ["/registeruser", "/loginuser", "/login", "/password-recovery", "/admin/login", "/admin/password-recovery"].includes(route.path);
 	});
 
 	// Internal workspaces provide their own navigation and must not mount
@@ -45,6 +45,19 @@
 
 	const isCustomerRoute = computed(() =>
 		route.path.startsWith("/customer") || route.path === "/checkout"
+	);
+
+	const isBmsLanding = computed(() => route.path === "/");
+
+	const showShopChrome = computed(() =>
+		!isInternalRoute.value &&
+		!isAuthRoute.value &&
+		!isBmsLanding.value &&
+		(route.path.startsWith("/catalogue") ||
+			route.path.startsWith("/customer") ||
+			route.path === "/checkout" ||
+			route.path === "/contact" ||
+			route.path.startsWith("/shop"))
 	);
 </script>
 

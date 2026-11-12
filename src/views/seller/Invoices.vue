@@ -30,7 +30,7 @@
         </article>
         <article class="kpi-card">
           <p class="kpi-label">Page Total</p>
-          <p class="kpi-value">PKR {{ formatAmount(pageStats.value) }}</p>
+          <p class="kpi-value">{{ formatAmount(pageStats.value) }}</p>
         </article>
       </section>
 
@@ -129,10 +129,10 @@
               class="ledger-row transition-colors"
             >
               <td class="px-4 py-3 font-mono font-medium text-indigo-700">{{ inv.invoice_number }}</td>
-              <td class="px-4 py-3 text-slate-700">{{ inv.customer?.name || '—' }}</td>
+              <td class="px-4 py-3 text-slate-700">{{ customerLabel(inv) }}</td>
               <td class="px-4 py-3 text-slate-500">{{ formatDate(inv.invoice_date) }}</td>
               <td class="px-4 py-3 text-right font-semibold text-slate-800">
-                PKR {{ formatAmount(inv.grand_total) }}
+                {{ formatAmount(inv.grand_total) }}
               </td>
               <td class="px-4 py-3 text-center">
                 <span :class="paymentBadge(inv.payment_status)" class="px-2 py-1 rounded-full text-xs font-medium capitalize">
@@ -217,7 +217,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 text-sm">
             <div>
               <div class="text-slate-500">Customer</div>
-              <div class="font-medium">{{ selectedInvoice.customer?.name || '—' }}</div>
+              <div class="font-medium">{{ customerLabel(selectedInvoice) }}</div>
             </div>
             <div>
               <div class="text-slate-500">Created by</div>
@@ -242,8 +242,8 @@
                   <div class="text-xs text-slate-400">SKU: {{ item.sku }}</div>
                 </td>
                 <td class="px-2 py-2 text-center">{{ item.quantity }}</td>
-                <td class="px-2 py-2 text-right">PKR {{ formatAmount(item.unit_price) }}</td>
-                <td class="px-2 py-2 text-right font-medium">PKR {{ formatAmount(item.line_total) }}</td>
+                <td class="px-2 py-2 text-right">{{ formatAmount(item.unit_price) }}</td>
+                <td class="px-2 py-2 text-right font-medium">{{ formatAmount(item.line_total) }}</td>
               </tr>
             </tbody>
           </table>
@@ -251,16 +251,16 @@
           <!-- Totals -->
           <div class="border-t pt-3 space-y-1 text-sm">
             <div class="flex justify-between text-slate-600">
-              <span>Subtotal</span><span>PKR {{ formatAmount(selectedInvoice.subtotal) }}</span>
+              <span>Subtotal</span><span>{{ formatAmount(selectedInvoice.subtotal) }}</span>
             </div>
             <div v-if="selectedInvoice.tax_amount > 0" class="flex justify-between text-slate-600">
-              <span>Tax</span><span>PKR {{ formatAmount(selectedInvoice.tax_amount) }}</span>
+              <span>Tax</span><span>{{ formatAmount(selectedInvoice.tax_amount) }}</span>
             </div>
             <div v-if="selectedInvoice.discount_amount > 0" class="flex justify-between text-green-600">
-              <span>Discount</span><span>-PKR {{ formatAmount(selectedInvoice.discount_amount) }}</span>
+              <span>Discount</span><span>-{{ formatAmount(selectedInvoice.discount_amount) }}</span>
             </div>
             <div class="flex justify-between font-bold text-slate-900 text-base border-t pt-2 mt-2">
-              <span>Grand Total</span><span>PKR {{ formatAmount(selectedInvoice.grand_total) }}</span>
+              <span>Grand Total</span><span>{{ formatAmount(selectedInvoice.grand_total) }}</span>
             </div>
           </div>
 
@@ -275,6 +275,7 @@
 </template>
 
 <script setup>
+import { formatMoney as formatAmount } from '@/utils/currency'
 import { computed, ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import invoiceApi from '@/services/invoiceApi'
@@ -317,6 +318,14 @@ const pageStats = computed(() => {
     value,
   }
 })
+
+function customerLabel(row) {
+  return row?.biz_customer?.name
+    || row?.bizCustomer?.name
+    || row?.customer?.name
+    || row?.customer_name
+    || 'Walk-in'
+}
 
 const fetchInvoices = async () => {
   loading.value = true
@@ -421,7 +430,6 @@ const openPrint = (inv) => {
 }
 
 const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'
-const formatAmount = (v) => Number(v || 0).toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 const paymentBadge = (s) => ({
   'bg-yellow-100 text-yellow-700': s === 'pending',

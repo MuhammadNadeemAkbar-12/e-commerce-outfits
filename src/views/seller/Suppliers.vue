@@ -131,7 +131,7 @@
                   <td class="px-3 py-2">{{ tx.purchase_number || '-' }}</td>
                   <td class="px-3 py-2">{{ tx.purchase_date || '-' }}</td>
                   <td class="px-3 py-2 text-xs">{{ (tx.items || []).map(i => `${i.product_name} × ${i.quantity}`).join(', ') || '-' }}</td>
-                  <td class="px-3 py-2 text-right">PKR {{ fmt(tx.grand_total) }}</td>
+                  <td class="px-3 py-2 text-right">{{ fmt(tx.grand_total) }}</td>
                   <td class="px-3 py-2 text-center">{{ tx.status || '-' }}</td>
                 </tr>
                 <tr v-if="!historyRows.length">
@@ -150,6 +150,7 @@
 </template>
 
 <script setup>
+import { formatMoney as fmt } from '@/utils/currency'
 import { ref, reactive, onMounted } from 'vue'
 import suppliersApi from '@/services/suppliersApi'
 
@@ -220,7 +221,6 @@ const openHistory = async (s) => {
   }
 }
 
-const fmt = (v) => Number(v || 0).toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 onMounted(fetchList)
 </script>

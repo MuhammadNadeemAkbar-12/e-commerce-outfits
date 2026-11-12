@@ -11,7 +11,7 @@
         </div>
       </div>
       <div class="flex items-center justify-between mt-3">
-        <div class="font-bold text-xl text-primary">${{ product.price }}</div>
+        <div class="font-bold text-xl text-primary">{{ formatMoney(product.price) }}</div>
         <div class="flex gap-2">
           <q-btn
             dense
@@ -36,6 +36,8 @@
 </template>
 
 <script setup>
+import { formatMoney } from '@/utils/currency'
+
 defineProps({
   product: Object,
   inCart: Boolean,

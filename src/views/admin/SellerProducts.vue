@@ -208,7 +208,7 @@
 
           <template v-slot:body-cell-price="props">
             <q-td :props="props">
-              ${{ formatCurrency(props.row.price) }}
+              {{ formatMoney(props.row.price) }}
             </q-td>
           </template>
 
@@ -276,6 +276,7 @@
 
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
+import { formatMoney } from '@/utils/currency'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import adminApi from '@/services/adminApi'
@@ -502,10 +503,6 @@ const fetchProducts = async () => {
 
 const goBackToSellers = () => {
   router.push({ name: 'ManageSellers' })
-}
-
-const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('en-US').format(amount || 0)
 }
 
 const getStatusColor = (status) => {

@@ -159,7 +159,7 @@
 							</div>
 							<div class="flex items-center justify-between mt-2">
 								<div class="font-bold text-lg text-primary">
-									${{ product.price }}
+									{{ formatMoney(product.price) }}
 								</div>
 								<div class="flex gap-2">
 									<q-btn
@@ -206,6 +206,7 @@
 
 <script setup>
 	import { ref } from "vue";
+	import { formatMoney } from "@/utils/currency";
 	import { useQuasar } from "quasar";
 	import { useRouter } from "vue-router";
 	import { useCartStore } from "../../stores/cart";

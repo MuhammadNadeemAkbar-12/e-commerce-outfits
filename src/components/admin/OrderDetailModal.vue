@@ -103,12 +103,12 @@
           >
             <template v-slot:body-cell-price="props">
               <q-td :props="props">
-                ${{ props.row.price }}
+                {{ formatMoney(props.row.price) }}
               </q-td>
             </template>
             <template v-slot:body-cell-total="props">
               <q-td :props="props">
-                ${{ (props.row.price * props.row.quantity).toFixed(2) }}
+                {{ formatMoney(props.row.price * props.row.quantity) }}
               </q-td>
             </template>
           </q-table>
@@ -123,7 +123,7 @@
               <strong>Subtotal:</strong>
             </div>
             <div class="col-6 text-right">
-              ${{ order.subtotal || 0 }}
+              {{ formatMoney(order.subtotal || 0) }}
             </div>
           </div>
           <div class="row q-mt-sm">
@@ -131,7 +131,7 @@
               <strong>Shipping:</strong>
             </div>
             <div class="col-6 text-right">
-              ${{ order.shipping || 0 }}
+              {{ formatMoney(order.shipping || 0) }}
             </div>
           </div>
           <div class="row q-mt-sm">
@@ -139,7 +139,7 @@
               <strong>Tax:</strong>
             </div>
             <div class="col-6 text-right">
-              ${{ order.tax || 0 }}
+              {{ formatMoney(order.tax || 0) }}
             </div>
           </div>
           <div class="row q-mt-sm text-h6">
@@ -147,7 +147,7 @@
               <strong>Total:</strong>
             </div>
             <div class="col-6 text-right">
-              ${{ order.total || 0 }}
+              {{ formatMoney(order.total || 0) }}
             </div>
           </div>
         </div>
@@ -200,6 +200,7 @@
 import { ref, computed, watch } from 'vue'
 import { useOrderStore } from '@/stores/order'
 import { useQuasar } from 'quasar'
+import { formatMoney } from '@/utils/currency'
 
 const props = defineProps({
   modelValue: {

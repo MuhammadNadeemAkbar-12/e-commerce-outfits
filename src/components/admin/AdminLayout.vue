@@ -12,8 +12,8 @@
           <q-toolbar-title class="admin-title">
             <span class="admin-title-mark">S</span>
             <span class="admin-title-copy">
-              <strong>StyleHub</strong>
-              <small>Operations</small>
+              <strong>Stock &amp; Sales BMS</strong>
+              <small>Inventory &amp; Sales</small>
             </span>
           </q-toolbar-title>
 
@@ -38,7 +38,7 @@
           <div class="admin-drawer-intro">
             <span>Workspace</span>
             <strong>Administration</strong>
-            <small>Business control centre</small>
+            <small>Stock, Inventory &amp; Sales</small>
           </div>
 
           <q-list padding class="admin-nav">
@@ -90,43 +90,39 @@ const navigation = [
     items: [
       { label: 'Dashboard', caption: 'Business overview', icon: 'space_dashboard', to: '/admin/dashboard' },
       { label: 'Reports', caption: 'Sales and inventory', icon: 'query_stats', to: '/admin/reports' },
-      { label: 'Platform Stats', caption: 'Operational metrics', icon: 'insights', to: '/admin/platform-stats' },
+    ],
+  },
+  {
+    label: 'Inventory & Stock',
+    items: [
+      { label: 'Products', caption: 'Inventory items', icon: 'inventory_2', to: '/admin/products' },
+      { label: 'Categories', caption: 'Product categories', icon: 'category', to: '/admin/categories' },
+      { label: 'Purchases', caption: 'Stock-in / purchasing', icon: 'shopping_cart_checkout', to: '/admin/purchases' },
+      { label: 'Stock Movements', caption: 'In/out history', icon: 'swap_vert', to: '/admin/stock-movements' },
+      { label: 'Suppliers', caption: 'Supplier records', icon: 'local_shipping', to: '/admin/suppliers' },
+    ],
+  },
+  {
+    label: 'Sales',
+    items: [
+      { label: 'Invoices', caption: 'Sales invoices', icon: 'request_quote', to: '/admin/invoices' },
+      { label: 'Business Customers', caption: 'Customer accounts', icon: 'apartment', to: '/admin/biz-customers' },
+      { label: 'Returns', caption: 'Customer returns', icon: 'assignment_return', to: '/admin/sale-returns' },
     ],
   },
   {
     label: 'People',
     items: [
-      { label: 'Users', caption: 'Customer accounts', icon: 'group', to: '/admin/users' },
-      { label: 'Sellers', caption: 'Seller accounts', icon: 'storefront', to: '/admin/sellers' },
-      { label: 'Business Customers', caption: 'B2B accounts', icon: 'apartment', to: '/admin/biz-customers' },
-      { label: 'Suppliers', caption: 'Supplier records', icon: 'local_shipping', to: '/admin/suppliers' },
-    ],
-  },
-  {
-    label: 'Commerce',
-    items: [
-      { label: 'Products', caption: 'Product catalogue', icon: 'inventory_2', to: '/admin/products' },
-      { label: 'Product Approval', caption: 'Review listings', icon: 'fact_check', to: '/admin/product-approval' },
-      { label: 'Categories', caption: 'Catalogue structure', icon: 'category', to: '/admin/categories' },
-      { label: 'Customer Orders', caption: 'Online purchases', icon: 'shopping_bag', to: '/admin/customer-orders' },
-      { label: 'Seller Orders', caption: 'Seller fulfilment', icon: 'receipt_long', to: '/admin/seller-orders' },
-      { label: 'Invoices', caption: 'Sales records', icon: 'request_quote', to: '/admin/invoices' },
-      { label: 'Returns', caption: 'Returns and refunds', icon: 'assignment_return', to: '/admin/sale-returns' },
-    ],
-  },
-  {
-    label: 'Inventory',
-    items: [
-      { label: 'Purchases', caption: 'Purchasing and stock-in', icon: 'shopping_cart_checkout', to: '/admin/purchases' },
-      { label: 'Stock Movements', caption: 'Inventory activity', icon: 'swap_vert', to: '/admin/stock-movements' },
+      { label: 'Users', caption: 'System users', icon: 'group', to: '/admin/users' },
+      { label: 'Managers', caption: 'Manager accounts', icon: 'badge', to: '/admin/sellers' },
     ],
   },
   {
     label: 'System',
     items: [
-      { label: 'Activity Logs', caption: 'Administrative audit trail', icon: 'manage_history', to: '/admin/audit-logs' },
-      { label: 'Backup & Restore', caption: 'Protected archives', icon: 'cloud_sync', to: '/admin/backups' },
-      { label: 'Settings', caption: 'Platform configuration', icon: 'settings', to: '/admin/settings' },
+      { label: 'Activity Logs', caption: 'Audit trail', icon: 'manage_history', to: '/admin/audit-logs' },
+      { label: 'Backup & Restore', caption: 'Data backup', icon: 'cloud_sync', to: '/admin/backups' },
+      { label: 'Settings', caption: 'Configuration', icon: 'settings', to: '/admin/settings' },
     ],
   },
 ]
@@ -140,7 +136,7 @@ async function handleLogout() {
   try {
     await authStore.logout()
     $q.notify({ type: 'positive', message: 'Logged out successfully', position: 'top' })
-    await router.push('/')
+    await router.push('/loginuser')
   } catch {
     $q.notify({ type: 'negative', message: 'Unable to log out', position: 'top' })
   }
